@@ -7,29 +7,23 @@ import {
   listFromInput,
   nullableNumber,
   requiredInteger,
+  scheduleFromPreset,
   trimmed,
   validateScores,
 } from "@/lib/validation";
 
 function searchPayload(formData: FormData) {
-  const frequencyType = trimmed(formData.get("frequency_type"));
-  const frequencyInput = trimmed(formData.get("frequency_value"), 50);
   const notification = requiredInteger(formData.get("notification_min_score"), "Score de notificación");
   const semi = requiredInteger(formData.get("semi_auto_min_score"), "Score semi-automático");
   const auto = requiredInteger(formData.get("auto_apply_min_score"), "Score automático");
   validateScores(notification, semi, auto);
 
-  const frequencyValue =
-    frequencyType === "INTERVAL"
-      ? { minutes: requiredInteger(formData.get("frequency_value"), "Intervalo") }
-      : frequencyType === "WEEKDAYS"
-        ? { time: frequencyInput, days: [1, 2, 3, 4, 5] }
-        : { time: frequencyInput };
+  const schedule = scheduleFromPreset(trimmed(formData.get("schedule_preset")));
 
   return {
     name: trimmed(formData.get("name"), 120),
-    frequency_type: frequencyType,
-    frequency_value: frequencyValue,
+    frequency_type: schedule.frequency_type,
+    frequency_value: schedule.frequency_value,
     timezone: trimmed(formData.get("timezone"), 100) || "Europe/Madrid",
     notification_min_score: notification,
     semi_auto_min_score: semi,
@@ -40,28 +34,39 @@ function searchPayload(formData: FormData) {
 
 function preferencesPayload(formData: FormData) {
   const minimumSalary = nullableNumber(formData.get("minimum_salary"));
-  const minimumExperience = nullableNumber(formData.get("minimum_experience_years"));
-  const maximumExperience = nullableNumber(formData.get("maximum_experience_years"));
-  if (
-    minimumExperience !== null &&
-    maximumExperience !== null &&
-    minimumExperience > maximumExperience
-  ) throw new Error("La experiencia mínima no puede superar la máxima.");
+  const experienceYears = nullableNumber(formData.get("experience_years"));
+  const locationMode = trimmed(formData.get("location_mode"));
+  const locationNames = listFromInput(formData.get("location_names"));
+  const locations = locationMode === "ALL_SPAIN"
+    ? [{ label: "Toda España", country: "ES" }]
+    : locationNames.map((label) => ({ label }));
+  const primaryTitle = trimmed(formData.get("name"), 120);
+  const targetTitles = Array.from(new Set([
+    primaryTitle,
+    ...listFromInput(formData.get("target_titles")),
+  ].filter(Boolean)));
+  const languageCodes: Record<string, string> = {
+    español: "es", castellano: "es", inglés: "en", ingles: "en",
+    francés: "fr", frances: "fr", alemán: "de", aleman: "de",
+    portugués: "pt", portugues: "pt", italiano: "it",
+  };
 
   return {
     keywords: listFromInput(formData.get("keywords")),
-    target_titles: listFromInput(formData.get("target_titles")),
+    target_titles: targetTitles,
     excluded_titles: listFromInput(formData.get("excluded_titles")),
-    locations: listFromInput(formData.get("locations")).map((label) => ({ label })),
+    locations,
     work_modes: formData.getAll("work_modes").map(String),
     minimum_salary: minimumSalary,
     currency: trimmed(formData.get("currency"), 3).toUpperCase(),
     accepted_seniorities: listFromInput(formData.get("accepted_seniorities")),
-    minimum_experience_years: minimumExperience,
-    maximum_experience_years: maximumExperience,
+    minimum_experience_years: experienceYears === null ? null : 0,
+    maximum_experience_years: experienceYears,
     required_technologies: listFromInput(formData.get("required_technologies")),
     excluded_technologies: listFromInput(formData.get("excluded_technologies")),
-    languages: listFromInput(formData.get("languages")).map((code) => ({ code })),
+    languages: listFromInput(formData.get("languages")).map((language) => ({
+      code: languageCodes[language.toLocaleLowerCase("es")] ?? language.toLocaleLowerCase("es"),
+    })),
     contract_types: listFromInput(formData.get("contract_types")),
   };
 }

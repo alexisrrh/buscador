@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   ]);
   return (
     <>
-      <div className="page-header"><div><h1>Resumen</h1><p>Estado actual de tu espacio de búsqueda.</p></div></div>
+      <div className="page-header"><div><h1>Tu búsqueda de empleo</h1><p>Aquí puedes ver lo que ya has preparado y qué falta por configurar.</p></div></div>
       <section className="grid cards" aria-label="Métricas actuales">
         <article className="card"><span className="muted">Perfiles</span><div className="metric">{profiles.count ?? 0}</div></article>
         <article className="card"><span className="muted">Búsquedas activas</span><div className="metric">{searches.count ?? 0}</div></article>

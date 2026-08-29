@@ -9,5 +9,5 @@ export default async function NewSearchPage({ searchParams }: { searchParams: Pr
   const params = await searchParams; const { supabase } = await requireUser();
   const { data } = await supabase.from("candidate_profiles").select("*").is("deleted_at", null).order("name");
   const profiles = (data ?? []) as CandidateProfile[];
-  return <><div className="page-header"><div><h1>Nueva búsqueda</h1><p>Configura criterios independientes para un perfil.</p></div></div><Feedback error={params.error} />{profiles.length ? <SearchForm action={saveSearch} profiles={profiles} /> : <div className="card empty">Primero necesitas un perfil profesional.<div className="actions" style={{ justifyContent: "center" }}><Link className="button" href="/profiles/new">Crear perfil</Link></div></div>}</>;
+  return <><div className="page-header"><div><p className="eyebrow">Paso 2 de 3</p><h1>Nueva búsqueda de empleo</h1><p>Responde estas preguntas para indicarnos qué ofertas te interesan.</p></div></div><Feedback error={params.error} />{profiles.length ? <SearchForm action={saveSearch} profiles={profiles} /> : <div className="card empty">Primero cuéntanos cuál es tu perfil profesional.<div className="actions" style={{ justifyContent: "center" }}><Link className="button" href="/profiles/new">Crear mi perfil</Link></div></div>}</>;
 }

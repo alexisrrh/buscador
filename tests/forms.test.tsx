@@ -11,19 +11,20 @@ const profile = {
 describe("MVP forms", () => {
   it("renders all CandidateProfile fields and derived status", () => {
     render(<ProfileForm action={vi.fn()} profile={profile} />);
-    expect(screen.getByLabelText("Nombre del perfil")).toHaveValue("Frontend");
-    expect(screen.getByLabelText("Headline")).toBeInTheDocument();
-    expect(screen.getByLabelText("Familia profesional")).toBeInTheDocument();
-    expect(screen.getByLabelText("Seniority")).toBeInTheDocument();
-    expect(screen.getByLabelText("Estado")).toHaveValue("ACTIVE");
+    expect(screen.getByLabelText("¿Cómo quieres llamar a este perfil?")).toHaveValue("Frontend");
+    expect(screen.getByLabelText("¿Cómo quieres presentarte profesionalmente?")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿En qué área quieres trabajar?")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿Qué nivel de experiencia tienes?")).toBeInTheDocument();
+    expect(screen.getByLabelText("Estado del perfil")).toHaveValue("Activo");
   });
 
-  it("shows search constraints without claiming auto-apply exists", () => {
+  it("presents search settings as natural questions", () => {
     render(<SearchForm action={vi.fn()} profiles={[profile]} />);
-    expect(screen.getByLabelText("Score para notificar")).toHaveAttribute("max", "100");
-    expect(screen.getByLabelText("Umbral reservado automático")).toBeInTheDocument();
-    expect(screen.getByText(/no activa auto-apply/i)).toBeInTheDocument();
-    expect(screen.getByLabelText("Keywords")).toBeInTheDocument();
-    expect(screen.getByLabelText("Tecnologías requeridas")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿Qué trabajo estás buscando?")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿Dónde quieres trabajar?")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿Cada cuánto quieres que busquemos nuevas ofertas?")).toBeInTheDocument();
+    expect(screen.getByLabelText("¿A partir de qué compatibilidad quieres recibir avisos?")).toHaveAttribute("max", "100");
+    expect(screen.getByText(/No hay postulación automática activa/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("¿Qué tecnologías o conocimientos quieres que tengan las ofertas?")).toBeInTheDocument();
   });
 });

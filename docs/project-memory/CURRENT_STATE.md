@@ -25,6 +25,7 @@ Last verified: 2026-08-29.
 - Phase 3 migration `20260829000300_phase3_minimal_web.sql` is applied and synchronized remotely.
 - The Next.js application implements email/password Auth, protected routes, dashboard, CandidateProfile CRUD, versioned SearchProfile/JobPreferences editing, and private Resume upload/approval.
 - Phase 3 validation passed 12 web tests, typecheck, lint, production build, runtime SQL A/B tests, remote schema lint, and zero-residue checks.
+- Phase 3 UX was refined into a Spanish, question-led onboarding flow. Technical field names, internal statuses, schedules, scoring gates, Storage details, and domain terminology are no longer exposed in normal forms.
 
 ## Current Boundary
 

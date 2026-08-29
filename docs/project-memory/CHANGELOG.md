@@ -8,6 +8,7 @@ This file records verified project-level milestones. It does not replace Git his
 - Added CandidateProfile management, versioned SearchProfile/JobPreferences editing, dashboard counts, and private Resume upload/version/approval management.
 - Applied `20260829000300_phase3_minimal_web.sql` with minimal CandidateProfile fields and transactional owner-scoped search/approval RPCs.
 - Passed 12 web tests, typecheck, lint, production build, remote A/B runtime SQL, schema lint, migration synchronization, and zero-residue verification.
+- Refined the web UX into Spanish, natural-language questions and five short search sections; internal schedules, locations, statuses, seniority codes, contract codes, and advanced thresholds remain translated to the existing data model.
 
 ## 2026-08-29 — Phase 2 complete
 

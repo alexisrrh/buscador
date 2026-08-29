@@ -5,5 +5,16 @@ export function Feedback({ message, error }: { message?: string; error?: string 
 }
 
 export function StatusBadge({ status }: { status: string }) {
-  return <span className={`badge ${status}`}>{status}</span>;
+  const labels: Record<string, string> = {
+    ACTIVE: "Activa",
+    APPROVED: "Aprobado",
+    READY: "Listo para usar",
+    PAUSED: "En pausa",
+    PROCESSING: "Guardando",
+    DRAFT: "Borrador",
+    ARCHIVED: "Archivado",
+    REJECTED: "No se pudo guardar",
+    DISABLED: "Desactivada",
+  };
+  return <span className={`badge ${status}`}>{labels[status] ?? status}</span>;
 }

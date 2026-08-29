@@ -39,7 +39,7 @@ const profiles = [{
 
 describe("Resume upload coordinator", () => {
   function submitForm() {
-    const form = screen.getByRole("heading", { name: "Subir nueva versión" }).closest("form");
+    const form = screen.getByRole("heading", { name: "Sube tu CV" }).closest("form");
     if (!form) throw new Error("Upload form not found");
     fireEvent.submit(form);
   }
@@ -66,7 +66,7 @@ describe("Resume upload coordinator", () => {
     const user = userEvent.setup();
     render(<ResumeUploader profiles={profiles} />);
     const file = new File(["synthetic"], "resume.pdf", { type: "application/pdf" });
-    await user.upload(screen.getByLabelText("Archivo PDF o DOCX"), file);
+    await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
     submitForm();
 
     expect(await screen.findByText(/versión 2 subido/i)).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe("Resume upload coordinator", () => {
   it("rejects invalid MIME before metadata creation", async () => {
     render(<ResumeUploader profiles={profiles} />);
     const file = new File(["synthetic"], "resume.txt", { type: "text/plain" });
-    const input = screen.getByLabelText("Archivo PDF o DOCX") as HTMLInputElement;
+    const input = screen.getByLabelText("Selecciona tu CV") as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
     submitForm();
     expect(await screen.findByRole("alert")).toHaveTextContent(/PDF o DOCX/);
@@ -97,7 +97,7 @@ describe("Resume upload coordinator", () => {
     render(<ResumeUploader profiles={profiles} />);
     const file = new File(["synthetic"], "resume.pdf", { type: "application/pdf" });
     Object.defineProperty(file, "size", { value: MAX_RESUME_BYTES + 1 });
-    fireEvent.change(screen.getByLabelText("Archivo PDF o DOCX"), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText("Selecciona tu CV"), { target: { files: [file] } });
     submitForm();
     expect(await screen.findByRole("alert")).toHaveTextContent(/10 MiB/);
     expect(mocks.prepare).not.toHaveBeenCalled();

@@ -18,13 +18,13 @@ export async function prepareResumeUpload(input: PrepareInput) {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesión no válida." } as const;
   if (!RESUME_MIME_TYPES.includes(input.mimeType as (typeof RESUME_MIME_TYPES)[number])) {
-    return { error: "MIME no permitido." } as const;
+    return { error: "El formato del archivo no está permitido." } as const;
   }
   if (input.fileSizeBytes <= 0 || input.fileSizeBytes > MAX_RESUME_BYTES) {
     return { error: "Tamaño no permitido." } as const;
   }
   if (!/^[0-9a-f]{64}$/.test(input.contentSha256)) {
-    return { error: "SHA-256 inválido." } as const;
+    return { error: "No se pudo verificar el archivo." } as const;
   }
 
   const { data: profile } = await supabase

@@ -34,6 +34,19 @@ Provide the first multi-user web interface for registration/login and management
 - Dashboard displays only current profile, active-search, Resume, approved-Resume, and next-scheduled-search data.
 - No offers, matches, interviews, generated metrics, scraping, messaging, AI, or application automation were added.
 
+## User Experience
+
+- All user-facing navigation, states, actions, help text, and form questions are presented in Spanish.
+- CandidateProfile setup asks how the user wants to present themselves, their work area, and their experience level without exposing domain field names.
+- Search setup is a five-section questionnaire covering the desired role, location/work style, experience/salary, skills/conditions, and search frequency.
+- Friendly frequency choices are translated to existing `frequency_type` and `frequency_value` values.
+- Location answers are translated to the existing structured JSON representation without exposing JSON.
+- One understandable experience answer maps to the existing minimum/maximum experience fields.
+- Internal status, seniority, work-mode, contract, and language codes are displayed as human-readable Spanish labels.
+- Semi-automatic and automatic thresholds remain hidden with safe existing values. Only the notification threshold and timezone appear in a collapsed advanced section, which explicitly states that applications remain manual.
+- Profile, search, and Resume pages provide an explicit three-step path without a wizard dependency.
+- Resume upload does not expose Storage, MIME, hashes, buckets, or generated paths to the user.
+
 ## Database API
 
 Migration `20260829000300_phase3_minimal_web.sql`:
@@ -58,7 +71,7 @@ No distributed transaction is claimed. If object upload succeeds but final statu
 
 - TypeScript typecheck passed.
 - ESLint passed with no warnings in the final run.
-- Four Vitest suites passed: 12/12 tests.
+- Four Vitest suites passed after the UX refinement: 13/13 tests.
 - Tests cover private-route auth guard, CandidateProfile/Search forms, score constraints, valid private upload coordination, invalid MIME, size above 10 MiB, path-like filenames, and shared input parsing.
 - Production build passed and emitted only the required routes.
 - Linked migration preflight and dry-run showed only Phase 3 pending and no destructive SQL.

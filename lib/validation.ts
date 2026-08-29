@@ -40,6 +40,21 @@ export function validateScores(notification: number, semi: number, auto: number)
   }
 }
 
+export const SEARCH_SCHEDULES = {
+  HOURLY: { frequency_type: "INTERVAL", frequency_value: { minutes: 60 } },
+  EVERY_3_HOURS: { frequency_type: "INTERVAL", frequency_value: { minutes: 180 } },
+  EVERY_6_HOURS: { frequency_type: "INTERVAL", frequency_value: { minutes: 360 } },
+  DAILY: { frequency_type: "DAILY", frequency_value: { time: "09:00" } },
+  WEEKDAYS: {
+    frequency_type: "WEEKDAYS",
+    frequency_value: { time: "09:00", days: [1, 2, 3, 4, 5] },
+  },
+} as const;
+
+export function scheduleFromPreset(preset: string) {
+  return SEARCH_SCHEDULES[preset as keyof typeof SEARCH_SCHEDULES] ?? SEARCH_SCHEDULES.DAILY;
+}
+
 export function validateResumeFile(file: Pick<File, "name" | "type" | "size">) {
   const extension = file.name.toLowerCase().split(".").pop();
   const extensionValid = extension === "pdf" || extension === "docx";

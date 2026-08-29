@@ -7,6 +7,7 @@
 - [x] Apply and runtime-validate the Phase 2 migration safely.
 - [x] Confirm transactional cleanup left no synthetic Resume data or objects.
 - [x] Implement and validate the minimal multi-user web/API.
+- [x] Replace technical Phase 3 forms with a Spanish, question-led onboarding experience.
 
 ## NEXT
 

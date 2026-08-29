@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { archiveProfile, updateProfile } from "@/app/actions/profiles";
 import { Feedback } from "@/components/feedback";
@@ -11,5 +12,5 @@ export default async function EditProfilePage({ params, searchParams }: { params
   const { data } = await supabase.from("candidate_profiles").select("*").eq("id", id).eq("user_id", user!.id).maybeSingle();
   if (!data) notFound();
   const profile = data as CandidateProfile;
-  return <><div className="page-header"><div><h1>Editar perfil</h1><p>Los cambios se aplican solo a este perfil.</p></div></div><Feedback error={query.error} message={query.message} /><ProfileForm action={updateProfile} profile={profile} />{!profile.deleted_at && <form action={archiveProfile} className="actions"><input type="hidden" name="id" value={profile.id} /><button className="danger" type="submit">Archivar perfil</button></form>}</>;
+  return <><div className="page-header"><div><h1>Tu perfil profesional</h1><p>Actualiza cómo quieres presentarte para este tipo de trabajo.</p></div>{!profile.deleted_at && <Link className="button" href="/searches/new">Continuar: crear una búsqueda</Link>}</div><Feedback error={query.error} message={query.message} /><ProfileForm action={updateProfile} profile={profile} />{!profile.deleted_at && <form action={archiveProfile} className="actions"><input type="hidden" name="id" value={profile.id} /><button className="danger" type="submit">Ya no quiero usar este perfil</button></form>}</>;
 }

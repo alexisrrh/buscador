@@ -3,6 +3,7 @@ import {
   MAX_RESUME_BYTES,
   listFromInput,
   validateResumeFile,
+  scheduleFromPreset,
   validateScores,
 } from "@/lib/validation";
 
@@ -19,6 +20,14 @@ describe("shared input validation", () => {
     expect(() => validateScores(70, 80, 90)).not.toThrow();
     expect(() => validateScores(90, 80, 95)).toThrow(/scores/);
     expect(() => validateScores(70, 80, 101)).toThrow(/scores/);
+  });
+
+  it("translates friendly schedule choices to the internal model", () => {
+    expect(scheduleFromPreset("EVERY_3_HOURS")).toEqual({
+      frequency_type: "INTERVAL",
+      frequency_value: { minutes: 180 },
+    });
+    expect(scheduleFromPreset("WEEKDAYS").frequency_type).toBe("WEEKDAYS");
   });
 
   it("accepts PDF and DOCX under 10 MiB", () => {

@@ -11,10 +11,10 @@ export default async function PrivateLayout({ children }: { children: React.Reac
       <header className="topbar">
         <Link className="brand" href="/dashboard">Job Search</Link>
         <nav className="nav" aria-label="Navegación principal">
-          <Link href="/dashboard">Resumen</Link>
-          <Link href="/profiles">Perfiles</Link>
-          <Link href="/searches">Búsquedas</Link>
-          <Link href="/resumes">CV</Link>
+          <Link href="/dashboard">Inicio</Link>
+          <Link href="/profiles">Mis perfiles</Link>
+          <Link href="/searches">Mis búsquedas</Link>
+          <Link href="/resumes">Mis CV</Link>
           <form action={logout}><button className="secondary small" type="submit">Salir</button></form>
         </nav>
       </header>
