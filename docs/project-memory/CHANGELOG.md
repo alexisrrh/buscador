@@ -2,6 +2,14 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-08-29 — Phase 2 complete
+
+- Designed tenant-owned, versioned Resume metadata and a private Supabase Storage bucket.
+- Applied `20260829000200_phase2_private_resumes.sql` to the linked Supabase project.
+- Runtime-validated PostgreSQL RLS, Storage RLS, tenant FKs, versioning, SHA-256 deduplication, private bucket constraints, generated paths, approval rotation, timestamps, and soft deletion with two synthetic users.
+- Tests ended with `ROLLBACK`; post-checks found zero synthetic Auth users, profiles, candidate profiles, Resume rows, or Storage objects.
+- Corrected two test-only issues: an RLS-filtered `INSERT ... SELECT` that tested zero rows instead of a forbidden object path, and direct Storage deletion requiring Supabase's transaction-local API deletion flag. The applied migration did not require correction.
+
 ## 2026-08-29 — Persistent project memory
 
 - Added versioned context, state, roadmap, decisions, tasks, risks, metrics, and completed-phase records.

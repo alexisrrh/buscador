@@ -22,3 +22,8 @@ Decisions here are approved defaults. Reopen one only when new verified evidence
 | ADR-016 | Application architecture | Auto-apply needs configurable score/location/salary/profile/completeness gates, duplicate protection, daily limits, audit history, per-portal controls, and a global kill switch. Any doubt routes to manual review. | Prevent unsupported, unsafe, or repeated submissions. |
 | ADR-017 | Product objective | Optimize qualified interviews per application, not the number of applications. | Product decisions must favor relevance and outcomes over volume. |
 | ADR-018 | Phase process | Work advances through small, reversible, validated phases. | Limits blast radius and keeps the repository recoverable. |
+| ADR-019 | Phase 2 | Store Resume metadata in PostgreSQL and file bytes in a fixed private Supabase Storage bucket. | PostgreSQL ownership is authoritative; no public permanent Resume URLs. |
+| ADR-020 | Phase 2 | Generate immutable object paths from tenant, profile, Resume, version, and MIME metadata. | Original filenames are never identity or authorization inputs. |
+| ADR-021 | Phase 2 | Deduplicate exact Resume content by user plus CandidateProfile plus SHA-256. | Different tenants and different professional profiles may legitimately reuse identical files. |
+| ADR-022 | Phase 2 | Treat the sole non-deleted `APPROVED` Resume as the active version for the MVP. | A partial unique index is simpler and safer than a separate mutable current pointer. |
+| ADR-023 | Phase 2 | Limit Resume uploads to declared PDF/DOCX content between 1 byte and 10 MiB. | Bounds storage abuse while deferring signature verification and malware scanning. |

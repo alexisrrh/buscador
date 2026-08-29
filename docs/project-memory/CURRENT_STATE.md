@@ -6,8 +6,9 @@ Last verified: 2026-08-29.
 | --- | --- |
 | Phase 0 | COMPLETE |
 | Phase 1 | COMPLETE |
-| Current phase | `BEFORE_PHASE_2` |
-| Next allowed phase | Private/versioned resume storage |
+| Phase 2 | COMPLETE |
+| Current phase | `BEFORE_PHASE_3` |
+| Next allowed phase | Minimal web/API, only after explicit authorization |
 
 ## Verified Baseline
 
@@ -17,7 +18,10 @@ Last verified: 2026-08-29.
 - Runtime-verified tables are `public.profiles`, `public.candidate_profiles`, `public.search_profiles`, and `public.job_preferences`.
 - The Auth profile trigger, forced RLS, tenant isolation, cross-tenant foreign keys, checks, soft deletion, and `runnable_search_profiles` behavior passed runtime tests.
 - Runtime test data was rolled back; no synthetic users or domain rows persisted.
+- Phase 2 migration `20260829000200_phase2_private_resumes.sql` is applied to the linked project.
+- Runtime-verified Resume storage includes `public.resumes`, the private `private-resumes` bucket, forced PostgreSQL RLS, Storage object policies, versioning, tenant-scoped SHA-256 deduplication, and single active approval behavior.
+- Phase 2 tests rolled back and post-checks found zero synthetic Auth users, profiles, candidate profiles, Resume rows, or Storage objects.
 
 ## Current Boundary
 
-The project is between Phases 1 and 2. This documentation bank does not begin Phase 2 or modify functional code, existing SQL, Supabase configuration, or workflow behavior.
+Phase 2 is complete. The project is waiting before Phase 3; no web/API implementation is part of the completed work or currently started.

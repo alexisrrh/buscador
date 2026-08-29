@@ -3,11 +3,13 @@
 ## NOW
 
 - [x] Create the persistent project memory bank.
-- [ ] Prepare the technical design for Phase 2 without implementing it prematurely.
+- [x] Prepare the technical design for Phase 2.
+- [x] Apply and runtime-validate the Phase 2 migration safely.
+- [x] Confirm transactional cleanup left no synthetic Resume data or objects.
 
 ## NEXT
 
-- [ ] Implement private, versioned resume storage as Phase 2 after its design and validation plan are approved.
+- [ ] Prepare Phase 3 minimal web/API design only after explicit authorization.
 
 ## LATER
 
