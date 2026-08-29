@@ -26,9 +26,10 @@ The product must help users define independent searches, collect candidate-neutr
 - Phase 0: COMPLETE.
 - Phase 1: COMPLETE.
 - Phase 2: COMPLETE.
-- Current state: `BEFORE_PHASE_3`.
-- Next allowed phase: minimal web/API, only after explicit authorization.
-- No Phase 3 implementation has started.
+- Phase 3: COMPLETE.
+- Current state: `BEFORE_PHASE_4`.
+- Next allowed phase: first neutral job source, only after explicit authorization.
+- No Phase 4 implementation has started.
 
 Detailed state and evidence live in [`docs/project-memory/`](docs/project-memory/).
 

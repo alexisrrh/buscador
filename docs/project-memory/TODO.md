@@ -6,14 +6,14 @@
 - [x] Prepare the technical design for Phase 2.
 - [x] Apply and runtime-validate the Phase 2 migration safely.
 - [x] Confirm transactional cleanup left no synthetic Resume data or objects.
+- [x] Implement and validate the minimal multi-user web/API.
 
 ## NEXT
 
-- [ ] Prepare Phase 3 minimal web/API design only after explicit authorization.
+- [ ] Prepare Phase 4 first neutral source design only after explicit authorization.
 
 ## LATER
 
-- [ ] Minimal web/API.
 - [ ] First neutral job source.
 - [ ] Candidate-profile matching.
 - [ ] CRM and human review.

@@ -27,3 +27,8 @@ Decisions here are approved defaults. Reopen one only when new verified evidence
 | ADR-021 | Phase 2 | Deduplicate exact Resume content by user plus CandidateProfile plus SHA-256. | Different tenants and different professional profiles may legitimately reuse identical files. |
 | ADR-022 | Phase 2 | Treat the sole non-deleted `APPROVED` Resume as the active version for the MVP. | A partial unique index is simpler and safer than a separate mutable current pointer. |
 | ADR-023 | Phase 2 | Limit Resume uploads to declared PDF/DOCX content between 1 byte and 10 MiB. | Bounds storage abuse while deferring signature verification and malware scanning. |
+| ADR-024 | Phase 3 | Use Next.js App Router, TypeScript, Supabase SSR, Server Components, and Server Actions without a separate backend. | Keeps Auth cookies server-aware while relying on the existing RLS-protected data API. |
+| ADR-025 | Phase 3 | Use custom responsive CSS and native controls instead of Tailwind or a UI framework. | Meets current UX/accessibility needs with fewer dependencies. |
+| ADR-026 | Phase 3 | Save SearchProfile and versioned JobPreferences through one security-invoker PostgreSQL transaction. | Prevents partial versions without introducing an application backend or service-role key. |
+| ADR-027 | Phase 3 | Rotate approved Resumes through an owner-scoped transactional RPC. | Preserves the one-approved invariant without a two-request race. |
+| ADR-028 | Phase 3 | Upload Resume bytes directly from the authenticated browser after server-side metadata preparation. | Avoids proxying private files through Next while Storage RLS and generated paths remain authoritative. |

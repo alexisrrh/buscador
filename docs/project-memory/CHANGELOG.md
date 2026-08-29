@@ -2,6 +2,13 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-08-29 — Phase 3 complete
+
+- Added a Next.js App Router application with Supabase SSR Auth, protected private routes, responsive UI, and server-side mutations.
+- Added CandidateProfile management, versioned SearchProfile/JobPreferences editing, dashboard counts, and private Resume upload/version/approval management.
+- Applied `20260829000300_phase3_minimal_web.sql` with minimal CandidateProfile fields and transactional owner-scoped search/approval RPCs.
+- Passed 12 web tests, typecheck, lint, production build, remote A/B runtime SQL, schema lint, migration synchronization, and zero-residue verification.
+
 ## 2026-08-29 — Phase 2 complete
 
 - Designed tenant-owned, versioned Resume metadata and a private Supabase Storage bucket.

@@ -20,5 +20,9 @@
 | Malware or active content in uploaded resumes | Deferred Phase 2 risk. | Add quarantined upload and malware scanning before broader processing or sharing. |
 | Resume object/metadata inconsistency | Open operational risk. Metadata is created before the object and cleanup can fail. | Use existing upload states, idempotent reconciliation, and monitored orphan cleanup in the future API/workflow. |
 | Signed Resume URLs may leak through logs or referrers | Open Phase 2 operational risk. The bucket is private but temporary URLs are bearer credentials. | Use short expiry, never persist URLs, redact logs, and avoid third-party referrers. |
+| Resume upload spans PostgreSQL and Storage without a distributed transaction | Controlled Phase 3 risk. Metadata states make partial completion visible but do not reconcile automatically. | Add idempotent reconciliation for `PROCESSING`/`REJECTED` metadata before upload volume grows. |
+| Browser SHA-256 can consume noticeable CPU/memory on weaker devices | Bounded Phase 3 risk because files are limited to 10 MiB. | Monitor UX; move hashing to a worker only if measurements justify it. |
+| Supabase Auth email/redirect configuration differs by deployment | Open operational risk. Code and route guards are tested, but delivery depends on project SMTP and allowed URLs. | Smoke-test signup confirmation, cookies, logout, and redirect URLs in each deployed environment. |
+| Raw database integration errors may reveal implementation details to authenticated users | Open Phase 3 hardening risk. React escapes output, preventing direct HTML injection. | Map expected database errors to stable user messages before public launch. |
 
 Risks are not permission to implement later phases early. Update this register when evidence changes or a new risk is discovered.

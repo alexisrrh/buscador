@@ -5,7 +5,7 @@
 | 0 | Safe baseline: disable inherited automation | COMPLETE |
 | 1 | Multi-user core and configurable search domain | COMPLETE |
 | 2 | Private, versioned CV storage | COMPLETE |
-| 3 | Minimal web/API | NOT STARTED |
+| 3 | Minimal web/API | COMPLETE |
 | 4 | First neutral job source | NOT STARTED |
 | 5 | Candidate-profile matching | NOT STARTED |
 | 6 | CRM and human review | NOT STARTED |
