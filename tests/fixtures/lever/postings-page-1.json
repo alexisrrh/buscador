@@ -1,0 +1,38 @@
+[
+  {
+    "id": "lever-synthetic-001",
+    "text": "Synthetic Platform Engineer",
+    "categories": {
+      "location": "Madrid, Spain",
+      "commitment": "Full-time",
+      "team": "Platform",
+      "department": "Engineering",
+      "allLocations": ["Madrid, Spain"]
+    },
+    "country": "ES",
+    "descriptionPlain": "Build synthetic systems using documented public fixtures.",
+    "hostedUrl": "https://jobs.lever.co/synthetic-site/lever-synthetic-001?utm_source=fixture",
+    "applyUrl": "https://jobs.lever.co/synthetic-site/lever-synthetic-001/apply",
+    "workplaceType": "hybrid",
+    "salaryRange": {
+      "currency": "EUR",
+      "interval": "per-year-salary",
+      "min": 35000,
+      "max": 45000
+    }
+  },
+  {
+    "id": "lever-synthetic-002",
+    "text": "Synthetic Remote Operator",
+    "categories": {
+      "location": "Remote",
+      "commitment": "Contract",
+      "team": "Operations",
+      "allLocations": ["Remote"]
+    },
+    "country": null,
+    "hostedUrl": "https://jobs.lever.co/synthetic-site/lever-synthetic-002",
+    "applyUrl": "https://jobs.lever.co/synthetic-site/lever-synthetic-002/apply",
+    "workplaceType": "remote"
+  }
+]

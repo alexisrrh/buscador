@@ -85,11 +85,23 @@ export interface JobOfferRepository {
     offer: NormalizedJobOffer,
   ): Promise<ExistingJobOffer | null>;
   persist(
-    source: { code: string; name: string; baseUrl: string },
+    source: {
+      code: string;
+      name: string;
+      baseUrl: string;
+      companyCareerSourceId?: string | null;
+    },
     offer: NormalizedJobOffer,
     rawPayload: unknown,
     observedAt: Date,
   ): Promise<PersistedJobOffer>;
+}
+
+export interface CompanyCareerSourceCheckRecorder {
+  recordCompanyCareerSourceCheck(
+    companyCareerSourceId: string,
+    result: { success: boolean; errorCode: string | null; checkedAt: Date },
+  ): Promise<void>;
 }
 
 export interface JobIngestionStats {

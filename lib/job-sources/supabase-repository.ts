@@ -1,4 +1,5 @@
 import type {
+  CompanyCareerSourceCheckRecorder,
   ExistingJobOffer,
   JobOfferRepository,
   NormalizedJobOffer,
@@ -27,7 +28,9 @@ function nullableString(value: unknown) {
   return typeof value === "string" ? value : null;
 }
 
-export class SupabaseJobOfferRepository implements JobOfferRepository {
+export class SupabaseJobOfferRepository
+  implements JobOfferRepository, CompanyCareerSourceCheckRecorder
+{
   constructor(private readonly client: JobOfferRpcClient) {}
 
   async findExisting(sourceCode: string, offer: NormalizedJobOffer) {
@@ -62,16 +65,25 @@ export class SupabaseJobOfferRepository implements JobOfferRepository {
   }
 
   async persist(
-    source: { code: string; name: string; baseUrl: string },
+    source: {
+      code: string;
+      name: string;
+      baseUrl: string;
+      companyCareerSourceId?: string | null;
+    },
     offer: NormalizedJobOffer,
     rawPayload: unknown,
     observedAt: Date,
   ) {
-    const { data, error } = await this.client.rpc("ingest_job_offer", {
+    const rpcName = source.companyCareerSourceId
+      ? "ingest_company_career_job_offer"
+      : "ingest_job_offer";
+    const { data, error } = await this.client.rpc(rpcName, {
       p_offer: {
         source_code: source.code,
         source_name: source.name,
         source_base_url: source.baseUrl,
+        company_career_source_id: source.companyCareerSourceId ?? null,
         external_job_id: offer.externalJobId,
         source_url: offer.sourceUrl,
         canonical_source_url: offer.canonicalSourceUrl,
@@ -115,5 +127,20 @@ export class SupabaseJobOfferRepository implements JobOfferRepository {
       offerCreated: data.offer_created,
       sourceCreated: data.source_created,
     } satisfies PersistedJobOffer;
+  }
+
+  async recordCompanyCareerSourceCheck(
+    companyCareerSourceId: string,
+    result: { success: boolean; errorCode: string | null; checkedAt: Date },
+  ) {
+    const { error } = await this.client.rpc("record_company_career_source_check", {
+      p_company_career_source_id: companyCareerSourceId,
+      p_success: result.success,
+      p_error_code: result.errorCode,
+      p_checked_at: result.checkedAt.toISOString(),
+    });
+    if (error) {
+      throw new Error(`Career source check update failed (${error.code ?? "unknown"}).`);
+    }
   }
 }

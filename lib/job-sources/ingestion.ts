@@ -9,6 +9,7 @@ import type {
 export interface IngestJobSearchOptions extends JobSearchOptions {
   fetchDetails?: boolean;
   observedAt?: Date;
+  companyCareerSourceId?: string | null;
 }
 
 export async function ingestJobSearchResults<TRawOffer, TRawDetails>(
@@ -58,6 +59,7 @@ export async function ingestJobSearchResults<TRawOffer, TRawDetails>(
           code: adapter.sourceCode,
           name: adapter.sourceName,
           baseUrl: adapter.sourceBaseUrl,
+          companyCareerSourceId: options.companyCareerSourceId,
         },
         normalized,
         rawPayload,

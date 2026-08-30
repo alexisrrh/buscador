@@ -1,0 +1,67 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "ashby-synthetic-001",
+      "title": "Synthetic Product Engineer",
+      "location": "Madrid",
+      "secondaryLocations": [
+        {
+          "location": "Barcelona",
+          "address": {
+            "addressLocality": "Barcelona",
+            "addressRegion": "Cataluña",
+            "addressCountry": "ES"
+          }
+        }
+      ],
+      "department": "Engineering",
+      "team": "Product",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "Hybrid",
+      "descriptionPlain": "A synthetic Ashby job used only for local tests.",
+      "publishedAt": "2026-08-28T10:00:00.000+00:00",
+      "employmentType": "FullTime",
+      "address": {
+        "postalAddress": {
+          "addressLocality": "Madrid",
+          "addressRegion": "Madrid",
+          "addressCountry": "ES"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/synthetic-board/ashby-synthetic-001?utm_campaign=fixture",
+      "applyUrl": "https://jobs.ashbyhq.com/synthetic-board/ashby-synthetic-001/application",
+      "compensation": {
+        "summaryComponents": [
+          {
+            "compensationType": "Salary",
+            "currencyCode": "EUR",
+            "minValue": 40000,
+            "maxValue": 52000
+          }
+        ]
+      }
+    },
+    {
+      "id": "ashby-synthetic-002",
+      "title": "Synthetic Support Associate",
+      "location": "Remote",
+      "secondaryLocations": [],
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "jobUrl": "https://jobs.ashbyhq.com/synthetic-board/ashby-synthetic-002",
+      "applyUrl": "https://jobs.ashbyhq.com/synthetic-board/ashby-synthetic-002/application"
+    },
+    {
+      "id": "ashby-synthetic-001",
+      "title": "Synthetic Product Engineer",
+      "location": "Madrid",
+      "secondaryLocations": [],
+      "isListed": true,
+      "workplaceType": "Hybrid",
+      "jobUrl": "https://jobs.ashbyhq.com/synthetic-board/ashby-synthetic-001?utm_source=repeat"
+    }
+  ]
+}
