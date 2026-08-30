@@ -1,0 +1,31 @@
+{
+  "currentPage": 1,
+  "pageSize": 2,
+  "totalResults": 3,
+  "currentResults": 2,
+  "totalPages": 2,
+  "offers": [
+    {
+      "id": "synthetic-offer-001",
+      "title": "  Senior   Synthetic Engineer ",
+      "province": { "id": 28, "key": "madrid", "value": "Madrid" },
+      "city": "Madrid",
+      "link": "https://www.infojobs.net/madrid/synthetic-engineer/of-i001?utm_source=fixture&id=001",
+      "author": {
+        "id": "synthetic-company-001",
+        "name": "  Synthetic   Systems  "
+      },
+      "updated": "2026-08-29T12:00:00Z",
+      "published": "2026-08-28T09:00:00Z",
+      "contractType": { "id": 1, "key": "indefinido", "value": "Indefinido" }
+    },
+    {
+      "id": "synthetic-offer-002",
+      "title": "Synthetic Support Specialist",
+      "province": { "id": 8, "key": "barcelona", "value": "Barcelona" },
+      "city": "Barcelona",
+      "link": "https://www.infojobs.net/barcelona/support/of-i002",
+      "published": "2026-08-27T09:00:00Z"
+    }
+  ]
+}

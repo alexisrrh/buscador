@@ -1,0 +1,24 @@
+{
+  "id": "synthetic-offer-001",
+  "title": "Senior Synthetic Engineer",
+  "link": "https://www.infojobs.net/madrid/synthetic-engineer/of-i001?utm_medium=email&id=001",
+  "city": "Madrid",
+  "province": { "id": 28, "key": "madrid", "value": "Madrid" },
+  "country": { "id": 17, "key": "espana", "value": "España" },
+  "description": "Synthetic description used only by local tests.",
+  "creationDate": "2026-08-28T09:00:00Z",
+  "updateDate": "2026-08-29T12:00:00Z",
+  "profile": {
+    "id": "synthetic-company-001",
+    "name": "Synthetic Systems",
+    "websiteUrl": "https://synthetic-systems.example.invalid"
+  },
+  "contractType": { "id": 1, "key": "indefinido", "value": "Indefinido" },
+  "jobLevel": { "id": 3, "key": "especialista", "value": "Especialista" },
+  "showPay": true,
+  "minPay": { "amount": 30000, "amountValue": "30.000 €", "periodValue": "Bruto/año" },
+  "maxPay": { "amount": 42000, "amountValue": "42.000 €", "periodValue": "Bruto/año" },
+  "active": true,
+  "archived": false,
+  "deleted": false
+}

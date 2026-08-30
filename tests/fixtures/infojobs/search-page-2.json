@@ -1,0 +1,21 @@
+{
+  "currentPage": 2,
+  "pageSize": 2,
+  "totalResults": 3,
+  "currentResults": 1,
+  "totalPages": 2,
+  "offers": [
+    {
+      "id": "synthetic-offer-003",
+      "title": "Synthetic Data Operator",
+      "province": { "id": 15, "key": "a-coruna", "value": "A Coruña" },
+      "city": "A Coruña",
+      "link": "https://www.infojobs.net/a-coruna/operator/of-i003",
+      "author": {
+        "id": "synthetic-company-002",
+        "name": "Fixture Industries"
+      },
+      "published": "2026-08-26T09:00:00Z"
+    }
+  ]
+}
