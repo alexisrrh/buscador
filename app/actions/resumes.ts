@@ -14,6 +14,17 @@ type PrepareInput = {
   contentSha256: string;
 };
 
+type PublicError = { code?: string };
+
+function publicResumeError(operation: string, error: PublicError | null | undefined, fallback: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.error("[resume-action]", { operation, code: error?.code ?? "unknown" });
+  }
+  return error?.code === "23505"
+    ? "Este CV ya existe en el perfil seleccionado."
+    : fallback;
+}
+
 export async function prepareResumeUpload(input: PrepareInput) {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesión no válida." } as const;
@@ -26,62 +37,47 @@ export async function prepareResumeUpload(input: PrepareInput) {
   if (!/^[0-9a-f]{64}$/.test(input.contentSha256)) {
     return { error: "No se pudo verificar el archivo." } as const;
   }
+  const filename = input.originalFilename.trim();
+  if (!filename || filename.length > 255 || /[/\\]/.test(filename)) {
+    return { error: "El nombre del archivo no es válido." } as const;
+  }
 
-  const { data: profile } = await supabase
-    .from("candidate_profiles")
-    .select("id")
-    .eq("id", input.candidateProfileId)
-    .eq("user_id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-  if (!profile) return { error: "Perfil no disponible." } as const;
+  const { data, error } = await supabase.rpc("create_resume_upload", {
+    p_candidate_profile_id: input.candidateProfileId,
+    p_original_filename: filename,
+    p_mime_type: input.mimeType,
+    p_file_size_bytes: input.fileSizeBytes,
+    p_content_sha256: input.contentSha256,
+  });
 
-  const { data: duplicate } = await supabase
-    .from("resumes")
-    .select("id")
-    .eq("candidate_profile_id", input.candidateProfileId)
-    .eq("content_sha256", input.contentSha256)
-    .maybeSingle();
-  if (duplicate) return { error: "Este CV ya existe en el perfil seleccionado." } as const;
-
-  const { data: latest } = await supabase
-    .from("resumes")
-    .select("version")
-    .eq("candidate_profile_id", input.candidateProfileId)
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { data, error } = await supabase
-    .from("resumes")
-    .insert({
-      user_id: user.id,
-      candidate_profile_id: input.candidateProfileId,
-      version: Number(latest?.version ?? 0) + 1,
-      status: "PROCESSING",
-      original_filename: input.originalFilename,
-      mime_type: input.mimeType,
-      file_size_bytes: input.fileSizeBytes,
-      content_sha256: input.contentSha256,
-    })
-    .select("*")
-    .single();
-
-  if (error) return { error: error.message } as const;
-  return { resume: data as Resume } as const;
+  if (error || !data) {
+    return {
+      error: publicResumeError("prepare", error, "No se pudo preparar la subida del CV."),
+    } as const;
+  }
+  const resume = (Array.isArray(data) ? data[0] : data) as Resume | undefined;
+  return resume
+    ? { resume } as const
+    : { error: "No se pudo preparar la subida del CV." } as const;
 }
 
-export async function finishResumeUpload(id: string, success: boolean) {
+export async function finishResumeUpload(id: string) {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesión no válida." };
-  const { error } = await supabase
-    .from("resumes")
-    .update({ status: success ? "READY" : "REJECTED" })
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .eq("status", "PROCESSING");
+  const { error } = await supabase.rpc("complete_resume_upload", { p_resume_id: id });
   revalidatePath("/resumes");
-  return error ? { error: error.message } : { ok: true };
+  return error
+    ? { error: publicResumeError("complete", error, "No se pudo verificar el archivo subido.") }
+    : { ok: true };
+}
+
+export async function rejectResumeUpload(id: string) {
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Sesión no válida." };
+  const { error } = await supabase.rpc("reject_resume_upload", { p_resume_id: id });
+  return error
+    ? { error: publicResumeError("reject", error, "No se pudo cerrar la subida fallida.") }
+    : { ok: true };
 }
 
 export async function approveResume(formData: FormData) {
@@ -89,7 +85,9 @@ export async function approveResume(formData: FormData) {
   const { supabase, user } = await requireUser();
   if (!user) redirect("/login");
   const { error } = await supabase.rpc("approve_resume", { p_resume_id: id });
-  if (error) redirect(`/resumes?error=${encodeURIComponent(error.message)}`);
+  if (error) {
+    redirect(`/resumes?error=${encodeURIComponent(publicResumeError("approve", error, "No se pudo aprobar este CV."))}`);
+  }
   revalidatePath("/resumes");
   redirect("/resumes?message=CV%20aprobado");
 }
@@ -99,15 +97,11 @@ export async function setResumeStatus(formData: FormData) {
   const intent = String(formData.get("intent") ?? "");
   const { supabase, user } = await requireUser();
   if (!user) redirect("/login");
-  const patch = intent === "delete"
-    ? { deleted_at: new Date().toISOString() }
-    : { status: "ARCHIVED" as const };
-  const { error } = await supabase
-    .from("resumes")
-    .update(patch)
-    .eq("id", id)
-    .eq("user_id", user.id);
-  if (error) redirect(`/resumes?error=${encodeURIComponent(error.message)}`);
+  const operation = intent === "delete" ? "soft_delete_resume" : "archive_resume";
+  const { error } = await supabase.rpc(operation, { p_resume_id: id });
+  if (error) {
+    redirect(`/resumes?error=${encodeURIComponent(publicResumeError(intent, error, "No se pudo actualizar este CV."))}`);
+  }
   revalidatePath("/resumes");
   redirect("/resumes?message=CV%20actualizado");
 }

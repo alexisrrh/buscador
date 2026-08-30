@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { finishResumeUpload, prepareResumeUpload } from "@/app/actions/resumes";
+import { finishResumeUpload, prepareResumeUpload, rejectResumeUpload } from "@/app/actions/resumes";
 import { createClient } from "@/lib/supabase/browser";
 import { sha256Hex, validateResumeFile } from "@/lib/validation";
 import type { CandidateProfile } from "@/lib/types";
@@ -24,10 +24,13 @@ export function ResumeUploader({ profiles }: { profiles: CandidateProfile[] }) {
       const prepared = await prepareResumeUpload({ candidateProfileId, originalFilename: file.name, mimeType: file.type, fileSizeBytes: file.size, contentSha256 });
       if ("error" in prepared) throw new Error(prepared.error);
       const resume = prepared.resume; const supabase = createClient();
-      await supabase.storage.from(resume.storage_bucket).remove([resume.storage_path]);
-      const { error: uploadError } = await supabase.storage.from(resume.storage_bucket).upload(resume.storage_path, file, { contentType: file.type, upsert: false });
-      if (uploadError) { await finishResumeUpload(resume.id, false); throw new Error(`No se pudo subir el archivo: ${uploadError.message}`); }
-      const finalized = await finishResumeUpload(resume.id, true);
+      const { error: uploadError } = await supabase.storage.from(resume.storage_bucket).upload(resume.storage_path, file, {
+        contentType: file.type,
+        upsert: false,
+        metadata: { contentSha256 },
+      });
+      if (uploadError) { await rejectResumeUpload(resume.id); throw new Error("No se pudo subir el archivo. Inténtalo de nuevo."); }
+      const finalized = await finishResumeUpload(resume.id);
       if (finalized.error) throw new Error("El archivo subió, pero su estado quedó PROCESSING. Recarga para revisarlo.");
       formRef.current?.reset(); setFeedback({ message: `CV versión ${resume.version} subido correctamente.` }); router.refresh();
     } catch (error) {

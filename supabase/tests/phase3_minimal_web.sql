@@ -83,6 +83,7 @@ begin
 end;
 $$;
 
+reset role;
 insert into public.resumes (
   id, user_id, candidate_profile_id, version, status, original_filename,
   mime_type, file_size_bytes, content_sha256
@@ -90,6 +91,10 @@ insert into public.resumes (
 values
   ('52000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '51000000-0000-0000-0000-000000000001', 1, 'READY', 'a-v1.pdf', 'application/pdf', 100, repeat('a', 64)),
   ('52000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', '51000000-0000-0000-0000-000000000001', 2, 'READY', 'a-v2.pdf', 'application/pdf', 100, repeat('b', 64));
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '50000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select public.approve_resume('52000000-0000-0000-0000-000000000001');
 select public.approve_resume('52000000-0000-0000-0000-000000000002');

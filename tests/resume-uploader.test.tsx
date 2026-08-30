@@ -7,20 +7,21 @@ import { MAX_RESUME_BYTES } from "@/lib/validation";
 const mocks = vi.hoisted(() => ({
   prepare: vi.fn(),
   finish: vi.fn(),
+  reject: vi.fn(),
   upload: vi.fn(),
-  remove: vi.fn(),
   refresh: vi.fn(),
 }));
 
 vi.mock("@/app/actions/resumes", () => ({
   prepareResumeUpload: mocks.prepare,
   finishResumeUpload: mocks.finish,
+  rejectResumeUpload: mocks.reject,
 }));
 
 vi.mock("@/lib/supabase/browser", () => ({
   createClient: () => ({
     storage: {
-      from: () => ({ upload: mocks.upload, remove: mocks.remove }),
+      from: () => ({ upload: mocks.upload }),
     },
   }),
 }));
@@ -57,9 +58,9 @@ describe("Resume upload coordinator", () => {
         archived_at: null, deleted_at: null,
       },
     });
-    mocks.remove.mockResolvedValue({ error: null });
     mocks.upload.mockResolvedValue({ error: null });
     mocks.finish.mockResolvedValue({ ok: true });
+    mocks.reject.mockResolvedValue({ ok: true });
   });
 
   it("uploads a valid file to the generated private path and finalizes READY", async () => {
@@ -77,10 +78,29 @@ describe("Resume upload coordinator", () => {
     expect(mocks.upload).toHaveBeenCalledWith(
       "user-a/profile-a/resume-a/v2/resume.pdf",
       file,
-      expect.objectContaining({ contentType: "application/pdf", upsert: false }),
+      expect.objectContaining({
+        contentType: "application/pdf",
+        upsert: false,
+        metadata: { contentSha256: "a".repeat(64) },
+      }),
     );
-    expect(mocks.finish).toHaveBeenCalledWith("resume-a", true);
+    expect(mocks.finish).toHaveBeenCalledWith("resume-a");
+    expect(mocks.reject).not.toHaveBeenCalled();
     expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("marks metadata REJECTED when immutable object upload fails", async () => {
+    mocks.upload.mockResolvedValue({ error: { message: "internal storage detail" } });
+    const user = userEvent.setup();
+    render(<ResumeUploader profiles={profiles} />);
+    const file = new File(["synthetic"], "resume.pdf", { type: "application/pdf" });
+    await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
+    submitForm();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/No se pudo subir el archivo/);
+    expect(screen.getByRole("alert")).not.toHaveTextContent(/internal storage detail/);
+    expect(mocks.reject).toHaveBeenCalledWith("resume-a");
+    expect(mocks.finish).not.toHaveBeenCalled();
   });
 
   it("rejects invalid MIME before metadata creation", async () => {

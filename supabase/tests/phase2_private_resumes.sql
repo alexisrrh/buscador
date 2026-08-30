@@ -68,6 +68,7 @@ values
     'Synthetic candidate A2'
   );
 
+reset role;
 insert into public.resumes (
   id,
   user_id,
@@ -118,6 +119,14 @@ values
     now() - interval '1 day'
   );
 
+set local role authenticated;
+select set_config(
+  'request.jwt.claim.sub',
+  '30000000-0000-0000-0000-000000000001',
+  true
+);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
 reset role;
 set local role authenticated;
 select set_config(
@@ -135,6 +144,7 @@ values (
 );
 
 -- The same content hash and version are valid in a different tenant.
+reset role;
 insert into public.resumes (
   id,
   user_id,
@@ -233,17 +243,15 @@ end;
 $$;
 
 do $$
-declare
-  affected_rows integer;
 begin
+  begin
   update public.resumes
   set original_filename = 'forbidden-update.pdf'
   where id = '42000000-0000-0000-0000-000000000002';
-  get diagnostics affected_rows = row_count;
-  if affected_rows <> 0 then
-    raise exception 'RLS_A_UPDATE_FAILED affected=%', affected_rows;
-  end if;
-  raise notice 'PASS RLS_A_UPDATE affected=0';
+    raise exception 'RLS_A_UPDATE_UNEXPECTED_SUCCESS';
+  exception when insufficient_privilege then
+    raise notice 'PASS RLS_A_UPDATE sqlstate=%', sqlstate;
+  end;
 end;
 $$;
 
@@ -260,6 +268,7 @@ end;
 $$;
 
 -- A cannot bind an A-owned Resume to B's CandidateProfile.
+reset role;
 do $$
 begin
   begin
@@ -454,10 +463,16 @@ begin
 end;
 $$;
 
+set local role authenticated;
+select set_config(
+  'request.jwt.claim.sub',
+  '30000000-0000-0000-0000-000000000001',
+  true
+);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
 -- Approval is the active pointer: only one non-deleted APPROVED Resume per profile.
-update public.resumes
-set status = 'APPROVED'
-where id = '32000000-0000-0000-0000-000000000001';
+select public.approve_resume('32000000-0000-0000-0000-000000000001');
 
 do $$
 declare
@@ -487,20 +502,14 @@ begin
     update public.resumes
     set status = 'APPROVED'
     where id = '32000000-0000-0000-0000-000000000002';
-    raise exception 'APPROVAL_UNIQUE_UNEXPECTED_SUCCESS';
-  exception when unique_violation then
-    raise notice 'PASS APPROVAL_UNIQUE sqlstate=%', sqlstate;
+    raise exception 'APPROVAL_DIRECT_UPDATE_UNEXPECTED_SUCCESS';
+  exception when insufficient_privilege then
+    raise notice 'PASS APPROVAL_DIRECT_UPDATE_BLOCKED sqlstate=%', sqlstate;
   end;
 end;
 $$;
 
-update public.resumes
-set status = 'ARCHIVED'
-where id = '32000000-0000-0000-0000-000000000001';
-
-update public.resumes
-set status = 'APPROVED'
-where id = '32000000-0000-0000-0000-000000000002';
+select public.approve_resume('32000000-0000-0000-0000-000000000002');
 
 do $$
 declare
@@ -670,17 +679,15 @@ end;
 $$;
 
 do $$
-declare
-  affected_rows integer;
 begin
+  begin
   update public.resumes
   set original_filename = 'forbidden-by-b.pdf'
   where id = '32000000-0000-0000-0000-000000000002';
-  get diagnostics affected_rows = row_count;
-  if affected_rows <> 0 then
-    raise exception 'RLS_B_UPDATE_FAILED affected=%', affected_rows;
-  end if;
-  raise notice 'PASS RLS_B_UPDATE affected=0';
+    raise exception 'RLS_B_UPDATE_UNEXPECTED_SUCCESS';
+  exception when insufficient_privilege then
+    raise notice 'PASS RLS_B_UPDATE sqlstate=%', sqlstate;
+  end;
 end;
 $$;
 
@@ -696,21 +703,36 @@ begin
 end;
 $$;
 
--- B may update/delete only B's Storage object.
-update storage.objects
-set metadata = '{"owner":"B","mimetype":"application/pdf"}'::jsonb
-where name = (
-  select storage_path
-  from public.resumes
-  where id = '42000000-0000-0000-0000-000000000002'
-);
+-- Resume objects are immutable and cannot be physically deleted by clients.
+do $$
+declare
+  affected_rows integer;
+begin
+  update storage.objects
+  set metadata = '{"owner":"B","mimetype":"application/pdf"}'::jsonb
+  where name = (
+    select storage_path
+    from public.resumes
+    where id = '42000000-0000-0000-0000-000000000002'
+  );
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'STORAGE_B_UPDATE_UNEXPECTED_SUCCESS affected=%', affected_rows;
+  end if;
 
-delete from storage.objects
-where name = (
-  select storage_path
-  from public.resumes
-  where id = '42000000-0000-0000-0000-000000000002'
-);
+  delete from storage.objects
+  where name = (
+    select storage_path
+    from public.resumes
+    where id = '42000000-0000-0000-0000-000000000002'
+  );
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'STORAGE_B_DELETE_UNEXPECTED_SUCCESS affected=%', affected_rows;
+  end if;
+  raise notice 'PASS STORAGE_B_OBJECT_IMMUTABLE';
+end;
+$$;
 
 -- A soft-deletes an archived Resume; its object becomes unreadable but remains deletable for cleanup.
 reset role;
@@ -722,9 +744,7 @@ select set_config(
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-update public.resumes
-set deleted_at = now()
-where id = '32000000-0000-0000-0000-000000000002';
+select public.soft_delete_resume('32000000-0000-0000-0000-000000000002');
 
 do $$
 declare
@@ -748,9 +768,6 @@ begin
   raise notice 'PASS SOFT_DELETE_AND_STORAGE_HIDE';
 end;
 $$;
-
-delete from storage.objects
-where name like '30000000-0000-0000-0000-000000000001/%';
 
 select array[
   'RESUME_OWN_CREATE',
