@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { JobSearchSummary } from "@/components/job-search-summary";
+import { JobsEmptyState, JobsSearchControls } from "@/components/jobs-search-state";
 import { PublicJobSourceError } from "@/lib/job-sources/public-json-client";
 import { runPublicJobSearch } from "@/lib/job-sources/run-public-search";
 import type {
@@ -170,6 +171,40 @@ describe("public job search orchestration", () => {
 });
 
 describe("jobs dashboard execution summary", () => {
+  it("shows Buscar ofertas for an active profile even with zero configured sources", () => {
+    const searches = [{
+      id: "61110000-0000-0000-0000-000000000001",
+      name: "Frontend real",
+      status: "ACTIVE",
+      notification_min_score: 70,
+    }];
+    render(JobsSearchControls({ searches, selectedSearchId: searches[0].id }));
+    expect(screen.getByRole("option", { name: "Frontend real" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buscar ofertas" })).toBeInTheDocument();
+
+    render(JobsEmptyState({ searches, configuredSourceCount: 0 }));
+    expect(screen.getByText(/No hay fuentes de empresas configuradas/)).toBeInTheDocument();
+    expect(screen.getByText(/pulsa “Buscar ofertas”/)).toBeInTheDocument();
+  });
+
+  it("shows paused searches for activation without exposing the search button", () => {
+    const searches = [{
+      id: "61110000-0000-0000-0000-000000000001",
+      name: "Frontend pausada",
+      status: "PAUSED",
+      notification_min_score: 70,
+    }];
+    render(JobsSearchControls({ searches }));
+    render(JobsEmptyState({ searches, configuredSourceCount: 0 }));
+    expect(screen.queryByRole("button", { name: "Buscar ofertas" })).not.toBeInTheDocument();
+    expect(screen.getByText("No tienes ninguna búsqueda activa.")).toBeInTheDocument();
+    expect(screen.getByText("En pausa")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Frontend pausada/ })).toHaveAttribute(
+      "href",
+      `/searches/${searches[0].id}`,
+    );
+  });
+
   it("renders newly generated matches and source results", () => {
     render(JobSearchSummary({ summary: {
       sources: 2, succeeded: 1, failed: 1, received: 20, created: 12,

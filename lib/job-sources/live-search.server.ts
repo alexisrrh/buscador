@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createCompanyCareerAdapter, type CompanyCareerSourceConfig } from "@/lib/job-sources/company-careers";
 import { ensureDevelopmentCareerSources } from "@/lib/job-sources/development-career-sources.server";
 import { runPublicJobSearch } from "@/lib/job-sources/run-public-search";
+import { assertActiveSearchProfile } from "@/lib/job-sources/search-profile-access";
 import { SupabaseJobOfferRepository, type JobOfferRpcClient } from "@/lib/job-sources/supabase-repository";
 import { SupabaseMatchingRepository } from "@/lib/matching/supabase-repository.server";
 
@@ -37,6 +38,7 @@ async function loadEnabledCareerSources(client: SupabaseClient) {
 
 export async function executeLiveJobSearch(userId: string, searchProfileId: string) {
   const client = createServiceClient();
+  await assertActiveSearchProfile(client, userId, searchProfileId);
   await ensureDevelopmentCareerSources(client);
   const sources = await loadEnabledCareerSources(client);
   if (sources.length === 0) {

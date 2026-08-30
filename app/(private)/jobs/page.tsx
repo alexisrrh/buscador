@@ -1,9 +1,11 @@
-import Link from "next/link";
-
-import { searchJobs, setJobMatchStatus } from "@/app/actions/jobs";
+import { setJobMatchStatus } from "@/app/actions/jobs";
 import { Feedback, StatusBadge } from "@/components/feedback";
 import { JobSearchSummary } from "@/components/job-search-summary";
-import { SearchJobsButton } from "@/components/search-jobs-button";
+import {
+  JobsEmptyState,
+  JobsSearchControls,
+  type JobsSearchProfile,
+} from "@/components/jobs-search-state";
 import { requireUser } from "@/lib/supabase/server";
 
 type JobMatchRow = {
@@ -15,13 +17,6 @@ type JobMatchRow = {
   reasons: string[];
   status: string;
   created_at: string;
-};
-
-type SearchRow = {
-  id: string;
-  name: string;
-  status: string;
-  notification_min_score: number;
 };
 
 type OfferRow = {
@@ -67,11 +62,10 @@ const WORK_MODES = ["REMOTE", "HYBRID", "ONSITE"];
 export default async function JobsPage({ searchParams }: { searchParams: Promise<JobsParams> }) {
   const params = await searchParams;
   const { supabase } = await requireUser();
-  const [{ data: searchData }, { data: matchData }, { count: configuredSourceCount }] = await Promise.all([
+  const [{ data: searchData, error: searchError }, { data: matchData }, { count: configuredSourceCount }] = await Promise.all([
     supabase
       .from("search_profiles")
       .select("id,name,status,notification_min_score")
-      .eq("status", "ACTIVE")
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase
@@ -84,7 +78,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       .eq("enabled", true),
   ]);
 
-  const searches = (searchData ?? []) as SearchRow[];
+  const searches = (searchData ?? []) as JobsSearchProfile[];
   const matches = (matchData ?? []) as JobMatchRow[];
   const offerIds = [...new Set(matches.map((match) => match.job_offer_id))];
   const { data: offerData } = offerIds.length
@@ -128,17 +122,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           <h1>Ofertas compatibles</h1>
           <p>Revisa el score y los motivos antes de abrir, guardar o descartar una oferta.</p>
         </div>
-        {searches.length > 0 ? (
-          <form action={searchJobs} className="match-generator">
-            <label htmlFor="generate-search">Búsqueda activa</label>
-            <select id="generate-search" name="search_profile_id" defaultValue={selectedSearch || searches[0].id}>
-              {searches.map((search) => <option key={search.id} value={search.id}>{search.name}</option>)}
-            </select>
-            <SearchJobsButton />
-          </form>
-        ) : (
-          <Link className="button" href="/searches/new">Crear búsqueda</Link>
-        )}
+        <JobsSearchControls searches={searches} selectedSearchId={selectedSearch} />
       </div>
 
       <Feedback message={params.message} error={params.error} />
@@ -252,16 +236,11 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
               </div>
             </article>
           );
-        }) : (configuredSourceCount ?? 0) === 0 ? (
-          <div className="card empty">
-            <strong>No hay fuentes de empresas configuradas todavía.</strong>
-            <p>Selecciona una búsqueda activa y pulsa “Buscar ofertas” para registrar las fuentes públicas de desarrollo y obtener vacantes reales.</p>
-          </div>
-        ) : (
-          <div className="card empty">
-            No hay ofertas para estos filtros. Actualiza los matches desde una búsqueda activa.
-          </div>
-        )}
+        }) : <JobsEmptyState
+          searches={searches}
+          configuredSourceCount={configuredSourceCount ?? 0}
+          searchLoadFailed={Boolean(searchError)}
+        />}
       </section>
     </>
   );

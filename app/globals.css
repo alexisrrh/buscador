@@ -125,6 +125,9 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .run-summary dl div { padding: .7rem; border-radius: 10px; background: var(--surface-soft); }
 .run-summary dt { color: var(--muted); font-size: .8rem; font-weight: 700; }
 .run-summary dd { margin: .1rem 0 0; font-size: 1.35rem; font-weight: 800; }
+.inactive-searches { display: grid; gap: .5rem; width: min(520px, 100%); margin: 1rem auto 0; text-align: left; }
+.inactive-searches a { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem .8rem; border: 1px solid var(--line); border-radius: 9px; background: white; }
+.empty-actions { justify-content: center; }
 .job-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
 .job-card.is-dismissed { opacity: .68; }
 .job-main { min-width: 0; }
