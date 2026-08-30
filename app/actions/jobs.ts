@@ -3,35 +3,43 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { generateMatchesForSearchProfile } from "@/lib/matching/service";
-import { SupabaseMatchingRepository } from "@/lib/matching/supabase-repository.server";
+import { executeLiveJobSearch } from "@/lib/job-sources/live-search.server";
 import { requireUser } from "@/lib/supabase/server";
 
 function identifier(value: FormDataEntryValue | null) {
   return typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value) ? value : "";
 }
 
-export async function generateJobMatches(formData: FormData) {
+export async function searchJobs(formData: FormData) {
   const searchProfileId = identifier(formData.get("search_profile_id"));
   const { user } = await requireUser();
   if (!user) redirect("/login");
   if (!searchProfileId) redirect("/jobs?error=Selecciona%20una%20b%C3%BAsqueda%20v%C3%A1lida");
 
-  let message: string;
+  let destination: string;
   try {
-    const report = await generateMatchesForSearchProfile(
-      new SupabaseMatchingRepository(),
-      user.id,
-      searchProfileId,
-    );
-    message = `${report.matchesCreated} matches nuevos y ${report.matchesUpdated} actualizados`;
+    const report = await executeLiveJobSearch(user.id, searchProfileId);
+    const summary = new URLSearchParams({
+      search: searchProfileId,
+      run: "1",
+      sources: String(report.sources_attempted),
+      succeeded: String(report.sources_succeeded),
+      failed: String(report.sources_failed),
+      received: String(report.offers_received),
+      created: String(report.offers_created),
+      updated: String(report.offers_updated),
+      duplicates: String(report.duplicates),
+      matches: String(report.matches_generated),
+      high: String(report.high_compatibility),
+      infojobs: report.skipped_sources.includes("INFOJOBS") ? "SKIPPED_SOURCE" : "",
+    });
+    destination = `/jobs?${summary.toString()}`;
   } catch (error) {
     const detail = error instanceof Error ? error.message : "No se pudieron generar los matches.";
     redirect(`/jobs?search=${searchProfileId}&error=${encodeURIComponent(detail)}`);
   }
-
   revalidatePath("/jobs");
-  redirect(`/jobs?search=${searchProfileId}&message=${encodeURIComponent(message)}`);
+  redirect(destination);
 }
 
 export async function setJobMatchStatus(formData: FormData) {

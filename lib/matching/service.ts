@@ -33,6 +33,7 @@ export interface GenerateMatchesReport {
   matchesCreated: number;
   matchesUpdated: number;
   eligible: number;
+  highCompatibility: number;
   review: number;
   rejected: number;
 }
@@ -54,6 +55,7 @@ export async function generateMatchesForSearchProfile(
     matchesCreated: 0,
     matchesUpdated: 0,
     eligible: 0,
+    highCompatibility: 0,
     review: 0,
     rejected: 0,
   };
@@ -73,6 +75,7 @@ export async function generateMatchesForSearchProfile(
     report.matchesCreated += persisted.created ? 1 : 0;
     report.matchesUpdated += persisted.created ? 0 : 1;
     if (result.eligibility === "ELIGIBLE") report.eligible += 1;
+    if (result.score >= context.search.notificationMinScore) report.highCompatibility += 1;
     if (result.eligibility === "REVIEW") report.review += 1;
     if (result.eligibility === "REJECTED") report.rejected += 1;
   }

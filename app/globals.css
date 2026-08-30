@@ -119,6 +119,12 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .match-generator label { grid-column: 1 / -1; }
 .jobs-filters { display: grid; grid-template-columns: 1.35fr repeat(4, minmax(120px, 1fr)) auto; gap: .75rem; align-items: end; margin-bottom: 1rem; }
 .jobs-list { display: grid; gap: 1rem; }
+.run-summary { margin-bottom: 1rem; }
+.run-summary h2 { margin-bottom: .8rem; }
+.run-summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: .65rem; margin: 0; }
+.run-summary dl div { padding: .7rem; border-radius: 10px; background: var(--surface-soft); }
+.run-summary dt { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.run-summary dd { margin: .1rem 0 0; font-size: 1.35rem; font-weight: 800; }
 .job-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
 .job-card.is-dismissed { opacity: .68; }
 .job-main { min-width: 0; }
