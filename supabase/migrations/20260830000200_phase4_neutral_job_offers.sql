@@ -51,7 +51,7 @@ create table public.job_offers (
   description_hash text generated always as (
     case
       when description is null then null
-      else encode(digest(description, 'sha256'), 'hex')
+      else encode(extensions.digest(description, 'sha256'), 'hex')
     end
   ) stored,
   location_text text,
