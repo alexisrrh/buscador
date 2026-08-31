@@ -39,8 +39,11 @@ async function loadEnabledCareerSources(client: SupabaseClient) {
 export async function executeLiveJobSearch(userId: string, searchProfileId: string) {
   const client = createServiceClient();
   await assertActiveSearchProfile(client, userId, searchProfileId);
-  await ensureDevelopmentCareerSources(client);
-  const sources = await loadEnabledCareerSources(client);
+  let sources = await loadEnabledCareerSources(client);
+  if (sources.length === 0) {
+    await ensureDevelopmentCareerSources(client);
+    sources = await loadEnabledCareerSources(client);
+  }
   if (sources.length === 0) {
     throw new Error("No hay fuentes de empresas configuradas todavía.");
   }
@@ -65,6 +68,8 @@ export async function executeLiveJobSearch(userId: string, searchProfileId: stri
     offers_updated: report.offers_updated,
     duplicates: report.duplicates,
     matches_generated: report.matches_generated,
+    matches_skipped: report.matches_skipped,
+    total_ms: Math.round(report.total_ms),
   });
   return report;
 }

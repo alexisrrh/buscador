@@ -79,6 +79,24 @@ export interface PersistedJobOffer {
   sourceCreated: boolean;
 }
 
+export type JobOfferBatchOutcome = "CREATED" | "UPDATED" | "UNCHANGED";
+
+export interface BatchPersistJobOfferInput {
+  offer: NormalizedJobOffer;
+  rawPayload: unknown;
+}
+
+export interface BatchPersistedJobOffer extends PersistedJobOffer {
+  inputIndex: number;
+  outcome: JobOfferBatchOutcome;
+  matchedExisting: boolean;
+}
+
+export interface BatchPersistJobOfferResult {
+  results: BatchPersistedJobOffer[];
+  errors: number;
+}
+
 export interface JobOfferRepository {
   findExisting(
     sourceCode: string,
@@ -95,6 +113,20 @@ export interface JobOfferRepository {
     rawPayload: unknown,
     observedAt: Date,
   ): Promise<PersistedJobOffer>;
+  findExistingBatch?(
+    sourceCode: string,
+    offers: NormalizedJobOffer[],
+  ): Promise<Array<ExistingJobOffer | null>>;
+  persistBatch?(
+    source: {
+      code: string;
+      name: string;
+      baseUrl: string;
+      companyCareerSourceId?: string | null;
+    },
+    items: BatchPersistJobOfferInput[],
+    observedAt: Date,
+  ): Promise<BatchPersistJobOfferResult>;
 }
 
 export interface CompanyCareerSourceCheckRecorder {
@@ -112,7 +144,12 @@ export interface JobIngestionStats {
   offers_normalized: number;
   offers_created: number;
   offers_updated: number;
+  offers_unchanged: number;
   duplicates: number;
   details_requested: number;
   errors: number;
+  fetch_ms: number;
+  normalize_ms: number;
+  persist_ms: number;
+  matching_job_offer_ids: string[];
 }

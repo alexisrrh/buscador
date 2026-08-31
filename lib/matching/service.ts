@@ -21,11 +21,27 @@ export interface MatchingRepository {
     jobOfferId: string;
     result: DeterministicMatchResult;
   }): Promise<{ created: boolean }>;
+  loadExistingMatchOfferIds?(input: {
+    searchProfileId: string;
+    searchProfileVersion: number;
+    scoringVersion: string;
+  }): Promise<Set<string>>;
+  upsertMatches?(inputs: MatchUpsertInput[]): Promise<{
+    created: number;
+    updated: number;
+  }>;
+}
+
+export interface MatchUpsertInput {
+  searchProfileId: string;
+  jobOfferId: string;
+  result: DeterministicMatchResult;
 }
 
 export interface GenerateMatchesOptions {
   limit?: number;
   recentDays?: number;
+  changedJobOfferIds?: string[];
 }
 
 export interface GenerateMatchesReport {
@@ -36,6 +52,9 @@ export interface GenerateMatchesReport {
   highCompatibility: number;
   review: number;
   rejected: number;
+  matchesSkipped: number;
+  matchingMs: number;
+  persistMatchesMs: number;
 }
 
 export async function generateMatchesForSearchProfile(
@@ -49,6 +68,17 @@ export async function generateMatchesForSearchProfile(
   const seenAfter = new Date(Date.now() - recentDays * 86_400_000).toISOString();
   const context = await repository.loadSearchContext(searchProfileId, userId);
   const offers = await repository.loadRecentActiveOffers({ limit, seenAfter });
+  const existingOfferIds = repository.loadExistingMatchOfferIds
+    ? await repository.loadExistingMatchOfferIds({
+      searchProfileId,
+      searchProfileVersion: context.search.version,
+      scoringVersion: "deterministic-v2",
+    })
+    : new Set<string>();
+  const changedOfferIds = new Set(options.changedJobOfferIds ?? offers.map((offer) => offer.id));
+  const offersToMatch = offers.filter((offer) =>
+    changedOfferIds.has(offer.id) || !existingOfferIds.has(offer.id),
+  );
 
   const report: GenerateMatchesReport = {
     offersProcessed: 0,
@@ -58,22 +88,24 @@ export async function generateMatchesForSearchProfile(
     highCompatibility: 0,
     review: 0,
     rejected: 0,
+    matchesSkipped: offers.length - offersToMatch.length,
+    matchingMs: 0,
+    persistMatchesMs: 0,
   };
 
-  for (const offer of offers) {
+  const upserts: MatchUpsertInput[] = [];
+  let timer = performance.now();
+  for (const offer of offersToMatch) {
     const result = matchJobOfferToSearchProfile({
       offer,
       ...context,
     });
-    const persisted = await repository.upsertMatch({
+    upserts.push({
       searchProfileId,
       jobOfferId: offer.id,
       result,
     });
-
     report.offersProcessed += 1;
-    report.matchesCreated += persisted.created ? 1 : 0;
-    report.matchesUpdated += persisted.created ? 0 : 1;
     if (result.eligibility === "ELIGIBLE") report.eligible += 1;
     if (
       result.eligibility === "ELIGIBLE" &&
@@ -82,6 +114,21 @@ export async function generateMatchesForSearchProfile(
     if (result.eligibility === "REVIEW") report.review += 1;
     if (result.eligibility === "REJECTED") report.rejected += 1;
   }
+  report.matchingMs = performance.now() - timer;
+
+  timer = performance.now();
+  if (repository.upsertMatches) {
+    const persisted = await repository.upsertMatches(upserts);
+    report.matchesCreated = persisted.created;
+    report.matchesUpdated = persisted.updated;
+  } else {
+    for (const input of upserts) {
+      const persisted = await repository.upsertMatch(input);
+      report.matchesCreated += persisted.created ? 1 : 0;
+      report.matchesUpdated += persisted.created ? 0 : 1;
+    }
+  }
+  report.persistMatchesMs = performance.now() - timer;
 
   return report;
 }

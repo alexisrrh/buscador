@@ -51,8 +51,11 @@ type JobsParams = {
   received?: string;
   created?: string;
   updated?: string;
+  unchanged?: string;
   duplicates?: string;
   matches?: string;
+  skipped?: string;
+  total_ms?: string;
   high?: string;
   infojobs?: string;
   providers?: string;
@@ -148,8 +151,11 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           received: numberParam(params.received),
           created: numberParam(params.created),
           updated: numberParam(params.updated),
+          unchanged: numberParam(params.unchanged),
           duplicates: numberParam(params.duplicates),
           matches: numberParam(params.matches),
+          skipped: numberParam(params.skipped),
+          totalMs: numberParam(params.total_ms),
           high: numberParam(params.high),
           infoJobsSkipped: params.infojobs === "SKIPPED_SOURCE",
           providers: providerParam(params.providers),

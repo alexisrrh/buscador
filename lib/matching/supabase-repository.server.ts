@@ -3,7 +3,13 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { DeterministicMatchResult } from "./types";
-import type { MatchingRepository, SearchMatchingContext } from "./service";
+import type { MatchUpsertInput, MatchingRepository, SearchMatchingContext } from "./service";
+
+const MATCH_BATCH_SIZE = 200;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 type MatchOfferRow = {
   id: string;
@@ -149,6 +155,56 @@ export class SupabaseMatchingRepository implements MatchingRepository {
       salaryCurrency: offer.salary_currency,
       status: offer.status,
     }));
+  }
+
+  async loadExistingMatchOfferIds(input: {
+    searchProfileId: string;
+    searchProfileVersion: number;
+    scoringVersion: string;
+  }) {
+    const ids = new Set<string>();
+    const pageSize = 1_000;
+    while (true) {
+      const { data, error } = await this.client
+        .from("job_matches")
+        .select("job_offer_id")
+        .eq("search_profile_id", input.searchProfileId)
+        .eq("search_profile_version", input.searchProfileVersion)
+        .eq("scoring_version", input.scoringVersion)
+        .order("job_offer_id", { ascending: true })
+        .range(ids.size, ids.size + pageSize - 1);
+      if (error) throw new Error(`Could not load existing matches: ${error.message}`);
+      for (const match of data ?? []) ids.add(match.job_offer_id);
+      if ((data ?? []).length < pageSize) break;
+    }
+    return ids;
+  }
+
+  async upsertMatches(inputs: MatchUpsertInput[]) {
+    let created = 0;
+    let updated = 0;
+    for (let offset = 0; offset < inputs.length; offset += MATCH_BATCH_SIZE) {
+      const chunk = inputs.slice(offset, offset + MATCH_BATCH_SIZE);
+      const { data, error } = await this.client.rpc("upsert_job_matches_batch", {
+        p_search_profile_id: chunk[0].searchProfileId,
+        p_matches: chunk.map((input) => ({
+          job_offer_id: input.jobOfferId,
+          scoring_version: input.result.scoringVersion,
+          score: input.result.score,
+          eligibility_status: input.result.eligibility,
+          score_components: input.result.components,
+          hard_gates: input.result.hardGates,
+          reasons: input.result.reasons,
+        })),
+      });
+      if (error) throw new Error(`Could not persist match batch: ${error.message}`);
+      if (!isRecord(data) || typeof data.created !== "number" || typeof data.updated !== "number") {
+        throw new Error("Match batch persistence returned an invalid response.");
+      }
+      created += data.created;
+      updated += data.updated;
+    }
+    return { created, updated };
   }
 
   async upsertMatch(input: {
