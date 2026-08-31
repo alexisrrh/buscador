@@ -27,7 +27,7 @@ export class SupabaseMatchingRepository implements MatchingRepository {
   async loadSearchContext(searchProfileId: string, userId: string): Promise<SearchMatchingContext> {
     const { data: search, error: searchError } = await this.client
       .from("search_profiles")
-      .select("id,user_id,candidate_profile_id,status,version,notification_min_score")
+      .select("id,user_id,candidate_profile_id,name,status,version,notification_min_score")
       .eq("id", searchProfileId)
       .eq("user_id", userId)
       .single();
@@ -38,7 +38,7 @@ export class SupabaseMatchingRepository implements MatchingRepository {
       await Promise.all([
         this.client
           .from("candidate_profiles")
-          .select("id,user_id,seniority")
+          .select("id,user_id,seniority,job_family")
           .eq("id", search.candidate_profile_id)
           .eq("user_id", userId)
           .single(),
@@ -61,12 +61,14 @@ export class SupabaseMatchingRepository implements MatchingRepository {
         id: candidate.id,
         userId,
         seniority: candidate.seniority,
+        jobFamily: candidate.job_family,
       },
       search: {
         id: search.id,
         userId,
         candidateProfileId: search.candidate_profile_id,
         status: search.status,
+        name: search.name,
         version: search.version,
         notificationMinScore: search.notification_min_score,
       },

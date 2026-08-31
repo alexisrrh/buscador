@@ -75,7 +75,10 @@ export async function generateMatchesForSearchProfile(
     report.matchesCreated += persisted.created ? 1 : 0;
     report.matchesUpdated += persisted.created ? 0 : 1;
     if (result.eligibility === "ELIGIBLE") report.eligible += 1;
-    if (result.score >= context.search.notificationMinScore) report.highCompatibility += 1;
+    if (
+      result.eligibility === "ELIGIBLE" &&
+      result.score >= context.search.notificationMinScore
+    ) report.highCompatibility += 1;
     if (result.eligibility === "REVIEW") report.review += 1;
     if (result.eligibility === "REJECTED") report.rejected += 1;
   }

@@ -87,10 +87,10 @@ function matchingRepository(): MatchingRepository & { matchIds: Set<string> } {
     matchIds,
     async loadSearchContext() {
       return {
-        candidate: { id: "candidate", userId: "user", seniority: "MID" },
+        candidate: { id: "candidate", userId: "user", seniority: "MID", jobFamily: "Software Engineering" },
         search: {
           id: "search", userId: "user", candidateProfileId: "candidate",
-          version: 1, status: "ACTIVE", notificationMinScore: 70,
+          version: 1, status: "ACTIVE", name: "Frontend Developer", notificationMinScore: 70,
         },
         preferences: {
           keywords: ["frontend"], targetTitles: ["Frontend Developer"], excludedTitles: [],

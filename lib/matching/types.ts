@@ -5,6 +5,7 @@ export interface MatchCandidateProfile {
   id: string;
   userId: string;
   seniority: string | null;
+  jobFamily: string | null;
 }
 
 export interface MatchSearchProfile {
@@ -13,6 +14,7 @@ export interface MatchSearchProfile {
   candidateProfileId: string;
   version: number;
   status: string;
+  name: string;
   notificationMinScore: number;
 }
 
@@ -62,6 +64,7 @@ export interface MatchScoreComponents {
 export interface MatchHardGates {
   offerActive: GateResult;
   searchActive: GateResult;
+  roleFamily: GateResult;
   location: GateResult;
   workMode: GateResult;
   seniority: GateResult;
@@ -71,7 +74,7 @@ export interface MatchHardGates {
 }
 
 export interface DeterministicMatchResult {
-  scoringVersion: "deterministic-v1";
+  scoringVersion: "deterministic-v2";
   score: number;
   eligibility: MatchEligibility;
   components: MatchScoreComponents;

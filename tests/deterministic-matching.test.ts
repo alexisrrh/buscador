@@ -13,6 +13,7 @@ const candidate: MatchCandidateProfile = {
   id: "candidate-a",
   userId: "user-a",
   seniority: "MID",
+  jobFamily: "Software Engineering",
 };
 
 const search: MatchSearchProfile = {
@@ -21,6 +22,7 @@ const search: MatchSearchProfile = {
   candidateProfileId: candidate.id,
   version: 1,
   status: "ACTIVE",
+  name: "Frontend Developer",
   notificationMinScore: 70,
 };
 
@@ -79,9 +81,12 @@ describe("deterministic matching", () => {
   });
 
   it("gives an incompatible title a substantially lower score", () => {
-    const result = run({ title: "Account Executive", description: "Commercial sales position. 3 years experience." });
+    const result = run({ title: "Account Executive", description: "Commercial sales position using React APIs. 3 years experience." });
     expect(result.components.title).toBe(0);
-    expect(result.score).toBeLessThan(60);
+    expect(result.components.technologies).toBe(0);
+    expect(result.hardGates.roleFamily).toBe("FAIL");
+    expect(result.eligibility).toBe("REJECTED");
+    expect(result.score).toBeLessThan(50);
   });
 
   it("rejects a known incompatible location", () => {
@@ -90,7 +95,7 @@ describe("deterministic matching", () => {
     expect(result.eligibility).toBe("REJECTED");
   });
 
-  it("accepts remote work despite a physical location preference", () => {
+  it("accepts unrestricted remote work despite a physical location preference", () => {
     const result = run({ locationText: "Anywhere", countryCode: null, workMode: "REMOTE" });
     expect(result.hardGates.location).toBe("PASS");
     expect(result.hardGates.workMode).toBe("PASS");
@@ -98,9 +103,70 @@ describe("deterministic matching", () => {
 
   it("rejects clearly excessive seniority and experience", () => {
     const result = run({ seniority: "SENIOR", description: "React TypeScript web role requiring 8 years experience." });
-    expect(result.hardGates.seniority).toBe("FAIL");
+    expect(result.hardGates.seniority).toBe("UNKNOWN");
     expect(result.hardGates.experience).toBe("FAIL");
     expect(result.eligibility).toBe("REJECTED");
+  });
+
+  it.each([
+    "Frontend Developer",
+    "Frontend Engineer",
+    "React Developer",
+  ])("treats %s as a strong frontend match", (title) => {
+    const result = run({ title });
+    expect(result.components.title).toBeGreaterThanOrEqual(31);
+    expect(result.hardGates.roleFamily).toBe("PASS");
+    expect(result.eligibility).toBe("ELIGIBLE");
+  });
+
+  it.each([
+    ["Full Stack Developer", 24],
+    ["Web Developer", 26],
+  ])("treats %s as a related role", (title, minimumTitleScore) => {
+    const result = run({ title });
+    expect(result.components.title).toBeGreaterThanOrEqual(minimumTitleScore);
+    expect(result.hardGates.roleFamily).toBe("PASS");
+  });
+
+  it.each([
+    "Design Engineer",
+    "Staff Design Engineer",
+    "Staff Platform Engineer",
+    "Engineering Manager",
+    "Account Executive",
+    "Customer Success Manager",
+    "Sales Recruiter",
+    "Marketing Manager",
+    "Product Support Specialist",
+  ])("rejects incompatible real-world title: %s", (title) => {
+    const result = run({ title, description: "React TypeScript Git APIs. 3 years experience." });
+    expect(result.hardGates.roleFamily).toBe("FAIL");
+    expect(result.eligibility).toBe("REJECTED");
+    expect(result.score).toBeLessThan(50);
+  });
+
+  it.each([
+    ["Remote - EU, Spain", null, "PASS"],
+    ["Spain - Remote", "ES", "PASS"],
+    ["Remote - US only", "US", "FAIL"],
+    ["Canada only", "CA", "FAIL"],
+    ["Remote - APAC only", null, "FAIL"],
+  ])("evaluates geography %s as %s", (locationText, countryCode, expected) => {
+    const result = run({ locationText, countryCode, workMode: "REMOTE" });
+    expect(result.hardGates.location).toBe(expected);
+  });
+
+  it.each([
+    ["Junior Frontend Developer", "PASS"],
+    ["Mid Frontend Developer", "PASS"],
+    ["Senior Frontend Developer", "UNKNOWN"],
+    ["Staff Frontend Engineer", "FAIL"],
+    ["Principal Frontend Engineer", "FAIL"],
+    ["Frontend Engineering Manager", "FAIL"],
+  ])("evaluates seniority in %s as %s", (title, expected) => {
+    const result = run({ title, seniority: null });
+    expect(result.hardGates.seniority).toBe(expected);
+    if (expected === "FAIL") expect(result.eligibility).toBe("REJECTED");
   });
 
   it("rewards present required technologies and penalizes absent ones", () => {
@@ -118,13 +184,13 @@ describe("deterministic matching", () => {
   });
 
   it("rewards compatible known salary", () => {
-    expect(run().components.salary).toBe(5);
+    expect(run().components.salary).toBe(2);
     expect(run({ salaryMax: 30_000 }).components.salary).toBe(0);
   });
 
   it("treats unknown salary as neutral instead of rejecting", () => {
     const result = run({ salaryMin: null, salaryMax: null, salaryCurrency: null });
-    expect(result.components.salary).toBe(3);
+    expect(result.components.salary).toBe(1);
     expect(result.eligibility).not.toBe("REJECTED");
     expect(result.reasons).toContain("Salario no informado");
   });

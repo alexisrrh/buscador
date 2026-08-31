@@ -41,6 +41,7 @@ type JobsParams = {
   search?: string;
   min_score?: string;
   status?: string;
+  eligibility?: string;
   work_mode?: string;
   sort?: string;
   run?: string;
@@ -58,6 +59,7 @@ type JobsParams = {
 
 const USER_STATUSES = ["NEW", "SAVED", "DISMISSED"];
 const WORK_MODES = ["REMOTE", "HYBRID", "ONSITE"];
+const ELIGIBILITY_FILTERS = ["compatible", "all", "ELIGIBLE", "REVIEW", "REJECTED"];
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<JobsParams> }) {
   const params = await searchParams;
@@ -71,6 +73,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
     supabase
       .from("job_matches")
       .select("id,search_profile_id,job_offer_id,score,eligibility_status,reasons,status,created_at")
+      .eq("scoring_version", "deterministic-v2")
       .limit(200),
     supabase
       .from("company_career_sources")
@@ -99,6 +102,9 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
     ? params.search
     : "";
   const selectedStatus = USER_STATUSES.includes(params.status ?? "") ? params.status : "";
+  const selectedEligibility = ELIGIBILITY_FILTERS.includes(params.eligibility ?? "")
+    ? params.eligibility!
+    : "compatible";
   const selectedMode = WORK_MODES.includes(params.work_mode ?? "") ? params.work_mode : "";
   const sort = params.sort === "recent" ? "recent" : "score";
 
@@ -106,6 +112,13 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
     .filter((match) => !selectedSearch || match.search_profile_id === selectedSearch)
     .filter((match) => match.score >= minimumScore)
     .filter((match) => !selectedStatus || match.status === selectedStatus)
+    .filter((match) =>
+      selectedEligibility === "all"
+        ? true
+        : selectedEligibility === "compatible"
+          ? match.eligibility_status !== "REJECTED"
+          : match.eligibility_status === selectedEligibility,
+    )
     .filter((match) => !selectedMode || offers.get(match.job_offer_id)?.work_mode === selectedMode)
     .sort((left, right) =>
       sort === "recent"
@@ -143,6 +156,16 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       )}
 
       <form className="card jobs-filters" method="get">
+        <div className="field">
+          <label htmlFor="eligibility">Compatibilidad</label>
+          <select id="eligibility" name="eligibility" defaultValue={selectedEligibility}>
+            <option value="compatible">Compatibles y por revisar</option>
+            <option value="ELIGIBLE">Compatibles</option>
+            <option value="REVIEW">Por revisar</option>
+            <option value="REJECTED">Rechazadas</option>
+            <option value="all">Todas</option>
+          </select>
+        </div>
         <div className="field">
           <label htmlFor="search">Búsqueda</label>
           <select id="search" name="search" defaultValue={selectedSearch}>
@@ -210,7 +233,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                 <div className="job-badges">
                   <StatusBadge status={match.status} />
                   <StatusBadge status={match.eligibility_status} />
-                  {match.score >= threshold && <span className="badge high-match">Alta compatibilidad</span>}
+                  {match.eligibility_status === "ELIGIBLE" && match.score >= threshold && <span className="badge high-match">Alta compatibilidad</span>}
                   {search && <span className="badge">{search.name}</span>}
                 </div>
                 <ul className="job-reasons">
