@@ -38,7 +38,7 @@ export function SearchForm({ action, profiles, search, preferences }: {
     .join(", ") ?? "";
 
   return (
-    <form action={action} className="questionnaire stack">
+    <form id="search-editor" action={action} className="questionnaire stack">
       {search && <input type="hidden" name="id" value={search.id} />}
       <input type="hidden" name="semi_auto_min_score" value={search?.semi_auto_min_score ?? 80} />
       <input type="hidden" name="auto_apply_min_score" value={search?.auto_apply_min_score ?? 90} />

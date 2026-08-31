@@ -96,22 +96,24 @@ export async function saveSearch(formData: FormData) {
   redirect(`/searches/${savedId}?message=Búsqueda%20guardada`);
 }
 
-export async function setSearchStatus(formData: FormData) {
+export async function transitionSearchStatus(formData: FormData) {
   const id = trimmed(formData.get("id"), 36);
   const status = trimmed(formData.get("status"));
   const allowed = ["ACTIVE", "PAUSED", "ARCHIVED"];
   if (!allowed.includes(status)) throw new Error("Estado no permitido.");
   const { supabase, user } = await requireUser();
   if (!user) redirect("/login");
-  const patch = status === "ARCHIVED"
-    ? { status, deleted_at: new Date().toISOString() }
-    : { status, deleted_at: null };
-  const { error } = await supabase
-    .from("search_profiles")
-    .update(patch)
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { error } = await supabase.rpc("transition_search_profile_status", {
+    p_search_profile_id: id,
+    p_status: status,
+  });
   if (error) redirect(`/searches/${id}?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/searches");
-  redirect(`/searches/${id}?message=Estado%20actualizado`);
+  revalidatePath(`/searches/${id}`);
+  revalidatePath("/jobs");
+  revalidatePath("/dashboard");
+  if (status === "ACTIVE") {
+    redirect(`/jobs?search=${encodeURIComponent(id)}&message=B%C3%BAsqueda%20activada`);
+  }
+  redirect(`/searches?message=Estado%20actualizado`);
 }
