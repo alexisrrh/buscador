@@ -6,6 +6,7 @@ import {
   JobsSearchControls,
   type JobsSearchProfile,
 } from "@/components/jobs-search-state";
+import { chunkValues, matchesResultFilter } from "@/lib/jobs/persisted-results";
 import { requireUser } from "@/lib/supabase/server";
 
 type JobMatchRow = {
@@ -67,18 +68,12 @@ const RESULT_FILTERS = ["useful", "ELIGIBLE", "REVIEW", "SAVED", "DISMISSED", "R
 export default async function JobsPage({ searchParams }: { searchParams: Promise<JobsParams> }) {
   const params = await searchParams;
   const { supabase } = await requireUser();
-  const [{ data: searchData, error: searchError }, { data: matchData }, { count: configuredSourceCount }] = await Promise.all([
+  const [{ data: searchData, error: searchError }, { count: configuredSourceCount }] = await Promise.all([
     supabase
       .from("search_profiles")
       .select("id,name,status,notification_min_score")
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("job_matches")
-      .select("id,search_profile_id,job_offer_id,score,eligibility_status,reasons,status,created_at")
-      .eq("scoring_version", "deterministic-v2")
-      .order("score", { ascending: false })
-      .limit(1000),
     supabase
       .from("company_career_sources")
       .select("id", { count: "exact", head: true })
@@ -86,21 +81,6 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   ]);
 
   const searches = (searchData ?? []) as JobsSearchProfile[];
-  const matches = (matchData ?? []) as JobMatchRow[];
-  const offerIds = [...new Set(matches.map((match) => match.job_offer_id))];
-  const { data: offerData } = offerIds.length
-    ? await supabase
-        .from("job_offers")
-        .select(
-          "id,title,location_text,work_mode,published_at,last_seen_at,canonical_url,companies(name),job_offer_sources(source_url,company_career_source_id,job_sources(code,name))",
-        )
-        .in("id", offerIds)
-    : { data: [] };
-
-  const offers = new Map(
-    ((offerData ?? []) as unknown as OfferRow[]).map((offer) => [offer.id, offer]),
-  );
-  const searchMap = new Map(searches.map((search) => [search.id, search]));
   const minimumScore = Math.min(Math.max(Number(params.min_score) || 0, 0), 100);
   const selectedSearch = searches.some((search) => search.id === params.search)
     ? params.search
@@ -111,16 +91,56 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   const selectedMode = WORK_MODES.includes(params.work_mode ?? "") ? params.work_mode : "";
   const sort = params.sort === "recent" ? "recent" : "score";
 
+  let matchQuery = supabase
+    .from("job_matches")
+    .select("id,search_profile_id,job_offer_id,score,eligibility_status,reasons,status,created_at")
+    .eq("scoring_version", "deterministic-v2")
+    .gte("score", minimumScore);
+
+  if (selectedSearch) matchQuery = matchQuery.eq("search_profile_id", selectedSearch);
+  if (selectedResult === "useful") {
+    matchQuery = matchQuery.in("eligibility_status", ["ELIGIBLE", "REVIEW"]);
+  } else if (selectedResult === "SAVED" || selectedResult === "DISMISSED") {
+    matchQuery = matchQuery
+      .eq("status", selectedResult)
+      .in("eligibility_status", ["ELIGIBLE", "REVIEW"]);
+  } else {
+    matchQuery = matchQuery.eq("eligibility_status", selectedResult);
+  }
+
+  const { data: matchData, error: matchError } = await matchQuery
+    .order("score", { ascending: false })
+    .limit(1000);
+  const matches = (matchData ?? []) as JobMatchRow[];
+  const offerIds = [...new Set(matches.map((match) => match.job_offer_id))];
+  const offerRows: OfferRow[] = [];
+  let offerLoadFailed = false;
+
+  for (const offerIdChunk of chunkValues(offerIds)) {
+    const { data, error } = await supabase
+        .from("job_offers")
+        .select(
+          "id,title,location_text,work_mode,published_at,last_seen_at,canonical_url,companies(name),job_offer_sources(source_url,company_career_source_id,job_sources(code,name))",
+        )
+        .in("id", offerIdChunk);
+
+    if (error) {
+      offerLoadFailed = true;
+      break;
+    }
+
+    offerRows.push(...((data ?? []) as unknown as OfferRow[]));
+  }
+
+  const offers = new Map(
+    offerRows.map((offer) => [offer.id, offer]),
+  );
+  const searchMap = new Map(searches.map((search) => [search.id, search]));
+
   const visibleMatches = matches
     .filter((match) => !selectedSearch || match.search_profile_id === selectedSearch)
     .filter((match) => match.score >= minimumScore)
-    .filter((match) =>
-      selectedResult === "useful"
-          ? match.eligibility_status !== "REJECTED"
-          : selectedResult === "SAVED" || selectedResult === "DISMISSED"
-            ? match.status === selectedResult && match.eligibility_status !== "REJECTED"
-            : match.eligibility_status === selectedResult,
-    )
+    .filter((match) => matchesResultFilter(match, selectedResult))
     .filter((match) => !selectedMode || offers.get(match.job_offer_id)?.work_mode === selectedMode)
     .sort((left, right) =>
       sort === "recent"
@@ -142,6 +162,9 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       </div>
 
       <Feedback message={params.message} error={params.error} />
+      {(matchError || offerLoadFailed) && (
+        <Feedback error="No se pudieron cargar las ofertas guardadas. Inténtalo de nuevo." />
+      )}
 
       {params.run === "1" && (
         <JobSearchSummary summary={{
@@ -205,7 +228,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       </form>
 
       <section className="jobs-list" aria-label="Resultados">
-        {visibleMatches.length > 0 ? visibleMatches.map((match) => {
+        {visibleMatches.some((match) => offers.has(match.job_offer_id)) ? visibleMatches.map((match) => {
           const offer = offers.get(match.job_offer_id);
           const search = searchMap.get(match.search_profile_id);
           if (!offer) return null;
