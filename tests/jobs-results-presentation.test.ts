@@ -10,7 +10,7 @@ describe("jobs results presentation", () => {
     expect(jobsPage).toContain('<option value="ELIGIBLE">Elegibles</option>');
     expect(jobsPage).toContain('<option value="REVIEW">Revisar</option>');
     expect(jobsPage).toContain('<option value="REJECTED">Rechazadas</option>');
-    expect(jobsPage).toContain('match.eligibility_status !== "REJECTED"');
+    expect(jobsPage).toContain("matchesResultFilter(match, selectedResult)");
   });
 
   it("orders eligible matches before review matches before rejected matches", () => {
