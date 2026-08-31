@@ -9,6 +9,7 @@ export interface JobSearchSummaryData {
   matches: number;
   high: number;
   infoJobsSkipped: boolean;
+  providers?: Record<string, { attempted: number; succeeded: number; failed: number; offers_received: number }>;
 }
 
 export function JobSearchSummary({ summary }: { summary: JobSearchSummaryData }) {
@@ -26,6 +27,15 @@ export function JobSearchSummary({ summary }: { summary: JobSearchSummaryData })
         <div><dt>Matches generados</dt><dd>{summary.matches}</dd></div>
         <div><dt>Alta compatibilidad</dt><dd>{summary.high}</dd></div>
       </dl>
+      {summary.providers && Object.keys(summary.providers).length > 0 && (
+        <div className="provider-summary">
+          {Object.entries(summary.providers).map(([provider, stats]) => (
+            <p className="hint" key={provider}>
+              {provider}: {stats.succeeded}/{stats.attempted} fuentes · {stats.offers_received} ofertas{stats.failed ? ` · ${stats.failed} errores` : ""}
+            </p>
+          ))}
+        </div>
+      )}
       {summary.infoJobsSkipped && <p className="hint">InfoJobs: SKIPPED_SOURCE (sin credenciales de aplicación).</p>}
     </section>
   );

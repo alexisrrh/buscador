@@ -25,7 +25,7 @@ async function loadEnabledCareerSources(client: SupabaseClient) {
     .from("company_career_sources")
     .select("id,platform,identifier,careers_url")
     .eq("enabled", true)
-    .in("platform", ["LEVER", "ASHBY"])
+    .in("platform", ["LEVER", "ASHBY", "GREENHOUSE", "SMARTRECRUITERS"])
     .order("created_at", { ascending: true });
   if (error) throw new Error("No se pudieron cargar las fuentes de empresas.");
   return (data ?? []).map((source) => ({

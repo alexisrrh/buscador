@@ -32,6 +32,7 @@ export async function searchJobs(formData: FormData) {
       matches: String(report.matches_generated),
       high: String(report.high_compatibility),
       infojobs: report.skipped_sources.includes("INFOJOBS") ? "SKIPPED_SOURCE" : "",
+      providers: JSON.stringify(report.provider_summary),
     });
     destination = `/jobs?${summary.toString()}`;
   } catch (error) {

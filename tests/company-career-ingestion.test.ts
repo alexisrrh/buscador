@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import ashbyBoard from "@/tests/fixtures/ashby/job-board.json";
+import greenhouseJobs from "@/tests/fixtures/greenhouse/jobs.json";
+import smartPageOne from "@/tests/fixtures/smartrecruiters/postings-page-1.json";
+import smartDetails from "@/tests/fixtures/smartrecruiters/posting-detail.json";
 import { AshbyAdapter } from "@/lib/job-sources/ashby/adapter";
+import { GreenhouseAdapter } from "@/lib/job-sources/greenhouse/adapter";
+import { SmartRecruitersAdapter } from "@/lib/job-sources/smartrecruiters/adapter";
 import { ingestCompanyCareerSource } from "@/lib/job-sources/company-careers";
 import type {
   CompanyCareerSourceCheckRecorder,
@@ -127,5 +132,34 @@ describe("company career ingestion", () => {
       { id: "synthetic-career-source-id", success: true, errorCode: null },
       { id: "synthetic-career-source-id", success: true, errorCode: null },
     ]);
+  });
+
+  it("keeps Greenhouse ingestion idempotent across repeated board data", async () => {
+    const adapter = new GreenhouseAdapter({
+      boardToken: "synthetic",
+      fetchImplementation: vi.fn<typeof fetch>().mockImplementation(async () => new Response(JSON.stringify(greenhouseJobs))),
+      requestIntervalMs: 0,
+    });
+    const repository = new MemoryCareerRepository();
+    const source = { id: "greenhouse-source", platform: "GREENHOUSE" as const, identifier: "synthetic", careersUrl: "https://job-boards.greenhouse.io/synthetic" };
+    const first = await ingestCompanyCareerSource(source, adapter, repository);
+    const second = await ingestCompanyCareerSource(source, adapter, repository);
+    expect(first).toMatchObject({ offers_created: 2, offers_updated: 0, duplicates: 0 });
+    expect(second).toMatchObject({ offers_created: 0, offers_updated: 2, duplicates: 2 });
+    expect(repository.sources).toHaveLength(2);
+  });
+
+  it("fetches SmartRecruiters details only before dedupe and remains idempotent", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) =>
+      new Response(JSON.stringify(String(input).includes("smart-67001") ? smartDetails : smartPageOne)),
+    );
+    const adapter = new SmartRecruitersAdapter({ companyIdentifier: "synthetic", fetchImplementation: fetchMock, requestIntervalMs: 0 });
+    const repository = new MemoryCareerRepository();
+    const source = { id: "smart-source", platform: "SMARTRECRUITERS" as const, identifier: "synthetic", careersUrl: "https://careers.smartrecruiters.com/synthetic" };
+    const first = await ingestCompanyCareerSource(source, adapter, repository);
+    const second = await ingestCompanyCareerSource(source, adapter, repository);
+    expect(first).toMatchObject({ offers_created: 1, details_requested: 1 });
+    expect(second).toMatchObject({ offers_created: 0, offers_updated: 1, duplicates: 1, details_requested: 0 });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

@@ -112,7 +112,7 @@ function roleFamilyGate(offerFamily: JobRoleFamily, desired: Set<JobRoleFamily>,
     (offerFamily === "FULLSTACK" && desired.has("FRONTEND"))
   ) return "PASS";
   if (offerFamily === "BACKEND" && (desired.has("FRONTEND") || desired.has("FULLSTACK"))) return "UNKNOWN";
-  if (offerFamily === "OTHER") return titleMatchIsStrong ? "PASS" : "UNKNOWN";
+  if (offerFamily === "OTHER") return titleMatchIsStrong ? "PASS" : "FAIL";
   return "FAIL";
 }
 
@@ -278,8 +278,14 @@ export function matchJobOfferToSearchProfile(input: {
   };
   const score = Math.max(0, Math.min(100, Object.values(components).reduce((total, value) => total + value, 0)));
   const criticalFails = Object.values(hardGates).some((gate) => gate === "FAIL");
-  const importantUnknown = [roleFamily, location, workMode, seniority, experience].some((gate) => gate === "UNKNOWN");
-  const eligibility = criticalFails ? "REJECTED" : score >= search.notificationMinScore && !importantUnknown ? "ELIGIBLE" : "REVIEW";
+  const explicitSeniority = extractJobSeniority(offer.title, offer.seniority);
+  const acceptsEveryWorkMode = ["REMOTE", "HYBRID", "ONSITE"]
+    .every((mode) => preferences.workModes.includes(mode));
+  const importantUnknown = roleFamily === "UNKNOWN" ||
+    location === "UNKNOWN" ||
+    (workMode === "UNKNOWN" && !acceptsEveryWorkMode) ||
+    (seniority === "UNKNOWN" && explicitSeniority !== "UNKNOWN");
+  const eligibility = criticalFails ? "REJECTED" : importantUnknown ? "REVIEW" : "ELIGIBLE";
 
   const reasons: string[] = [];
   if (roleFamily === "FAIL") reasons.push(`Rol incompatible con ${roleLabel(desiredFamilies)}`);
@@ -288,8 +294,9 @@ export function matchJobOfferToSearchProfile(input: {
   if (titleMatch.target && ["EXACT", "STRONG"].includes(titleMatch.level)) reasons.push(`Coincide con ${titleMatch.target}`);
   if (location === "FAIL") reasons.push(`Ubicación incompatible: ${offer.locationText ?? offer.countryCode ?? "fuera de la zona configurada"}`);
   else if (location === "UNKNOWN") reasons.push("Alcance geográfico del remoto no especificado");
+  if (workMode === "UNKNOWN" && !acceptsEveryWorkMode) reasons.push("Modalidad de trabajo no especificada");
   if (seniority === "FAIL") reasons.push(`Nivel ${extractJobSeniority(offer.title, offer.seniority)} superior o incompatible`);
-  else if (seniority === "UNKNOWN") reasons.push("Seniority por revisar");
+  else if (seniority === "UNKNOWN" && explicitSeniority !== "UNKNOWN") reasons.push("Seniority por revisar");
   if (matchedTechnologies.length > 0 && roleCompatible) reasons.push(`Tecnologías presentes: ${matchedTechnologies.join(", ")}`);
   else if (preferences.requiredTechnologies.length > 0 && roleCompatible) reasons.push("No aparecen las tecnologías requeridas");
   if (matchedKeywords.length > 0) reasons.push(`Keywords presentes: ${matchedKeywords.join(", ")}`);

@@ -5,6 +5,25 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { DeterministicMatchResult } from "./types";
 import type { MatchingRepository, SearchMatchingContext } from "./service";
 
+type MatchOfferRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  location_text: string | null;
+  country_code: string | null;
+  region: string | null;
+  city: string | null;
+  work_mode: string | null;
+  seniority: string | null;
+  employment_type: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  published_at: string | null;
+  last_seen_at: string;
+  status: string;
+};
+
 function createServiceClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -91,18 +110,30 @@ export class SupabaseMatchingRepository implements MatchingRepository {
   }
 
   async loadRecentActiveOffers(options: { limit: number; seenAfter: string }) {
-    const { data, error } = await this.client
-      .from("job_offers")
-      .select(
-        "id,title,description,location_text,country_code,region,city,work_mode,seniority,employment_type,salary_min,salary_max,salary_currency,published_at,last_seen_at,status",
-      )
-      .eq("status", "ACTIVE")
-      .gte("last_seen_at", options.seenAfter)
-      .order("last_seen_at", { ascending: false })
-      .limit(options.limit);
-    if (error) throw new Error(`Could not load job offers: ${error.message}`);
+    const rows: MatchOfferRow[] = [];
+    const pageSize = 1_000;
 
-    return (data ?? []).map((offer) => ({
+    while (rows.length < options.limit) {
+      const requested = Math.min(pageSize, options.limit - rows.length);
+      const to = rows.length + requested - 1;
+      const { data, error } = await this.client
+        .from("job_offers")
+        .select(
+          "id,title,description,location_text,country_code,region,city,work_mode,seniority,employment_type,salary_min,salary_max,salary_currency,published_at,last_seen_at,status",
+        )
+        .eq("status", "ACTIVE")
+        .gte("last_seen_at", options.seenAfter)
+        .order("last_seen_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(rows.length, to);
+      if (error) throw new Error(`Could not load job offers: ${error.message}`);
+
+      const page = (data ?? []) as MatchOfferRow[];
+      rows.push(...page);
+      if (page.length < requested) break;
+    }
+
+    return rows.map((offer) => ({
       id: offer.id,
       title: offer.title,
       description: offer.description,

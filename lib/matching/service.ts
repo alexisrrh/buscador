@@ -44,7 +44,7 @@ export async function generateMatchesForSearchProfile(
   searchProfileId: string,
   options: GenerateMatchesOptions = {},
 ): Promise<GenerateMatchesReport> {
-  const limit = Math.min(Math.max(options.limit ?? 200, 1), 500);
+  const limit = Math.min(Math.max(options.limit ?? 200, 1), 5_000);
   const recentDays = Math.min(Math.max(options.recentDays ?? 45, 1), 365);
   const seenAfter = new Date(Date.now() - recentDays * 86_400_000).toISOString();
   const context = await repository.loadSearchContext(searchProfileId, userId);

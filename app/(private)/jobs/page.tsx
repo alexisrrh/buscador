@@ -55,11 +55,11 @@ type JobsParams = {
   matches?: string;
   high?: string;
   infojobs?: string;
+  providers?: string;
 };
 
-const USER_STATUSES = ["NEW", "SAVED", "DISMISSED"];
 const WORK_MODES = ["REMOTE", "HYBRID", "ONSITE"];
-const ELIGIBILITY_FILTERS = ["compatible", "all", "ELIGIBLE", "REVIEW", "REJECTED"];
+const RESULT_FILTERS = ["useful", "ELIGIBLE", "REVIEW", "SAVED", "DISMISSED", "REJECTED"];
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<JobsParams> }) {
   const params = await searchParams;
@@ -74,7 +74,8 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       .from("job_matches")
       .select("id,search_profile_id,job_offer_id,score,eligibility_status,reasons,status,created_at")
       .eq("scoring_version", "deterministic-v2")
-      .limit(200),
+      .order("score", { ascending: false })
+      .limit(1000),
     supabase
       .from("company_career_sources")
       .select("id", { count: "exact", head: true })
@@ -101,30 +102,29 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   const selectedSearch = searches.some((search) => search.id === params.search)
     ? params.search
     : "";
-  const selectedStatus = USER_STATUSES.includes(params.status ?? "") ? params.status : "";
-  const selectedEligibility = ELIGIBILITY_FILTERS.includes(params.eligibility ?? "")
+  const selectedResult = RESULT_FILTERS.includes(params.eligibility ?? "")
     ? params.eligibility!
-    : "compatible";
+    : "useful";
   const selectedMode = WORK_MODES.includes(params.work_mode ?? "") ? params.work_mode : "";
   const sort = params.sort === "recent" ? "recent" : "score";
 
   const visibleMatches = matches
     .filter((match) => !selectedSearch || match.search_profile_id === selectedSearch)
     .filter((match) => match.score >= minimumScore)
-    .filter((match) => !selectedStatus || match.status === selectedStatus)
     .filter((match) =>
-      selectedEligibility === "all"
-        ? true
-        : selectedEligibility === "compatible"
+      selectedResult === "useful"
           ? match.eligibility_status !== "REJECTED"
-          : match.eligibility_status === selectedEligibility,
+          : selectedResult === "SAVED" || selectedResult === "DISMISSED"
+            ? match.status === selectedResult && match.eligibility_status !== "REJECTED"
+            : match.eligibility_status === selectedResult,
     )
     .filter((match) => !selectedMode || offers.get(match.job_offer_id)?.work_mode === selectedMode)
     .sort((left, right) =>
       sort === "recent"
         ? offerDate(offers.get(right.job_offer_id)).getTime() -
           offerDate(offers.get(left.job_offer_id)).getTime()
-        : right.score - left.score,
+        : eligibilityRank(left.eligibility_status) - eligibilityRank(right.eligibility_status) ||
+          right.score - left.score,
     );
 
   return (
@@ -152,18 +152,20 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           matches: numberParam(params.matches),
           high: numberParam(params.high),
           infoJobsSkipped: params.infojobs === "SKIPPED_SOURCE",
+          providers: providerParam(params.providers),
         }} />
       )}
 
       <form className="card jobs-filters" method="get">
         <div className="field">
           <label htmlFor="eligibility">Compatibilidad</label>
-          <select id="eligibility" name="eligibility" defaultValue={selectedEligibility}>
-            <option value="compatible">Compatibles y por revisar</option>
-            <option value="ELIGIBLE">Compatibles</option>
-            <option value="REVIEW">Por revisar</option>
+          <select id="eligibility" name="eligibility" defaultValue={selectedResult}>
+            <option value="useful">Todas las útiles</option>
+            <option value="ELIGIBLE">Elegibles</option>
+            <option value="REVIEW">Revisar</option>
+            <option value="SAVED">Guardadas</option>
+            <option value="DISMISSED">Descartadas</option>
             <option value="REJECTED">Rechazadas</option>
-            <option value="all">Todas</option>
           </select>
         </div>
         <div className="field">
@@ -176,15 +178,6 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
         <div className="field">
           <label htmlFor="min-score">Score mínimo</label>
           <input id="min-score" name="min_score" type="number" min="0" max="100" defaultValue={minimumScore} />
-        </div>
-        <div className="field">
-          <label htmlFor="status">Estado</label>
-          <select id="status" name="status" defaultValue={selectedStatus}>
-            <option value="">Todos</option>
-            <option value="NEW">Nuevas</option>
-            <option value="SAVED">Guardadas</option>
-            <option value="DISMISSED">Descartadas</option>
-          </select>
         </div>
         <div className="field">
           <label htmlFor="work-mode">Modalidad</label>
@@ -274,6 +267,10 @@ function preferredSource(offer: OfferRow) {
     offer.job_offer_sources[0];
 }
 
+function eligibilityRank(value: string) {
+  return { ELIGIBLE: 0, REVIEW: 1, REJECTED: 2 }[value] ?? 3;
+}
+
 function offerDate(offer?: OfferRow) {
   return new Date(offer?.published_at ?? offer?.last_seen_at ?? 0);
 }
@@ -289,4 +286,16 @@ function workModeLabel(value: string | null) {
 function numberParam(value?: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function providerParam(value?: string) {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return typeof parsed === "object" && parsed !== null
+      ? parsed as Record<string, { attempted: number; succeeded: number; failed: number; offers_received: number }>
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }

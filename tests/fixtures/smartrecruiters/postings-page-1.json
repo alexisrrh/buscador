@@ -1,0 +1,17 @@
+{
+  "limit": 1,
+  "offset": 0,
+  "totalFound": 2,
+  "content": [
+    {
+      "id": "smart-67001",
+      "uuid": "67000000-0000-0000-0000-000000000001",
+      "name": "React Developer",
+      "company": { "identifier": "synthetic", "name": "Synthetic Tech" },
+      "releasedDate": "2026-08-30T10:00:00Z",
+      "location": { "city": "Barcelona", "region": "Catalunya", "country": "es", "fullLocation": "Barcelona, Spain", "remote": true },
+      "typeOfEmployment": { "label": "Full-time" },
+      "experienceLevel": { "label": "Mid" }
+    }
+  ]
+}

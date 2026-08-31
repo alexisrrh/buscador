@@ -120,6 +120,46 @@ describe("deterministic matching", () => {
   });
 
   it.each([
+    ["Web Frontend Engineer - JS, CSS, React, Flutter", "Worldwide"],
+    ["Web Developer", "Home based - EMEA"],
+    ["Software Engineer II - Full Stack - Web Engineering", "Spain"],
+  ])("marks a clearly compatible real-world role as eligible: %s", (title, locationText) => {
+    const result = run(
+      { title, locationText, countryCode: null, workMode: "UNKNOWN", seniority: null },
+      { workModes: ["REMOTE", "HYBRID", "ONSITE"] },
+    );
+    expect(result.hardGates.roleFamily).toBe("PASS");
+    expect(result.hardGates.location).toBe("PASS");
+    expect(result.eligibility).toBe("ELIGIBLE");
+  });
+
+  it.each([
+    "Accountant Trainee",
+    "Entry-level Communications Specialist",
+    "Senior Communications Specialist",
+    "Python Engineer",
+    "Microservices Engineer",
+  ])("rejects OTHER without strong frontend title evidence: %s", (title) => {
+    const result = run({
+      title,
+      description: "Our web platform uses React and TypeScript. 3 years experience.",
+      locationText: "Spain",
+    });
+    expect(result.hardGates.roleFamily).toBe("FAIL");
+    expect(result.eligibility).toBe("REJECTED");
+  });
+
+  it("does not use the notification score threshold as an eligibility gate", () => {
+    const result = run(
+      { title: "Web Developer", description: "Build web products. 3 years experience." },
+      { requiredTechnologies: [], keywords: [], workModes: ["REMOTE", "HYBRID", "ONSITE"] },
+      { notificationMinScore: 95 },
+    );
+    expect(result.score).toBeLessThan(95);
+    expect(result.eligibility).toBe("ELIGIBLE");
+  });
+
+  it.each([
     ["Full Stack Developer", 24],
     ["Web Developer", 26],
   ])("treats %s as a related role", (title, minimumTitleScore) => {

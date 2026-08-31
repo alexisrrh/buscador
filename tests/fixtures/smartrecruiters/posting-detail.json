@@ -1,0 +1,17 @@
+{
+  "id": "smart-67001",
+  "name": "React Developer",
+  "company": { "identifier": "synthetic", "name": "Synthetic Tech" },
+  "releasedDate": "2026-08-30T10:00:00Z",
+  "postingUrl": "https://jobs.smartrecruiters.com/synthetic/smart-67001-react-developer?utm_source=test",
+  "applyUrl": "https://jobs.smartrecruiters.com/synthetic/smart-67001-react-developer/apply",
+  "location": { "city": "Barcelona", "region": "Catalunya", "country": "es", "fullLocation": "Barcelona, Spain", "remote": true },
+  "typeOfEmployment": { "label": "Full-time" },
+  "experienceLevel": { "label": "Mid" },
+  "jobAd": {
+    "sections": {
+      "jobDescription": { "title": "Job", "text": "<p>Build React and TypeScript products.</p>" },
+      "qualifications": { "title": "Qualifications", "text": "<p>Three years of web experience.</p>" }
+    }
+  }
+}

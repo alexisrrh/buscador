@@ -1,0 +1,22 @@
+{
+  "jobs": [
+    {
+      "id": 67001,
+      "title": "Frontend Engineer",
+      "updated_at": "2026-08-30T10:00:00Z",
+      "first_published": "2026-08-29T09:00:00Z",
+      "location": { "name": "Madrid, Spain (Hybrid)" },
+      "absolute_url": "https://job-boards.greenhouse.io/synthetic/jobs/67001?utm_source=test",
+      "content": "&lt;p&gt;Build interfaces with React and TypeScript.&lt;/p&gt;",
+      "departments": [{ "id": 1, "name": "Engineering" }],
+      "offices": [{ "id": 2, "name": "Madrid", "location": "Spain" }]
+    },
+    {
+      "id": 67002,
+      "title": "Web Developer",
+      "location": { "name": "Home based - EMEA" },
+      "absolute_url": "https://job-boards.greenhouse.io/synthetic/jobs/67002"
+    }
+  ],
+  "meta": { "total": 2 }
+}

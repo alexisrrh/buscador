@@ -146,6 +146,10 @@ describe("public job search orchestration", () => {
       matches_generated: 1,
       high_compatibility: 1,
       skipped_sources: ["INFOJOBS"],
+      provider_summary: {
+        ASHBY: { attempted: 1, succeeded: 1, failed: 0, offers_received: 1 },
+        LEVER: { attempted: 1, succeeded: 0, failed: 1, offers_received: 0 },
+      },
     });
   });
 
@@ -209,8 +213,10 @@ describe("jobs dashboard execution summary", () => {
     render(JobSearchSummary({ summary: {
       sources: 2, succeeded: 1, failed: 1, received: 20, created: 12,
       updated: 8, duplicates: 8, matches: 18, high: 6, infoJobsSkipped: true,
+      providers: { GREENHOUSE: { attempted: 3, succeeded: 2, failed: 1, offers_received: 120 } },
     } }));
     expect(screen.getByText("Matches generados").nextSibling).toHaveTextContent("18");
     expect(screen.getByText(/SKIPPED_SOURCE/)).toBeInTheDocument();
+    expect(screen.getByText(/GREENHOUSE: 2\/3 fuentes/)).toBeInTheDocument();
   });
 });

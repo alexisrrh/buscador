@@ -1,0 +1,13 @@
+{
+  "limit": 1,
+  "offset": 1,
+  "totalFound": 2,
+  "content": [
+    {
+      "id": "smart-67002",
+      "name": "Full Stack Developer",
+      "company": { "identifier": "synthetic", "name": "Synthetic Tech" },
+      "location": { "city": "Lisbon", "country": "pt", "hybrid": true }
+    }
+  ]
+}
