@@ -30,6 +30,7 @@ export type SearchProfile = {
   semi_auto_min_score: number;
   auto_apply_min_score: number;
   daily_application_limit: number;
+  application_mode: "MANUAL" | "REVIEW" | "AUTO";
   version: number;
   next_run_at: string | null;
   last_run_at: string | null;

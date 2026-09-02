@@ -149,6 +149,11 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .application-grid .full { grid-column: 1 / -1; }
 .application-grid h3 { margin-top: 1rem; font-size: .95rem; }
 .application-actions { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: 1rem; }
+.checklist { display: grid; gap: .5rem; padding: 0; list-style: none; }
+.checklist li { display: grid; grid-template-columns: 1.2rem 1fr auto; align-items: center; gap: .5rem; }
+.answer-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); gap: 1rem; align-items: end; padding-top: .8rem; border-top: 1px solid var(--line); }
+.answer-row form { display: flex; gap: .5rem; }
+.pre-wrap { white-space: pre-wrap; }
 
 @media (max-width: 760px) {
   .topbar { align-items: flex-start; }
@@ -160,5 +165,6 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
   .form-footer { position: static; }
   .match-generator, .jobs-filters, .job-card, .application-grid { grid-template-columns: 1fr; }
   .application-grid .full { grid-column: auto; }
+  .answer-row { grid-template-columns: 1fr; }
   .job-actions { justify-content: flex-start; }
 }

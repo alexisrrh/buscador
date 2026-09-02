@@ -7,6 +7,7 @@ import {
   regenerateApplication,
   saveApplicationText,
 } from "@/app/actions/applications";
+import { prepareApplicationSubmission } from "@/app/actions/application-engine";
 import { Feedback, StatusBadge } from "@/components/feedback";
 import type { CandidateEvidence, GapAnalysis, JobAnalysis, ResumeAdaptation } from "@/lib/applications/types";
 import { requireUser } from "@/lib/supabase/server";
@@ -54,6 +55,7 @@ export default async function ApplicationDraftPage({
     <div className="card application-actions">
       {draft.status !== "APPROVED" && <><form action={regenerateApplication}><input type="hidden" name="application_draft_id" value={draft.id} /><button className="secondary" type="submit">Regenerar</button></form><form action={approveApplicationDraft}><input type="hidden" name="application_draft_id" value={draft.id} /><button type="submit">Aprobar candidatura</button></form></>}
       {sourceUrl && <a className="button secondary" href={sourceUrl} target="_blank" rel="noreferrer">Abrir oferta</a>}
+      {draft.status === "APPROVED" && <form action={prepareApplicationSubmission}><input type="hidden" name="application_draft_id" value={draft.id} /><button type="submit">Preparar postulación</button></form>}
       <Link className="button secondary" href="/jobs">Volver a ofertas</Link>
     </div>
     <p className="hint">Aprobar este borrador no envía una candidatura ni modifica el CV original. Evidencia usada: {evidence.verified_skills.length} skills verificadas.</p>
