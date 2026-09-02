@@ -1,4 +1,6 @@
+import { prepareApplication } from "@/app/actions/applications";
 import { setJobMatchStatus } from "@/app/actions/jobs";
+import Link from "next/link";
 import { Feedback, StatusBadge } from "@/components/feedback";
 import { JobSearchSummary } from "@/components/job-search-summary";
 import {
@@ -60,6 +62,7 @@ type JobsParams = {
   high?: string;
   infojobs?: string;
   providers?: string;
+  resume_required?: string;
 };
 
 const WORK_MODES = ["REMOTE", "HYBRID", "ONSITE"];
@@ -162,6 +165,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       </div>
 
       <Feedback message={params.message} error={params.error} />
+      {params.resume_required === "1" && <p><Link className="button secondary" href="/resumes">Ir a Mis CV</Link></p>}
       {(matchError || offerLoadFailed) && (
         <Feedback error="No se pudieron cargar las ofertas guardadas. Inténtalo de nuevo." />
       )}
@@ -263,6 +267,12 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                 </ul>
               </div>
               <div className="job-actions">
+                {(match.eligibility_status === "ELIGIBLE" || match.eligibility_status === "REVIEW") && (
+                  <form action={prepareApplication}>
+                    <input type="hidden" name="job_match_id" value={match.id} />
+                    <button type="submit">Preparar candidatura</button>
+                  </form>
+                )}
                 {(source?.source_url || offer.canonical_url) && (
                   <a className="button secondary" href={source?.source_url ?? offer.canonical_url ?? "#"} target="_blank" rel="noreferrer">
                     Ver oferta

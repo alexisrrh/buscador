@@ -145,6 +145,10 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .badge.DISMISSED { color: var(--muted); background: #eef1f4; }
 .job-reasons { margin: .8rem 0 0; padding-left: 1.2rem; color: #344054; }
 .job-actions { display: flex; align-items: flex-end; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
+.application-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.application-grid .full { grid-column: 1 / -1; }
+.application-grid h3 { margin-top: 1rem; font-size: .95rem; }
+.application-actions { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: 1rem; }
 
 @media (max-width: 760px) {
   .topbar { align-items: flex-start; }
@@ -154,6 +158,7 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
   .field.full { grid-column: auto; }
   .page-header, .list-item { align-items: stretch; flex-direction: column; }
   .form-footer { position: static; }
-  .match-generator, .jobs-filters, .job-card { grid-template-columns: 1fr; }
+  .match-generator, .jobs-filters, .job-card, .application-grid { grid-template-columns: 1fr; }
+  .application-grid .full { grid-column: auto; }
   .job-actions { justify-content: flex-start; }
 }
