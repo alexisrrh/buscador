@@ -1,5 +1,6 @@
-import { prepareApplication } from "@/app/actions/applications";
+// prepareApplication is invoked by ApplicationPrepButton to preserve the existing guarded flow.
 import { setJobMatchStatus } from "@/app/actions/jobs";
+import { ApplicationPrepButton } from "@/components/application-prep-button";
 import Link from "next/link";
 import { Feedback, StatusBadge } from "@/components/feedback";
 import { JobSearchSummary } from "@/components/job-search-summary";
@@ -268,10 +269,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
               </div>
               <div className="job-actions">
                 {(match.eligibility_status === "ELIGIBLE" || match.eligibility_status === "REVIEW") && (
-                  <form action={prepareApplication}>
-                    <input type="hidden" name="job_match_id" value={match.id} />
-                    <button type="submit">Preparar candidatura</button>
-                  </form>
+                  <ApplicationPrepButton matchId={match.id} />
                 )}
                 {(source?.source_url || offer.canonical_url) && (
                   <a className="button secondary" href={source?.source_url ?? offer.canonical_url ?? "#"} target="_blank" rel="noreferrer">

@@ -1,30 +1,12 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/server";
-
+import { JobsSearchControls, type JobsSearchProfile } from "@/components/jobs-search-state";
+import { ActivityFeed, AgentStatus, MetricCard } from "@/components/agent-ui";
 export default async function DashboardPage() {
-  const { supabase, user } = await requireUser();
-  if (!user) return null;
-  const [profiles, searches, resumes, approved, nextSearch] = await Promise.all([
-    supabase.from("candidate_profiles").select("id", { count: "exact", head: true }).is("deleted_at", null),
-    supabase.from("search_profiles").select("id", { count: "exact", head: true }).eq("status", "ACTIVE").is("deleted_at", null),
-    supabase.from("resumes").select("id", { count: "exact", head: true }).is("deleted_at", null),
-    supabase.from("resumes").select("id", { count: "exact", head: true }).eq("status", "APPROVED").is("deleted_at", null),
-    supabase.from("search_profiles").select("name,next_run_at").eq("status", "ACTIVE").is("deleted_at", null).not("next_run_at", "is", null).order("next_run_at").limit(1).maybeSingle(),
+  const { supabase, user } = await requireUser(); if (!user) return null;
+  const [{ data: searches }, { count: matches }, { count: drafts }, { count: questions }] = await Promise.all([
+    supabase.from("search_profiles").select("id,name,status,notification_min_score,next_run_at").eq("status", "ACTIVE").is("deleted_at", null), supabase.from("job_matches").select("id", { count: "exact", head: true }).in("eligibility_status", ["ELIGIBLE", "REVIEW"]), supabase.from("application_drafts").select("id", { count: "exact", head: true }).in("status", ["DRAFT", "READY_FOR_REVIEW"]), supabase.from("application_answers").select("id", { count: "exact", head: true }).eq("requires_confirmation", true),
   ]);
-  return (
-    <>
-      <div className="page-header"><div><h1>Tu búsqueda de empleo</h1><p>Aquí puedes ver lo que ya has preparado y qué falta por configurar.</p></div></div>
-      <section className="grid cards" aria-label="Métricas actuales">
-        <article className="card"><span className="muted">Perfiles</span><div className="metric">{profiles.count ?? 0}</div></article>
-        <article className="card"><span className="muted">Búsquedas activas</span><div className="metric">{searches.count ?? 0}</div></article>
-        <article className="card"><span className="muted">CV totales</span><div className="metric">{resumes.count ?? 0}</div></article>
-        <article className="card"><span className="muted">CV aprobados</span><div className="metric">{approved.count ?? 0}</div></article>
-      </section>
-      <section className="card" style={{ marginTop: "1rem" }}>
-        <h2>Próxima búsqueda programada</h2>
-        {nextSearch.data ? <p><strong>{nextSearch.data.name}</strong><br /><span className="muted">{new Date(nextSearch.data.next_run_at).toLocaleString("es-ES")}</span></p> : <p className="muted">No hay búsquedas activas programadas.</p>}
-        <div className="actions"><Link className="button secondary" href="/searches">Administrar búsquedas</Link></div>
-      </section>
-    </>
-  );
+  const active = (searches ?? []) as JobsSearchProfile[]; const next = (searches ?? []).map((search: { next_run_at?: string | null }) => search.next_run_at).filter(Boolean).sort()[0];
+  return <><div className="page-header command-header"><div><p className="eyebrow">Automation command center</p><h1>Tu búsqueda, en marcha</h1><p>BuscaVacante identifica oportunidades y deja lista tu candidatura.</p></div></div><AgentStatus state={active.length ? "searching" : "idle"} title={active.length ? "Buscando nuevas oportunidades" : "Listo para empezar"} detail={next ? `Próxima sincronización: ${new Date(next).toLocaleString("es-ES")}` : "Activa una búsqueda cuando quieras recibir oportunidades."} />{active.length > 0 && <section className="assistant-control"><JobsSearchControls searches={active} /></section>}<section className="metric-grid"><MetricCard label="Fuentes activas" value={active.length} detail="Sincronización continua" /><MetricCard label="Oportunidades útiles" value={matches ?? 0} detail="Compatibilidad analizada" /><MetricCard label="Candidaturas listas" value={drafts ?? 0} detail="Pendientes de revisión" /><MetricCard label="Confirmaciones" value={questions ?? 0} detail="Solo cuando hace falta" /></section><ActivityFeed items={[{ state: active.length ? "searching" : "idle", text: active.length ? "Buscando nuevas oportunidades" : "Esperando una búsqueda activa" }, { state: "matching", text: `${matches ?? 0} ofertas comparadas con tu perfil` }, { state: drafts ? "ready" : "idle", text: `${drafts ?? 0} candidaturas preparadas` }, { state: questions ? "review_required" : "ready", text: questions ? `${questions} necesita tu confirmación` : "No necesitas responder nada ahora" }]} /><section className="grid cards"><Link className="card list-item" href="/jobs"><div><h2>Oportunidades</h2><p>Revisa las mejores y postúlate con un toque.</p></div><span>→</span></Link><Link className="card list-item" href="/applications"><div><h2>Candidaturas</h2><p>Consulta las que están listas o necesitan una confirmación.</p></div><span>→</span></Link></section></>;
 }
