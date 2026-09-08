@@ -75,7 +75,10 @@ function normalize(value: string) { return value.normalize("NFKC").replace(/\s/g
 function validateHeader(content: ResumeContent) {
   if (!content.name.trim()) throw new DerivedResumeError("MISSING_CANDIDATE_NAME");
   for (const value of content.header?.metadata ?? []) {
-    if (value.includes("@") && !/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(value)) throw new DerivedResumeError("INVALID_CONTACT");
+    if (value.includes("@")) {
+      if (!/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(value)) throw new DerivedResumeError("INVALID_CONTACT");
+      continue;
+    }
     if (/\d/.test(value) && !/^\+?\d[\d ()-]{7,}\d$/.test(value)) throw new DerivedResumeError("INVALID_CONTACT");
   }
   for (const link of content.header?.links ?? []) {

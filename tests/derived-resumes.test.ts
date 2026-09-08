@@ -104,6 +104,10 @@ describe("Phase 9A deterministic rendering", () => {
     const rendered = await renderResumePdf(content);
     expect(rendered.bytes.toString("latin1")).toContain("/URI");
   });
+  it("accepts a valid email containing digits without treating it as a phone", async () => {
+    const content = { name: "María Ejemplo", title: "Web Developer", target: "Web Developer", contact: [], sections: [{ heading: "Resumen profesional", lines: ["Web Developer"] }], header: { metadata: ["candidate123@example.test", "+34 600 000 000"], links: [] }, skill_groups: [], projects: [], training: [], additional_experience: [], languages: [] };
+    await expect(renderResumePdf(content)).resolves.toMatchObject({ pages: 1 });
+  });
   it("paginates long content without dropping lines or leaving blank pages", async () => {
     const content = buildResumeContent(adaptation, evidence, source, job);
     content.sections[2].lines = Array.from({ length: 34 }, (_, i) => `Empresa Ejemplo ${i + 1} — Developer — 2020–2024. Desarrollo y mantenimiento de aplicaciones empresariales con TypeScript y SQL.`);
