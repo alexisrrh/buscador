@@ -56,7 +56,12 @@ describe("evidence priority v2", () => {
   });
   it("ranks required, preferred, role family and remaining verified skills", async () => {
     const { output } = await generated();
-    expect(output.resume_adaptation.prioritized_skills).toEqual(["JavaScript", "HTML", "CSS", "React", "Node.js", "REST", "Git"]);
+    expect(output.resume_adaptation.prioritized_skills).toEqual(["React", "JavaScript", "HTML", "CSS", "Node.js", "REST", "Git"]);
+    expect(output.resume_adaptation.technical_skill_groups).toEqual([
+      { label: "Frontend", skills: ["React", "JavaScript", "HTML", "CSS"] },
+      { label: "Backend", skills: ["Node.js", "REST"] },
+      { label: "Herramientas", skills: ["Git"] },
+    ]);
     expect(output.resume_adaptation.sections?.find(section => section.key === "secondary-skills")?.lines.join(" ")).toContain("Python");
     expect(output.resume_adaptation.prioritized_skills).not.toContain("TypeScript");
     expect(output.resume_adaptation.excluded_requested_skills).toContain("TypeScript");
@@ -89,7 +94,7 @@ describe("evidence priority v2", () => {
   });
   it("reformulates a poor headline using only verified training, projects and skills", async () => {
     const { input, output } = await generated();
-    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Tecnologías acreditadas: JavaScript, HTML, CSS, React y Node.js.");
+    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Tecnologías acreditadas: React, JavaScript, HTML, CSS y Node.js.");
     expect(() => validateGeneratedApplication(output, input.evidence)).not.toThrow();
   });
   it("does not claim Full Stack training when only projects mention Full Stack", async () => {

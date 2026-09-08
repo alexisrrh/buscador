@@ -52,9 +52,11 @@ export default async function ApplicationDraftPage({
       <article className="card"><h2>Por qué encajas</h2><ItemList values={[...gaps.strong_matches, ...gaps.partial_matches]} empty="No se encontró evidencia directa para destacar." /></article>
       <article className="card"><h2>Lo que te falta</h2><ItemList values={[...gaps.missing_requirements, ...gaps.unknown_requirements]} empty="No se detectaron gaps explícitos." /></article>
       <article className="card full"><h2>CV adaptado</h2>
-        {adaptation.professional_title && <p>{adaptation.professional_title}</p>}
+        <header><h3>{evidence.candidate_profile.name}</h3>{adaptation.professional_title && <p>{adaptation.professional_title}</p>}</header>
         {!!adaptation.portfolio_links?.length && <div className="actions">{adaptation.portfolio_links.map(url => <a key={url} href={url} target="_blank" rel="noreferrer">{url}</a>)}</div>}
-        {adaptation.sections ? adaptation.sections.map(section => section.key === "projects" && adaptation.project_details?.length
+        {adaptation.sections ? adaptation.sections.map(section => section.key === "skills" && adaptation.technical_skill_groups?.length
+          ? <SkillGroups key={section.key} groups={adaptation.technical_skill_groups} />
+          : section.key === "projects" && adaptation.project_details?.length
           ? <ProjectList key={section.key} projects={adaptation.project_details} />
           : <section key={section.key}><h3>{section.heading}</h3><ItemList values={section.lines} empty="Sin evidencia verificada." /></section>) : <>
           <h3>Resumen profesional</h3><p>{adaptation.professional_summary || "Sin resumen verificable."}</p>
@@ -85,10 +87,14 @@ function ProjectList({ projects }: { projects: NonNullable<ResumeAdaptation["pro
   return <section><h3>Proyectos seleccionados</h3>{projects.map(project => <article key={project.name} className="stack">
     <h4>{project.name}</h4>
     {project.description && <p>{project.description}</p>}
-    {!!project.technologies.length && <p><strong>Tecnologías:</strong> {project.technologies.join(" · ")}</p>}
+    {!!project.technologies.length && <p>{project.technologies.join(" · ")}</p>}
     {!!project.highlights.length && <ul>{project.highlights.map(highlight => <li key={highlight}>{highlight}</li>)}</ul>}
     {project.link && <p><a href={project.link} target="_blank" rel="noreferrer">{project.link}</a></p>}
   </article>)}</section>;
+}
+
+function SkillGroups({ groups }: { groups: NonNullable<ResumeAdaptation["technical_skill_groups"]> }) {
+  return <section><h3>Skills técnicas</h3>{groups.map(group => <p key={group.label}><strong>{group.label}:</strong> {group.skills.join(" · ")}</p>)}</section>;
 }
 
 function companyName(value: unknown) {

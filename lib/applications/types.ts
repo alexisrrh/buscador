@@ -80,6 +80,7 @@ export type ResumeAdaptation = {
   additional_experience?: string[];
   technical_training?: string[];
   portfolio_links?: string[];
+  technical_skill_groups?: Array<{ label: string; skills: string[] }>;
   project_details?: Array<{
     name: string;
     description: string;

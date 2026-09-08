@@ -6,7 +6,7 @@ const ROLE_SKILLS: Record<RoleFamily, string[]> = {
   DATA: ["Python", "SQL", "PostgreSQL", "MySQL", "Git"],
   OTHER: [],
 };
-const WEB_PRIMARY_SKILLS = ["JavaScript", "HTML", "CSS", "React", "Node.js", "REST", "Git", "Tailwind CSS", "Supabase", "PostgreSQL", "SQL", "Vite", "GitHub", "Express"];
+const WEB_PRIMARY_SKILLS = ["React", "JavaScript", "HTML", "CSS", "Tailwind CSS", "Node.js", "Express", "REST", "Supabase", "PostgreSQL", "SQL", "Git", "GitHub", "Vite"];
 const TECH_ROLE = /\b(developer|programmer|software engineer|desarrollador|programador|ingenier[oa] de software|frontend|front-end|backend|back-end|full[ -]?stack|data scientist|data engineer)\b/i;
 const WEB_SIGNAL = /\b(web|react|html|css|frontend|front-end|full[ -]?stack|javascript)\b/i;
 const DATE = /\b(?:19|20)\d{2}\b/;
@@ -104,6 +104,24 @@ function secondarySkills(evidence: CandidateEvidence, primary: string[]) {
     .sort((a, b) => tier(a) - tier(b) || index(a) - index(b) || a.localeCompare(b));
 }
 
+function technicalSkillGroups(skills: string[]) {
+  const groups = [
+    ["Frontend", ["React", "JavaScript", "HTML", "CSS", "Tailwind CSS"]],
+    ["Backend", ["Node.js", "Express", "REST", "Supabase"]],
+    ["Datos", ["PostgreSQL", "SQL"]],
+    ["Herramientas", ["Git", "GitHub", "Vite"]],
+  ] as const;
+  return groups.map(([label, members]) => ({ label, skills: members.filter(skill => skills.includes(skill)) })).filter(group => group.skills.length);
+}
+
+function projectTechnologies(skills: string[]) {
+  return [...skills].sort((a, b) => {
+    const aIndex = WEB_PRIMARY_SKILLS.indexOf(a);
+    const bIndex = WEB_PRIMARY_SKILLS.indexOf(b);
+    return (aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex) || a.localeCompare(b);
+  });
+}
+
 function projectName(project: EvidenceBlock) {
   const text = project.lines.join(" ");
   if (/nutrismartcoach/i.test(text)) return "NutriSmartCoach";
@@ -131,7 +149,7 @@ function projectDetails(project: EvidenceBlock) {
   }
   const name = projectName(project);
   const titleDescription = safeEvidenceUrl(project.title) ? "" : project.title.replace(/\s*\|.*$/, "").replace(name, "").trim();
-  return { name, description: titleDescription || narrative.slice(0, 2).join(" "), technologies: project.skills, highlights: highlights.slice(0, 4), link: project.links[0] ?? null };
+  return { name, description: titleDescription || narrative.slice(0, 2).join(" "), technologies: projectTechnologies(project.skills), highlights: highlights.slice(0, 4), link: project.links[0] ?? null };
 }
 
 function normalizedLanguages(lines: string[]) {
@@ -199,6 +217,7 @@ export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeA
     excluded_requested_skills: evidence.requested_skills.filter(s => s.status === "NOT_FOUND").map(s => s.skill),
     sections, selected_project_ids: projects.map(b => b.id), technical_experience_ids: primary.filter(b => b.technical).map(b => b.id),
     additional_experience: extra.lines, technical_training: technicalTraining.lines, portfolio_links: portfolio,
+    technical_skill_groups: evidence.role_family === "WEB" ? technicalSkillGroups(skills) : undefined,
     project_details: projects.map(projectDetails) };
 }
 
