@@ -1,13 +1,14 @@
 import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { ApplicationPreparationError } from "./errors";
 
 import type { GeneratedApplication, JobAnalysis, CandidateEvidence, GapAnalysis, ResumeStructure } from "./types";
 
 export function createApplicationServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("APPLICATION_SERVICE_NOT_CONFIGURED");
+  if (!url || !key) throw new ApplicationPreparationError("APPLICATION_SERVICE_NOT_CONFIGURED", "service-client");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
@@ -20,7 +21,7 @@ export class ApplicationDraftRepository {
       .eq("source_resume_id", resumeId)
       .eq("extractor_version", extractorVersion)
       .maybeSingle();
-    if (error) throw new Error(`RESUME_EXTRACTION_READ_FAILED:${error.code ?? "unknown"}`);
+    if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "extraction-cache-read", error);
     return data ? {
       text: data.extracted_text as string,
       structured: data.structured_content as ResumeStructure,
@@ -43,7 +44,7 @@ export class ApplicationDraftRepository {
       extracted_text: input.text,
       structured_content: input.structured,
     }, { onConflict: "source_resume_id,extractor_version" });
-    if (error) throw new Error(`RESUME_EXTRACTION_WRITE_FAILED:${error.code ?? "unknown"}`);
+    if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "extraction-cache-write", error);
   }
 
   async findCurrentDraft(input: {
@@ -60,7 +61,7 @@ export class ApplicationDraftRepository {
       .eq("source_resume_id", input.resumeId)
       .neq("status", "ARCHIVED")
       .maybeSingle();
-    if (error) throw new Error(`APPLICATION_DRAFT_READ_FAILED:${error.code ?? "unknown"}`);
+    if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "draft-read", error);
     return data as { id: string; status: string } | null;
   }
 
@@ -97,7 +98,7 @@ export class ApplicationDraftRepository {
       ? this.client.from("application_drafts").update(values).eq("id", input.existingId).eq("user_id", input.userId)
       : this.client.from("application_drafts").insert(values);
     const { data, error } = await query.select("id").single();
-    if (error) throw new Error(`APPLICATION_DRAFT_WRITE_FAILED:${error.code ?? "unknown"}`);
+    if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "draft-write", error);
     return data.id as string;
   }
 }

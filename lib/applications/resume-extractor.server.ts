@@ -25,7 +25,9 @@ export async function extractResume(
     throw new Error("UNSUPPORTED_RESUME_FORMAT");
   }
 
-  const structured = structureResumeText(text);
+  // Some PDFs emit NUL for unmapped glyphs. PostgreSQL text/jsonb cannot store
+  // U+0000 (22P05); preserve word boundaries without changing the original file.
+  const structured = structureResumeText(text.replaceAll("\u0000", " "));
   if (!structured.lines.length) throw new Error("RESUME_TEXT_EXTRACTION_FAILED");
   return { text: structured.lines.join("\n"), structured };
 }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { buildCoverLetter } from "@/lib/applications/generator";
 import { prepareApplicationDraft, ApplicationPreparationError } from "@/lib/applications/service.server";
+import { logPreparationError, publicPreparationError } from "@/lib/applications/errors";
 import type { CandidateEvidence, GapAnalysis, JobAnalysis } from "@/lib/applications/types";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -17,14 +18,15 @@ export async function prepareApplication(formData: FormData) {
   const matchId = uuid(formData.get("job_match_id"));
   const { supabase, user } = await requireUser();
   if (!user) redirect("/login");
-  if (!matchId) redirect("/jobs?error=Oferta%20no%20v%C3%A1lida");
+  if (!matchId) redirect(`/jobs?error=${encodeURIComponent(publicPreparationError(new ApplicationPreparationError("MISSING_JOB_MATCH", "form")))}`);
   let draftId: string;
   try {
     const draft = await prepareApplicationDraft({ authClient: supabase, userId: user.id, jobMatchId: matchId });
     draftId = draft.id;
   } catch (error) {
+    logPreparationError(error);
     const message = publicPreparationError(error);
-    const resumeRequired = error instanceof ApplicationPreparationError && error.code === "APPROVED_RESUME_REQUIRED";
+    const resumeRequired = error instanceof ApplicationPreparationError && error.code === "NO_APPROVED_RESUME";
     redirect(`/jobs?error=${encodeURIComponent(message)}${resumeRequired ? "&resume_required=1" : ""}`);
   }
   redirect(`/applications/drafts/${draftId}`);
@@ -45,6 +47,7 @@ export async function regenerateApplication(formData: FormData) {
       regenerate: true,
     });
   } catch (error) {
+    logPreparationError(error);
     redirect(`/applications/drafts/${draftId}?error=${encodeURIComponent(publicPreparationError(error))}`);
   }
   revalidatePath(`/applications/drafts/${draftId}`);
@@ -102,13 +105,4 @@ export async function approveApplicationDraft(formData: FormData) {
   if (error) redirect(`/applications/drafts/${draftId}?error=No%20se%20pudo%20aprobar%20el%20borrador`);
   revalidatePath(`/applications/drafts/${draftId}`);
   redirect(`/applications/drafts/${draftId}?message=Candidatura%20aprobada%20sin%20enviar`);
-}
-
-function publicPreparationError(error: unknown) {
-  if (error instanceof ApplicationPreparationError) {
-    if (error.code === "APPROVED_RESUME_REQUIRED") return "Necesitas aprobar un CV antes de preparar una candidatura.";
-    if (error.code === "GENERATION_NOT_CONFIGURED") return "GENERATION_NOT_CONFIGURED";
-    return error.message;
-  }
-  return "No se pudo preparar la candidatura.";
 }

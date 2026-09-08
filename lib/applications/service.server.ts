@@ -7,13 +7,9 @@ import { EvidenceBasedApplicationGenerator } from "./generator";
 import { ApplicationDraftRepository, createApplicationServiceClient } from "./repository.server";
 import { extractResume, RESUME_EXTRACTOR_VERSION } from "./resume-extractor.server";
 import type { CandidateApplicationGenerator } from "./types";
-import { validateGeneratedApplication } from "./validation";
-
-export class ApplicationPreparationError extends Error {
-  constructor(public readonly code: string, message: string) {
-    super(message);
-  }
-}
+import { UnsupportedApplicationClaimError, validateGeneratedApplication } from "./validation";
+import { ApplicationPreparationError } from "./errors";
+export { ApplicationPreparationError } from "./errors";
 
 export async function prepareApplicationDraft(input: {
   authClient: SupabaseClient;
@@ -29,7 +25,7 @@ export async function prepareApplicationDraft(input: {
     .eq("user_id", input.userId)
     .in("eligibility_status", ["ELIGIBLE", "REVIEW"])
     .maybeSingle();
-  if (matchError || !match) throw new ApplicationPreparationError("MATCH_NOT_ELIGIBLE", "La oferta no puede prepararse.");
+  if (matchError || !match) throw new ApplicationPreparationError("MISSING_JOB_MATCH", "job-match", matchError);
 
   const [{ data: profile }, { data: resume }, { data: offer }] = await Promise.all([
     input.authClient.from("candidate_profiles")
@@ -43,7 +39,8 @@ export async function prepareApplicationDraft(input: {
       .select("id,title,description,location_text,work_mode,employment_type,salary_min,salary_max,salary_currency,companies(name)")
       .eq("id", match.job_offer_id).maybeSingle(),
   ]);
-  if (!profile || !offer) throw new ApplicationPreparationError("PREPARATION_DATA_MISSING", "No se pudo cargar el perfil o la oferta.");
+  if (!profile) throw new ApplicationPreparationError("MISSING_CANDIDATE_PROFILE", "candidate-profile");
+  if (!offer) throw new ApplicationPreparationError("MISSING_JOB_OFFER", "job-offer");
   const approvedResume = requireApprovedResume(resume);
 
   const serviceClient = input.serviceClient ?? createApplicationServiceClient();
@@ -56,15 +53,19 @@ export async function prepareApplicationDraft(input: {
   });
   if (current && !input.regenerate) return { id: current.id, reused: true };
   if (current?.status === "APPROVED") {
-    throw new ApplicationPreparationError("APPROVED_DRAFT_IMMUTABLE", "La candidatura aprobada no puede regenerarse.");
+    throw new ApplicationPreparationError("APPROVED_DRAFT_IMMUTABLE", "existing-draft");
   }
 
   let extraction = await repository.loadExtraction(approvedResume.id, RESUME_EXTRACTOR_VERSION);
   if (!extraction) {
     const { data: file, error: downloadError } = await input.authClient.storage
       .from(approvedResume.storage_bucket).download(approvedResume.storage_path);
-    if (downloadError || !file) throw new ApplicationPreparationError("RESUME_DOWNLOAD_FAILED", "No se pudo leer el CV aprobado.");
-    extraction = await extractResume(await file.arrayBuffer(), approvedResume.mime_type);
+    if (downloadError || !file) throw new ApplicationPreparationError("RESUME_DOWNLOAD_FAILED", "resume-download", downloadError);
+    try {
+      extraction = await extractResume(await file.arrayBuffer(), approvedResume.mime_type);
+    } catch (error) {
+      throw new ApplicationPreparationError("RESUME_EXTRACTION_FAILED", "resume-extraction", error);
+    }
     await repository.saveExtraction({
       userId: input.userId,
       candidateProfileId: match.candidate_profile_id,
@@ -78,7 +79,15 @@ export async function prepareApplicationDraft(input: {
   const evidence = buildCandidateEvidence(profile, extraction.structured, job);
   const gaps = analyzeGaps(job, evidence);
   const generator = input.generator ?? resolveApplicationGenerator();
-  const generated = validateGeneratedApplication(await generator.generate({ job, evidence, gaps }), evidence);
+  let generated;
+  try {
+    generated = validateGeneratedApplication(await generator.generate({ job, evidence, gaps }), evidence);
+  } catch (error) {
+    throw new ApplicationPreparationError(
+      error instanceof UnsupportedApplicationClaimError ? "INVALID_GENERATION" : "GENERATION_FAILED",
+      error instanceof UnsupportedApplicationClaimError ? "generation-validation" : "generator", error,
+    );
+  }
   const id = await repository.saveDraft({
     existingId: current?.id,
     userId: input.userId,
@@ -103,12 +112,12 @@ export async function prepareApplicationDraft(input: {
 }
 
 export function requireApprovedResume<T>(resume: T | null): T {
-  if (!resume) throw new ApplicationPreparationError("APPROVED_RESUME_REQUIRED", "Necesitas aprobar un CV antes de preparar una candidatura.");
+  if (!resume) throw new ApplicationPreparationError("NO_APPROVED_RESUME", "approved-resume");
   return resume;
 }
 
 export function resolveApplicationGenerator() {
   const provider = process.env.APPLICATION_GENERATOR_PROVIDER?.trim() || "evidence-based";
   if (provider === "evidence-based") return new EvidenceBasedApplicationGenerator();
-  throw new ApplicationPreparationError("GENERATION_NOT_CONFIGURED", "El generador de candidaturas no está configurado.");
+  throw new ApplicationPreparationError("GENERATION_NOT_CONFIGURED", "generator-config");
 }
