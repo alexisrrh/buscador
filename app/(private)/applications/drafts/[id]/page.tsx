@@ -54,7 +54,9 @@ export default async function ApplicationDraftPage({
       <article className="card full"><h2>CV adaptado</h2>
         {adaptation.professional_title && <p>{adaptation.professional_title}</p>}
         {!!adaptation.portfolio_links?.length && <div className="actions">{adaptation.portfolio_links.map(url => <a key={url} href={url} target="_blank" rel="noreferrer">{url}</a>)}</div>}
-        {adaptation.sections ? adaptation.sections.map(section => <section key={section.key}><h3>{section.heading}</h3><ItemList values={section.lines} empty="Sin evidencia verificada." /></section>) : <>
+        {adaptation.sections ? adaptation.sections.map(section => section.key === "projects" && adaptation.project_details?.length
+          ? <ProjectList key={section.key} projects={adaptation.project_details} />
+          : <section key={section.key}><h3>{section.heading}</h3><ItemList values={section.lines} empty="Sin evidencia verificada." /></section>) : <>
           <h3>Resumen profesional</h3><p>{adaptation.professional_summary || "Sin resumen verificable."}</p>
           <h3>Skills priorizadas</h3><ItemList values={adaptation.prioritized_skills} empty="Sin skills verificadas coincidentes." />
           <h3>Proyectos</h3><ItemList values={adaptation.project_sections} empty="Sin proyectos identificados." />
@@ -77,6 +79,16 @@ export default async function ApplicationDraftPage({
 
 function ItemList({ values, empty }: { values: string[]; empty: string }) {
   return values.length ? <ul>{values.map((value, index) => <li key={index}>{value}</li>)}</ul> : <p className="muted">{empty}</p>;
+}
+
+function ProjectList({ projects }: { projects: NonNullable<ResumeAdaptation["project_details"]> }) {
+  return <section><h3>Proyectos seleccionados</h3>{projects.map(project => <article key={project.name} className="stack">
+    <h4>{project.name}</h4>
+    {project.description && <p>{project.description}</p>}
+    {!!project.technologies.length && <p><strong>Tecnologías:</strong> {project.technologies.join(" · ")}</p>}
+    {!!project.highlights.length && <ul>{project.highlights.map(highlight => <li key={highlight}>{highlight}</li>)}</ul>}
+    {project.link && <p><a href={project.link} target="_blank" rel="noreferrer">{project.link}</a></p>}
+  </article>)}</section>;
 }
 
 function companyName(value: unknown) {

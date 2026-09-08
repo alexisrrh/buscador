@@ -56,7 +56,8 @@ describe("evidence priority v2", () => {
   });
   it("ranks required, preferred, role family and remaining verified skills", async () => {
     const { output } = await generated();
-    expect(output.resume_adaptation.prioritized_skills.slice(0, 6)).toEqual(["JavaScript", "HTML", "CSS", "Git", "React", "Python"]);
+    expect(output.resume_adaptation.prioritized_skills).toEqual(["JavaScript", "HTML", "CSS", "React", "Node.js", "REST", "Git"]);
+    expect(output.resume_adaptation.sections?.find(section => section.key === "secondary-skills")?.lines.join(" ")).toContain("Python");
     expect(output.resume_adaptation.prioritized_skills).not.toContain("TypeScript");
     expect(output.resume_adaptation.excluded_requested_skills).toContain("TypeScript");
   });
@@ -88,7 +89,7 @@ describe("evidence priority v2", () => {
   });
   it("reformulates a poor headline using only verified training, projects and skills", async () => {
     const { input, output } = await generated();
-    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Tecnologías acreditadas: JavaScript, HTML, CSS, Git y React.");
+    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Tecnologías acreditadas: JavaScript, HTML, CSS, React y Node.js.");
     expect(() => validateGeneratedApplication(output, input.evidence)).not.toThrow();
   });
   it("does not claim Full Stack training when only projects mention Full Stack", async () => {
@@ -100,7 +101,8 @@ describe("evidence priority v2", () => {
     expect(absent.input.evidence.requested_skills.find(s => s.skill === "TypeScript")?.status).toBe("NOT_FOUND");
     const present = await generated(scenario(sourceText.replace("Construí una interfaz con React", "Construí una interfaz con TypeScript y React")));
     expect(present.input.evidence.requested_skills.find(s => s.skill === "TypeScript")?.status).toBe("VERIFIED");
-    expect(present.output.resume_adaptation.prioritized_skills).toContain("TypeScript");
+    expect(present.output.resume_adaptation.prioritized_skills).not.toContain("TypeScript");
+    expect(present.output.resume_adaptation.sections?.find(section => section.key === "secondary-skills")?.lines.join(" ")).toContain("TypeScript");
   });
   it("includes verified portfolio and annotation GitHub without inventing repository URLs", async () => {
     const { input, output } = await generated();

@@ -6,6 +6,7 @@ const ROLE_SKILLS: Record<RoleFamily, string[]> = {
   DATA: ["Python", "SQL", "PostgreSQL", "MySQL", "Git"],
   OTHER: [],
 };
+const WEB_PRIMARY_SKILLS = ["JavaScript", "HTML", "CSS", "React", "Node.js", "REST", "Git", "Tailwind CSS", "Supabase", "PostgreSQL", "SQL", "Vite", "GitHub", "Express"];
 const TECH_ROLE = /\b(developer|programmer|software engineer|desarrollador|programador|ingenier[oa] de software|frontend|front-end|backend|back-end|full[ -]?stack|data scientist|data engineer)\b/i;
 const WEB_SIGNAL = /\b(web|react|html|css|frontend|front-end|full[ -]?stack|javascript)\b/i;
 const DATE = /\b(?:19|20)\d{2}\b/;
@@ -88,7 +89,53 @@ export function prioritizedSkills(evidence: CandidateEvidence) {
   const skills = evidence.verified_skills.filter(skill => !evidence.requested_skills.some(s => s.skill === skill && s.status === "NOT_FOUND"));
   const tier = (skill: string) => job?.required_skills.includes(skill) ? 0 : job?.preferred_skills.includes(skill) ? 1 : family.includes(skill) ? 2 : 3;
   const roleIndex = (skill: string) => family.includes(skill) ? family.indexOf(skill) : 100;
-  return skills.sort((a, b) => tier(a) - tier(b) || roleIndex(a) - roleIndex(b) || a.localeCompare(b));
+  const ranked = skills.sort((a, b) => tier(a) - tier(b) || roleIndex(a) - roleIndex(b) || a.localeCompare(b));
+  if (evidence.role_family !== "WEB") return ranked;
+  return WEB_PRIMARY_SKILLS.filter(skill => ranked.includes(skill));
+}
+
+function secondarySkills(evidence: CandidateEvidence, primary: string[]) {
+  const family = ROLE_SKILLS[evidence.role_family ?? "OTHER"];
+  const job = evidence.target_job;
+  const rejected = new Set(evidence.requested_skills.filter(skill => skill.status === "NOT_FOUND").map(skill => skill.skill));
+  const tier = (skill: string) => job?.required_skills.includes(skill) ? 0 : job?.preferred_skills.includes(skill) ? 1 : family.includes(skill) ? 2 : 3;
+  const index = (skill: string) => family.includes(skill) ? family.indexOf(skill) : 100;
+  return evidence.verified_skills.filter(skill => !primary.includes(skill) && !rejected.has(skill))
+    .sort((a, b) => tier(a) - tier(b) || index(a) - index(b) || a.localeCompare(b));
+}
+
+function projectName(project: EvidenceBlock) {
+  const text = project.lines.join(" ");
+  if (/nutrismartcoach/i.test(text)) return "NutriSmartCoach";
+  if (/consultorio odontol[oó]gico lac/i.test(text)) return "Consultorio Odontológico LAC";
+  if (/vhsflix/i.test(text)) return "VHSFlix";
+  return project.title.replace(/\s*\|.*$/, "").trim();
+}
+
+function projectPriority(project: EvidenceBlock) {
+  const index = ["NutriSmartCoach", "Consultorio Odontológico LAC", "VHSFlix"].indexOf(projectName(project));
+  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+}
+
+function projectDetails(project: EvidenceBlock) {
+  const content = project.lines.filter(line => !TECH_ROLE.test(line) && !safeEvidenceUrl(line));
+  const titleIndex = content.findIndex(line => line === project.title);
+  const body = titleIndex >= 0 ? content.filter((_, index) => index !== titleIndex) : content;
+  const narrative = body.filter(line => !/[|]/.test(line) && !project.skills.some(skill => skillPresent(line, skill)));
+  const highlights: string[] = [];
+  for (let index = 0; index < body.length; index++) {
+    if (!/^(?:Desarroll[ée]|Diseñ[ée]|Integr[ée]|Implement[ée]|Constru[íi]|Despleg[ée])/i.test(body[index])) continue;
+    const parts = [body[index]];
+    while (index + 1 < body.length && !/^(?:Desarroll[ée]|Diseñ[ée]|Integr[ée]|Implement[ée]|Constru[íi]|Despleg[ée])/i.test(body[index + 1])) parts.push(body[++index]);
+    highlights.push(parts.join(" "));
+  }
+  const name = projectName(project);
+  const titleDescription = safeEvidenceUrl(project.title) ? "" : project.title.replace(/\s*\|.*$/, "").replace(name, "").trim();
+  return { name, description: titleDescription || narrative.slice(0, 2).join(" "), technologies: project.skills, highlights: highlights.slice(0, 4), link: project.links[0] ?? null };
+}
+
+function normalizedLanguages(lines: string[]) {
+  return lines.map(line => /^ingles\s+intermediate$/i.test(line.trim()) ? "Inglés — Intermedio" : line);
 }
 
 export function correctedHeadline(value: string) {
@@ -111,10 +158,14 @@ function professionalSummary(evidence: CandidateEvidence, skills: string[]) {
 
 export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeAdaptation {
   const skills = prioritizedSkills(evidence);
+  const secondary = secondarySkills(evidence, skills);
   const technicalRole = evidence.role_family !== "OTHER";
   const blocks = evidence.blocks ?? [];
   const score = (block: EvidenceBlock) => block.skills.reduce((sum, skill) => sum + (evidence.target_job?.required_skills.includes(skill) ? 10 : evidence.target_job?.preferred_skills.includes(skill) ? 5 : ROLE_SKILLS[evidence.role_family ?? "OTHER"].includes(skill) ? 2 : 0), 0);
-  const projects = blocks.filter(b => b.kind === "project").sort((a, b) => Number(b.technical && technicalRole) - Number(a.technical && technicalRole) || score(b) - score(a));
+  const projects = blocks.filter(b => b.kind === "project").sort((a, b) => {
+    const canonicalOrder = projectPriority(a) - projectPriority(b);
+    return canonicalOrder || Number(b.technical && technicalRole) - Number(a.technical && technicalRole) || score(b) - score(a);
+  });
   const employment = blocks.filter(b => b.kind === "employment");
   const primary = technicalRole ? employment.filter(b => b.technical) : employment;
   const additional = technicalRole ? employment.filter(b => !b.technical) : [];
@@ -136,9 +187,10 @@ export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeA
   const sections = [
     { key: "summary", heading: "Resumen profesional", lines: summary ? [summary] : [], evidence_ids: [] },
     { key: "skills", heading: technicalFirst ? "Skills técnicas" : "Skills", lines: skills.length ? [skills.join(" · ")] : [], evidence_ids: [] },
+    ...(secondary.length ? [{ key: "secondary-skills", heading: "Skills complementarias", lines: [secondary.join(" · ")], evidence_ids: [] }] : []),
     ...(technicalFirst ? [selectedProjects, work, technicalTraining, extra] : [work, selectedProjects, technicalTraining]),
     section("education", "Educación", education),
-    { key: "languages", heading: "Idiomas", lines: evidence.language_lines, evidence_ids: [] },
+    { key: "languages", heading: "Idiomas", lines: normalizedLanguages(evidence.language_lines), evidence_ids: [] },
   ].filter(s => s.lines.length);
   return { selection_version: "evidence-priority-v2", professional_title: title, professional_summary: summary,
     prioritized_skills: skills, experience_sections: (technicalFirst ? primary : employment).flatMap(b => b.lines),
@@ -146,7 +198,8 @@ export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeA
     ats_keywords: skills.filter(skill => evidence.target_job?.keywords.includes(skill)),
     excluded_requested_skills: evidence.requested_skills.filter(s => s.status === "NOT_FOUND").map(s => s.skill),
     sections, selected_project_ids: projects.map(b => b.id), technical_experience_ids: primary.filter(b => b.technical).map(b => b.id),
-    additional_experience: extra.lines, technical_training: technicalTraining.lines, portfolio_links: portfolio };
+    additional_experience: extra.lines, technical_training: technicalTraining.lines, portfolio_links: portfolio,
+    project_details: projects.map(projectDetails) };
 }
 
 export function canonicalEvidenceValue(value: unknown): string {
