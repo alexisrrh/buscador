@@ -51,7 +51,18 @@ export default async function ApplicationDraftPage({
       <DerivedResumePanel draftId={draft.id} sourceResumeId={draft.source_resume_id} approved={draft.status === "APPROVED"} offerTitle={offer?.title ?? job.job_title} />
       <article className="card"><h2>Por qué encajas</h2><ItemList values={[...gaps.strong_matches, ...gaps.partial_matches]} empty="No se encontró evidencia directa para destacar." /></article>
       <article className="card"><h2>Lo que te falta</h2><ItemList values={[...gaps.missing_requirements, ...gaps.unknown_requirements]} empty="No se detectaron gaps explícitos." /></article>
-      <article className="card full"><h2>CV adaptado</h2><h3>Resumen profesional</h3><p>{adaptation.professional_summary || "Sin resumen verificable."}</p><h3>Skills priorizadas</h3><ItemList values={adaptation.prioritized_skills} empty="Sin skills verificadas coincidentes." /><h3>Experiencia priorizada</h3><ItemList values={adaptation.experience_sections} empty="El extractor no identificó una sección de experiencia." /><h3>Skills solicitadas no acreditadas</h3><ItemList values={adaptation.excluded_requested_skills} empty="Ninguna." /></article>
+      <article className="card full"><h2>CV adaptado</h2>
+        {adaptation.professional_title && <p>{adaptation.professional_title}</p>}
+        {!!adaptation.portfolio_links?.length && <div className="actions">{adaptation.portfolio_links.map(url => <a key={url} href={url} target="_blank" rel="noreferrer">{url}</a>)}</div>}
+        {adaptation.sections ? adaptation.sections.map(section => <section key={section.key}><h3>{section.heading}</h3><ItemList values={section.lines} empty="Sin evidencia verificada." /></section>) : <>
+          <h3>Resumen profesional</h3><p>{adaptation.professional_summary || "Sin resumen verificable."}</p>
+          <h3>Skills priorizadas</h3><ItemList values={adaptation.prioritized_skills} empty="Sin skills verificadas coincidentes." />
+          <h3>Proyectos</h3><ItemList values={adaptation.project_sections} empty="Sin proyectos identificados." />
+          <h3>Experiencia profesional</h3><ItemList values={adaptation.experience_sections} empty="Sin experiencia identificada." />
+          <h3>Formación</h3><ItemList values={adaptation.education} empty="Sin formación identificada." />
+        </>}
+        <h3>Skills solicitadas no acreditadas</h3><ItemList values={adaptation.excluded_requested_skills} empty="Ninguna." />
+      </article>
       <article className="card full"><h2>Editar textos</h2><form className="stack" action={saveApplicationText}><input type="hidden" name="application_draft_id" value={draft.id} /><div className="field"><label htmlFor="recruiter-message">Mensaje al recruiter</label><textarea id="recruiter-message" name="recruiter_message" defaultValue={draft.recruiter_message ?? ""} /></div><div className="field"><label htmlFor="cover-letter">Carta</label><textarea id="cover-letter" name="cover_letter" defaultValue={draft.cover_letter ?? ""} rows={10} /></div>{draft.status !== "APPROVED" && <button type="submit">Guardar cambios</button>}</form>{!draft.cover_letter && draft.status !== "APPROVED" && <form className="actions" action={generateApplicationCoverLetter}><input type="hidden" name="application_draft_id" value={draft.id} /><button className="secondary" type="submit">Preparar carta opcional</button></form>}</article>
     </section>
     <div className="card application-actions">
@@ -65,7 +76,7 @@ export default async function ApplicationDraftPage({
 }
 
 function ItemList({ values, empty }: { values: string[]; empty: string }) {
-  return values.length ? <ul>{values.map((value) => <li key={value}>{value}</li>)}</ul> : <p className="muted">{empty}</p>;
+  return values.length ? <ul>{values.map((value, index) => <li key={index}>{value}</li>)}</ul> : <p className="muted">{empty}</p>;
 }
 
 function companyName(value: unknown) {
