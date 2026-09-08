@@ -50,6 +50,17 @@ describe("Phase 9A deterministic rendering", () => {
     expect(content.target).toBe("Web Developer — Example Hiring");
     expect(content.contact).toContain("maria@example.test");
   });
+  it("uses a structured personal name and rejects a role label as identity", () => {
+    expect(buildResumeContent(adaptation, evidence, source, job).name).toBe("María Ejemplo");
+    const sourceWithoutName = structureResumeText(source.lines.slice(1).join("\n"));
+    expect(() => buildResumeContent(adaptation, { ...evidence, candidate_profile: { ...evidence.candidate_profile, name: "Frontend Developer" } }, sourceWithoutName, job)).toThrow("MISSING_CANDIDATE_NAME");
+  });
+  it("keeps contact fields and links only when extracted from the approved resume", () => {
+    const contactSource = structureResumeText("María Ejemplo\n+34 600 000 000\nmaria@example.test\nhttps://www.linkedin.com/in/maria\nhttps://github.com/maria\nhttps://portfolio.example.dev\nEXPERIENCIA\nExample Company — Web Developer — 2020–2024\nDesarrollo de aplicaciones con TypeScript y SQL.\nEDUCACIÓN\nUniversidad Ejemplo — Grado en Informática — 2016–2020");
+    const contactEvidence = buildCandidateEvidence(evidence.candidate_profile, contactSource, job);
+    expect(contactEvidence.identity).toMatchObject({ name: { source: "CANDIDATE_PROFILE" }, email: { source: "RESUME_EXTRACTION" }, phone: { source: "RESUME_EXTRACTION" } });
+    expect(contactEvidence.identity?.links.map(link => link.label)).toEqual(["LinkedIn", "GitHub", "Portfolio"]);
+  });
   it("generates a readable nonempty PDF with correct MIME, hash and pages", async () => {
     const content = buildResumeContent(adaptation, evidence, source, job);
     const result = await renderResumePdf(content);
@@ -73,6 +84,13 @@ describe("Phase 9A deterministic rendering", () => {
       }
     } finally { await parser.destroy(); }
   }, 30000);
+  it("renders grouped skills, structured projects and clickable link annotations", async () => {
+    const content = { name: "María Ejemplo", title: "Web Developer", target: "Web Developer", contact: [], sections: [{ heading: "Resumen profesional", lines: ["Web Developer"] }], header: { metadata: ["maria@example.test"], links: [{ label: "Portfolio", url: "https://example.test" }] }, skill_groups: [{ label: "Frontend", skills: ["TypeScript"] }], projects: [{ name: "Portal", technologies: ["TypeScript"], description: "Portal de documentación", highlights: [], link: "https://example.test" }], training: [], additional_experience: [], languages: [] };
+    expect(content.skill_groups).toEqual([{ label: "Frontend", skills: ["TypeScript"] }]);
+    expect(content.projects?.[0].name).toBe("Portal");
+    const rendered = await renderResumePdf(content);
+    expect(rendered.bytes.toString("latin1")).toContain("/URI");
+  });
   it("paginates long content without dropping lines or leaving blank pages", async () => {
     const content = buildResumeContent(adaptation, evidence, source, job);
     content.sections[2].lines = Array.from({ length: 34 }, (_, i) => `Empresa Ejemplo ${i + 1} — Developer — 2020–2024. Desarrollo y mantenimiento de aplicaciones empresariales con TypeScript y SQL.`);

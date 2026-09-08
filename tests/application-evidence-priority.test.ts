@@ -119,7 +119,7 @@ describe("evidence priority v2", () => {
     const { input, output } = await generated();
     const content = buildResumeContent(output.resume_adaptation, input.evidence, input.source, input.job);
     expect(content.sections.map(s => s.heading)).toEqual(output.resume_adaptation.sections!.map(s => s.heading));
-    expect(content.contact).toContain("https://github.com/synthetic-candidate");
+    expect(content.header?.links.map(link => link.url)).toContain("https://github.com/synthetic-candidate");
     expect(content.title).toBe("Desarrollador web");
   });
   it("retains employment-first ordering for another profession and for no technical evidence", async () => {

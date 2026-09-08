@@ -55,6 +55,13 @@ export type CandidateEvidence = {
   links?: Array<{ text: string; url: string }>;
   role_family?: RoleFamily;
   target_job?: Pick<JobAnalysis, "job_title" | "required_skills" | "preferred_skills" | "keywords">;
+  identity?: {
+    name?: { value: string; source: "CANDIDATE_PROFILE" | "RESUME_EXTRACTION" | "USER_PROFILE" };
+    email?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
+    phone?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
+    city?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
+    links: Array<{ label: "LinkedIn" | "GitHub" | "Portfolio"; url: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" }>;
+  };
 };
 
 export type GapAnalysis = {

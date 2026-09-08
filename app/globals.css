@@ -64,6 +64,13 @@ input, select, textarea {
 textarea { min-height: 90px; resize: vertical; }
 .hint { color: var(--muted); font-size: .82rem; }
 .actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; margin-top: .5rem; }
+.derived-ready-list { margin-top: 1rem; }
+.derived-version { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-top: 1px solid var(--line); }
+.derived-version h4 { margin: 0 0 .2rem; }
+.derived-version p { margin: 0; color: var(--muted); font-size: .88rem; }
+.derived-version-failed, .derived-version-archived { opacity: .72; }
+.derived-history { margin-top: .9rem; color: var(--muted); }
+.derived-history summary { cursor: pointer; font-weight: 700; }
 .list { display: grid; gap: .8rem; }
 .list-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .list-item h2, .list-item h3 { margin: 0; font-size: 1rem; }
@@ -166,6 +173,7 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
   .form-grid { grid-template-columns: 1fr; }
   .field.full { grid-column: auto; }
   .page-header, .list-item { align-items: stretch; flex-direction: column; }
+  .derived-version { flex-direction: column; }
   .form-footer { position: static; }
   .match-generator, .jobs-filters, .job-card, .application-grid { grid-template-columns: 1fr; }
   .application-grid .full { grid-column: auto; }
