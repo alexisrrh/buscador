@@ -63,7 +63,7 @@ describe("preparation failure classification", () => {
   it("does not need external generator keys and classifies invalid generation", async () => {
     vi.stubEnv("APPLICATION_GENERATOR_PROVIDER", "evidence-based");
     const generator = resolveApplicationGenerator();
-    expect(generator.provider).toBe("evidence-based-v1");
+    expect(generator.provider).toBe("evidence-based-v2");
     const original = generator.generate.bind(generator);
     vi.spyOn(generator, "generate").mockImplementation(async input => ({ ...await original(input), resume_adaptation: { ...(await original(input)).resume_adaptation, prioritized_skills: ["AWS"] } }));
     await expect(prepareApplicationDraft({ ...scenario().input, generator })).rejects.toMatchObject({ code: "INVALID_GENERATION" });

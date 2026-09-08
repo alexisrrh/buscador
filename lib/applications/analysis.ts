@@ -4,12 +4,14 @@ import type {
   JobAnalysis,
   ResumeStructure,
 } from "./types";
+import { enrichEvidence } from "./evidence-priority";
 
 const SKILLS = [
   "Angular", "AWS", "Azure", "CSS", "Docker", "Flutter", "Git", "GraphQL",
   "HTML", "Java", "JavaScript", "Kubernetes", "Next.js", "Node.js", "PHP",
   "PostgreSQL", "Python", "React", "REST", "Ruby", "SQL", "Supabase",
   "TypeScript", "Vue",
+  "Express", "Flask", "Vite", "Tailwind CSS", "Bootstrap", "Capacitor", "Redux", "JWT", "SQLAlchemy", "MySQL", "GitHub", "SCSS",
 ];
 
 type OfferInput = {
@@ -51,7 +53,7 @@ function meaningfulLines(value: string) {
 }
 
 export function skillsInText(value: string) {
-  const normalized = ` ${cleanText(value).toLocaleLowerCase("en")} `;
+  const normalized = ` ${cleanText(value).toLocaleLowerCase("en").replace(/\bhtml5\b/g, "html").replace(/\bcss3\b/g, "css").replace(/\bnodejs\b/g, "node.js")} `;
   return SKILLS.filter((skill) => {
     const needle = skill.toLocaleLowerCase("en");
     return new RegExp(`(^|[^a-z0-9+#])${escapeRegExp(needle)}([^a-z0-9+#]|$)`, "i").test(normalized);
@@ -61,8 +63,25 @@ export function skillsInText(value: string) {
 export function analyzeJobOffer(offer: OfferInput): JobAnalysis {
   const description = offer.description ?? "";
   const lines = meaningfulLines(description);
-  const mandatory = lines.filter((line) => /\b(required|must|essential|requisito|imprescindible|necesario)\b/i.test(line));
-  const preferred = lines.filter((line) => /\b(preferred|nice to have|desirable|valorable|deseable)\b/i.test(line));
+  // ATS descriptions often lose list breaks at ingestion. Respect requirement
+  // headings even when mandatory and optional lists are on one long line.
+  const requirementText = cleanText(description.replace(/<\/(?:li|p|h[1-6])>|<br\s*\/?\s*>/gi, "\n"));
+  const scoped = requirementText.split(/(required skills and experience|required qualifications|minimum qualifications|useful experience if you have it|preferred qualifications|nice to have|who you are|what we offer|benefits)/gi);
+  let mode: "required" | "preferred" | null = null;
+  const mandatory: string[] = [];
+  const preferred: string[] = [];
+  for (const part of scoped) {
+    if (/^(required skills and experience|required qualifications|minimum qualifications)$/i.test(part)) { mode = "required"; continue; }
+    if (/^(useful experience if you have it|preferred qualifications|nice to have)$/i.test(part)) { mode = "preferred"; continue; }
+    if (/^(who you are|what we offer|benefits)$/i.test(part)) { mode = null; continue; }
+    const candidates = meaningfulLines(part);
+    if (mode === "required") mandatory.push(...candidates);
+    else if (mode === "preferred") preferred.push(...candidates);
+    else for (const line of candidates) {
+      if (/\b(preferred|nice to have|desirable|valorable|deseable)\b/i.test(line)) preferred.push(line);
+      else if (/\b(required|must|essential|requisito|imprescindible|necesario)\b/i.test(line)) mandatory.push(line);
+    }
+  }
   const responsibilities = lines.filter((line) => /\b(build|develop|design|implement|maintain|deliver|crear|desarroll|diseñ|implement|mantener)\b/i.test(line));
   const experience = lines.filter((line) => /\b\d+\+?\s*(years?|años?)\b/i.test(line));
   const education = lines.filter((line) => /\b(degree|bachelor|master|university|grado|licenciatura|ingenier[ií]a)\b/i.test(line));
@@ -122,7 +141,7 @@ export function buildCandidateEvidence(
     .filter((section) => pattern.test(section.heading))
     .flatMap((section) => section.lines);
 
-  return {
+  return enrichEvidence({
     candidate_profile: profile,
     verified_skills: verifiedSkills,
     requested_skills: requested.map((skill) => ({
@@ -134,7 +153,7 @@ export function buildCandidateEvidence(
     education_lines: sectionLines(/education|educaci[oó]n|formaci[oó]n|studies|estudios/i),
     language_lines: sectionLines(/language|idioma/i),
     source_text: sourceText,
-  };
+  }, resume, job);
 }
 
 export function analyzeGaps(job: JobAnalysis, evidence: CandidateEvidence): GapAnalysis {

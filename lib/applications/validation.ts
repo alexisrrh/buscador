@@ -1,4 +1,5 @@
 import type { CandidateEvidence, GeneratedApplication } from "./types";
+import { buildPrioritizedAdaptation, canonicalEvidenceValue, correctedHeadline } from "./evidence-priority";
 
 export class UnsupportedApplicationClaimError extends Error {
   readonly code = "INVALID_GENERATION";
@@ -15,6 +16,16 @@ export function validateGeneratedApplication(
     throw new UnsupportedApplicationClaimError(["INVALID_OUTPUT_STRUCTURE"]);
   }
   const unsupported: string[] = [];
+  const adaptation = output.resume_adaptation;
+  if (adaptation.selection_version === "evidence-priority-v2") {
+    // Recompute every claim, source block, link and ordering from evidence.
+    // Accept factual deterministic reformulation, never arbitrary persuasive prose.
+    if (!evidence.blocks || !evidence.target_job || canonicalEvidenceValue(adaptation) !== canonicalEvidenceValue(buildPrioritizedAdaptation(evidence))) {
+      throw new UnsupportedApplicationClaimError(["INVALID_EVIDENCE_SELECTION"]);
+    }
+  } else if (adaptation.sections !== undefined || adaptation.professional_title !== undefined || adaptation.portfolio_links !== undefined || adaptation.additional_experience !== undefined || adaptation.technical_training !== undefined) {
+    throw new UnsupportedApplicationClaimError(["UNVALIDATED_SELECTION_FIELDS"]);
+  }
   const verified = new Set(evidence.verified_skills);
   for (const skill of [
     ...output.resume_adaptation.prioritized_skills,
@@ -50,8 +61,10 @@ export function validateGeneratedApplication(
   const supportedSummaries = new Set([
     "",
     evidence.candidate_profile.headline?.trim() ?? "",
+    correctedHeadline(evidence.candidate_profile.headline ?? ""),
     [evidence.candidate_profile.seniority, evidence.candidate_profile.job_family].filter(Boolean).join(" "),
   ]);
+  if (adaptation.selection_version === "evidence-priority-v2") supportedSummaries.add(buildPrioritizedAdaptation(evidence).professional_summary);
   if (!supportedSummaries.has(output.resume_adaptation.professional_summary)) {
     unsupported.push(output.resume_adaptation.professional_summary);
   }

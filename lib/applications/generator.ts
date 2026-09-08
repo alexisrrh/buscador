@@ -3,32 +3,23 @@ import type {
   CandidateApplicationGenerator,
   GeneratedApplication,
 } from "./types";
+import { buildPrioritizedAdaptation } from "./evidence-priority";
 
 export class EvidenceBasedApplicationGenerator implements CandidateApplicationGenerator {
-  readonly provider = "evidence-based-v1";
+  readonly provider = "evidence-based-v2";
 
   async generate(input: ApplicationGenerationInput): Promise<GeneratedApplication> {
-    const { job, evidence, gaps } = input;
-    const relevantSkills = evidence.verified_skills.filter((skill) => job.keywords.includes(skill));
+    const { job, evidence } = input;
+    const adaptation = buildPrioritizedAdaptation(evidence);
+    const relevantSkills = adaptation.prioritized_skills;
     const strengths = relevantSkills.slice(0, 3);
-    const profileSummary = evidence.candidate_profile.headline?.trim() ||
-      [evidence.candidate_profile.seniority, evidence.candidate_profile.job_family]
-        .filter(Boolean).join(" ");
     const company = job.company ? ` en ${job.company}` : "";
     const strengthText = strengths.length
       ? `Mi experiencia verificable incluye ${joinNatural(strengths)}.`
       : "Mi experiencia descrita en el CV guarda relación con los requisitos revisados.";
 
     return {
-      resume_adaptation: {
-        professional_summary: profileSummary,
-        prioritized_skills: relevantSkills,
-        experience_sections: evidence.experience_lines,
-        project_sections: evidence.project_lines,
-        education: evidence.education_lines,
-        ats_keywords: relevantSkills,
-        excluded_requested_skills: gaps.missing_requirements,
-      },
+      resume_adaptation: adaptation,
       recruiter_message: `Hola, me interesa el puesto de ${job.job_title}${company}. ${strengthText} Tras revisar la oferta, considero que estas capacidades pueden aportar una base útil para asumir sus responsabilidades. He preparado mi candidatura utilizando únicamente la experiencia acreditada en mi CV y manteniendo visibles los requisitos que todavía no constan en él. Me gustaría conversar sobre las necesidades del equipo y sobre cómo podría contribuir desde mi experiencia real. Quedo disponible para ampliar cualquier información y comentar mi motivación por la oportunidad.`,
       cover_letter: null,
     };

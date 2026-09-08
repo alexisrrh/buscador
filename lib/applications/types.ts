@@ -21,7 +21,21 @@ export type JobAnalysis = {
 export type ResumeStructure = {
   sections: Array<{ heading: string; lines: string[] }>;
   lines: string[];
+  links?: Array<{ text: string; url: string }>;
 };
+
+export type RoleFamily = "WEB" | "SOFTWARE" | "DATA" | "OTHER";
+export type EvidenceBlock = {
+  id: string;
+  kind: "project" | "employment" | "education";
+  title: string;
+  lines: string[];
+  identity_lines: string[];
+  skills: string[];
+  technical: boolean;
+  links: string[];
+};
+export type AdaptedSection = { key: string; heading: string; lines: string[]; evidence_ids: string[] };
 
 export type CandidateEvidence = {
   candidate_profile: {
@@ -37,6 +51,10 @@ export type CandidateEvidence = {
   education_lines: string[];
   language_lines: string[];
   source_text: string;
+  blocks?: EvidenceBlock[];
+  links?: Array<{ text: string; url: string }>;
+  role_family?: RoleFamily;
+  target_job?: Pick<JobAnalysis, "job_title" | "required_skills" | "preferred_skills" | "keywords">;
 };
 
 export type GapAnalysis = {
@@ -54,6 +72,14 @@ export type ResumeAdaptation = {
   education: string[];
   ats_keywords: string[];
   excluded_requested_skills: string[];
+  selection_version?: "evidence-priority-v2";
+  professional_title?: string;
+  sections?: AdaptedSection[];
+  selected_project_ids?: string[];
+  technical_experience_ids?: string[];
+  additional_experience?: string[];
+  technical_training?: string[];
+  portfolio_links?: string[];
 };
 
 export type GeneratedApplication = {

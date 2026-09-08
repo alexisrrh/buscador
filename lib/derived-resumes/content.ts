@@ -41,14 +41,17 @@ export function buildResumeContent(adaptation: ResumeAdaptation, evidence: Candi
     const section = (heading: string, lines: string[]) => ({ heading, lines });
     const original = (pattern: RegExp) => source.sections.filter(s => pattern.test(s.heading)).flatMap(s => s.lines);
     // Keep full original sections in their original order: dates/employers/roles remain together.
-    const contact = source.sections.filter(s => /^(perfil|profile|contact|contacto|personal details)$/i.test(s.heading))
+    const contact = source.sections.filter((s, index) => index === 0 || /^(perfil|profile|contact|contacto|personal details)$/i.test(s.heading))
       .flatMap(s => s.lines).filter(line => /[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|(?:\+?\d[\d ()-]{7,}\d)/i.test(line));
     const content = {
       name,
-      title: evidence.candidate_profile.headline || adaptation.professional_summary,
+      title: adaptation.professional_title ?? evidence.candidate_profile.headline ?? adaptation.professional_summary,
       target: [job.job_title, job.company].filter(Boolean).join(" — "),
-      contact,
-      sections: [
+      contact: [...new Set([...contact, ...(adaptation.portfolio_links ?? [])])],
+      sections: adaptation.selection_version === "evidence-priority-v2" ? [
+        ...adaptation.sections!.map(({ heading, lines }) => ({ heading, lines })),
+        section("Certificaciones", original(/certific|licenses|licencias/i)),
+      ].filter(s => s.lines.length) : [
         section("Resumen profesional", adaptation.professional_summary ? [adaptation.professional_summary] : []),
         section("Skills", [...new Set([...adaptation.prioritized_skills, ...adaptation.ats_keywords])]),
         section("Experiencia", fresh.experience_lines),

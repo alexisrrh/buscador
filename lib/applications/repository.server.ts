@@ -95,7 +95,7 @@ export class ApplicationDraftRepository {
       cover_letter: input.generated.cover_letter,
     };
     const query = input.existingId
-      ? this.client.from("application_drafts").update(values).eq("id", input.existingId).eq("user_id", input.userId)
+      ? this.client.from("application_drafts").update(values).eq("id", input.existingId).eq("user_id", input.userId).in("status", ["DRAFT", "READY_FOR_REVIEW"])
       : this.client.from("application_drafts").insert(values);
     const { data, error } = await query.select("id").single();
     if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "draft-write", error);
