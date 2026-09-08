@@ -10,7 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const source = structureResumeText(`María Ejemplo\nmaria@example.test\nhttps://example.test\nEXPERIENCIA\nExample Company — Web Developer — 2020–2024\nDesarrollo de aplicaciones con TypeScript y SQL.\nPROYECTOS\nPortal de documentación — 2023\nEDUCACIÓN\nUniversidad Ejemplo — Grado en Informática — 2016–2020\nCERTIFICACIONES\nCertificación de ejemplo — 2022\nIDIOMAS\nEspañol nativo; inglés B2`);
 const job = analyzeJobOffer({ title: "Web Developer", description: "TypeScript required. AWS preferred.", companies: { name: "Example Hiring" }, location_text: null, work_mode: null, employment_type: null, salary_min: null, salary_max: null, salary_currency: null });
-const evidence = buildCandidateEvidence({ name: "María Ejemplo", headline: "Web Developer", seniority: null, job_family: null }, source, job);
+const evidence = buildCandidateEvidence({ name: "Frontend Developer", headline: "Web Developer", seniority: null, job_family: null }, source, job);
 const adaptation = { professional_summary: "Web Developer", prioritized_skills: ["TypeScript"], ats_keywords: ["SQL"], experience_sections: evidence.experience_lines, project_sections: evidence.project_lines, education: evidence.education_lines, excluded_requested_skills: ["AWS"] };
 
 function mockClient(draft: unknown, resume: unknown) {
@@ -50,15 +50,28 @@ describe("Phase 9A deterministic rendering", () => {
     expect(content.target).toBe("Web Developer — Example Hiring");
     expect(content.contact).toContain("maria@example.test");
   });
-  it("uses a structured personal name and rejects a role label as identity", () => {
+  it("prioritizes a saved structured identity over resume extraction", () => {
+    const saved = { first_name: "Ana", last_name: "Usuario" };
+    const fresh = buildCandidateEvidence(evidence.candidate_profile, source, job, saved);
+    expect(fresh.identity?.name).toEqual({ value: "Ana Usuario", source: "USER_PROFILE" });
+    expect(buildResumeContent(adaptation, evidence, source, job, saved).name).toBe("Ana Usuario");
+  });
+  it("falls back to verified resume extraction and rejects role labels as identity", () => {
+    const extracted = buildCandidateEvidence(evidence.candidate_profile, source, job);
+    expect(extracted.identity?.name).toEqual({ value: "María Ejemplo", source: "RESUME_EXTRACTION" });
     expect(buildResumeContent(adaptation, evidence, source, job).name).toBe("María Ejemplo");
     const sourceWithoutName = structureResumeText(source.lines.slice(1).join("\n"));
     expect(() => buildResumeContent(adaptation, { ...evidence, candidate_profile: { ...evidence.candidate_profile, name: "Frontend Developer" } }, sourceWithoutName, job)).toThrow("MISSING_CANDIDATE_NAME");
   });
+  it("never treats a filename as candidate identity", () => {
+    const sourceWithoutName = { ...structureResumeText(source.lines.slice(1).join("\n")), filename: "Alexis_Rodriguez_CV.pdf" };
+    expect(() => buildResumeContent(adaptation, evidence, sourceWithoutName, job)).toThrow("MISSING_CANDIDATE_NAME");
+    expect(buildCandidateEvidence(evidence.candidate_profile, sourceWithoutName, job).identity?.name).toBeUndefined();
+  });
   it("keeps contact fields and links only when extracted from the approved resume", () => {
     const contactSource = structureResumeText("María Ejemplo\n+34 600 000 000\nmaria@example.test\nhttps://www.linkedin.com/in/maria\nhttps://github.com/maria\nhttps://portfolio.example.dev\nEXPERIENCIA\nExample Company — Web Developer — 2020–2024\nDesarrollo de aplicaciones con TypeScript y SQL.\nEDUCACIÓN\nUniversidad Ejemplo — Grado en Informática — 2016–2020");
     const contactEvidence = buildCandidateEvidence(evidence.candidate_profile, contactSource, job);
-    expect(contactEvidence.identity).toMatchObject({ name: { source: "CANDIDATE_PROFILE" }, email: { source: "RESUME_EXTRACTION" }, phone: { source: "RESUME_EXTRACTION" } });
+    expect(contactEvidence.identity).toMatchObject({ name: { source: "RESUME_EXTRACTION" }, email: { source: "RESUME_EXTRACTION" }, phone: { source: "RESUME_EXTRACTION" } });
     expect(contactEvidence.identity?.links.map(link => link.label)).toEqual(["LinkedIn", "GitHub", "Portfolio"]);
   });
   it("generates a readable nonempty PDF with correct MIME, hash and pages", async () => {

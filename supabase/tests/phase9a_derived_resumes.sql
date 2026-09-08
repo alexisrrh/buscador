@@ -45,27 +45,27 @@ insert into public.application_drafts (
 
 insert into public.derived_resumes (id,user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id)
 values ('89000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000001','85000000-0000-4000-8000-000000000001','83000000-0000-4000-8000-000000000001','84000000-0000-4000-8000-000000000001');
-insert into storage.objects (bucket_id,name) select storage_bucket,storage_path from public.derived_resumes;
-update public.derived_resumes set status='READY',sha256=repeat('a',64),size_bytes=1500,pages=1,content_snapshot='{}';
+insert into storage.objects (bucket_id,name) select storage_bucket,storage_path from public.derived_resumes where id='89000000-0000-4000-8000-000000000001';
+update public.derived_resumes set status='READY',sha256=repeat('a',64),size_bytes=1500,pages=1,content_snapshot='{}' where id='89000000-0000-4000-8000-000000000001';
 insert into public.derived_resumes (id,user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id)
-select '89000000-0000-4000-8000-000000000002',user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes;
-update public.derived_resumes set status='FAILED',failure_code='INVALID_ADAPTATION' where status='GENERATING';
+select '89000000-0000-4000-8000-000000000002',user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes where id='89000000-0000-4000-8000-000000000001';
+update public.derived_resumes set status='FAILED',failure_code='INVALID_ADAPTATION' where id='89000000-0000-4000-8000-000000000002' and status='GENERATING';
 select public.create_prepared_application('80000000-0000-4000-8000-000000000001','85000000-0000-4000-8000-000000000001',null,'MANUAL','https://example.test/jobs/one','PREPARED','[]','{}',null,null,'[]');
-update public.applications set derived_resume_id='89000000-0000-4000-8000-000000000001';
+update public.applications set derived_resume_id='89000000-0000-4000-8000-000000000001' where application_draft_id='85000000-0000-4000-8000-000000000001';
 do $$
 begin
-  if (select count(distinct storage_path) from public.derived_resumes) <> 2 then raise exception 'Regeneration reused path'; end if;
+  if (select count(distinct storage_path) from public.derived_resumes where id in ('89000000-0000-4000-8000-000000000001','89000000-0000-4000-8000-000000000002')) <> 2 then raise exception 'Regeneration reused path'; end if;
   if not exists(select 1 from public.applications where derived_resume_id='89000000-0000-4000-8000-000000000001') then raise exception 'Application reference missing'; end if;
   begin
-    update public.applications set derived_resume_id='89000000-0000-4000-8000-000000000002';
+    update public.applications set derived_resume_id='89000000-0000-4000-8000-000000000002' where application_draft_id='85000000-0000-4000-8000-000000000001';
     raise exception 'FAILED derivative accepted';
   exception when check_violation then null; end;
   begin
-    update public.derived_resumes set sha256=repeat('b',64) where status='READY';
+    update public.derived_resumes set sha256=repeat('b',64) where id='89000000-0000-4000-8000-000000000001';
     raise exception 'READY metadata mutable';
   exception when check_violation then null; end;
   begin
-    update storage.objects set metadata='{}' where bucket_id='derived-resumes';
+    update storage.objects set metadata='{}' where bucket_id='derived-resumes' and name=(select storage_path from public.derived_resumes where id='89000000-0000-4000-8000-000000000001');
     raise exception 'Bytes overwrite permitted';
   exception when check_violation then null; end;
   begin
@@ -76,14 +76,14 @@ begin
   update public.application_drafts set status='READY_FOR_REVIEW' where id='85000000-0000-4000-8000-000000000001';
   begin
     insert into public.derived_resumes (user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id)
-    select user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes limit 1;
+    select user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes where id='89000000-0000-4000-8000-000000000001';
     raise exception 'Unapproved draft accepted';
   exception when check_violation then null; end;
   update public.application_drafts set status='APPROVED' where id='85000000-0000-4000-8000-000000000001';
-  update public.resumes set status='ARCHIVED',archived_at=now();
+  update public.resumes set status='ARCHIVED',archived_at=now() where id='83000000-0000-4000-8000-000000000001';
   begin
     insert into public.derived_resumes (user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id)
-    select user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes limit 1;
+    select user_id,candidate_profile_id,application_draft_id,source_resume_id,job_offer_id from public.derived_resumes where id='89000000-0000-4000-8000-000000000001';
     raise exception 'Unapproved source accepted';
   exception when check_violation then null; end;
 end;
@@ -106,7 +106,7 @@ $$;
 select set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000001',true);
 do $$
 begin
-  if (select count(*) from public.derived_resumes) <> 2 then raise exception 'Owner cannot read'; end if;
+  if (select count(*) from public.derived_resumes where id in ('89000000-0000-4000-8000-000000000001','89000000-0000-4000-8000-000000000002')) <> 2 then raise exception 'Owner cannot read'; end if;
   begin
     update public.derived_resumes set status='ARCHIVED';
     raise exception 'Client lifecycle allowed';

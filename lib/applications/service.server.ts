@@ -27,7 +27,7 @@ export async function prepareApplicationDraft(input: {
     .maybeSingle();
   if (matchError || !match) throw new ApplicationPreparationError("MISSING_JOB_MATCH", "job-match", matchError);
 
-  const [{ data: profile }, { data: resume }, { data: offer }] = await Promise.all([
+  const [{ data: profile }, { data: resume }, { data: offer }, { data: userIdentity }] = await Promise.all([
     input.authClient.from("candidate_profiles")
       .select("id,name,headline,job_family,seniority")
       .eq("id", match.candidate_profile_id).eq("user_id", input.userId).is("deleted_at", null).maybeSingle(),
@@ -38,6 +38,9 @@ export async function prepareApplicationDraft(input: {
     input.authClient.from("job_offers")
       .select("id,title,description,location_text,work_mode,employment_type,salary_min,salary_max,salary_currency,companies(name)")
       .eq("id", match.job_offer_id).maybeSingle(),
+    input.authClient.from("profiles")
+      .select("first_name,last_name")
+      .eq("id", input.userId).maybeSingle(),
   ]);
   if (!profile) throw new ApplicationPreparationError("MISSING_CANDIDATE_PROFILE", "candidate-profile");
   if (!offer) throw new ApplicationPreparationError("MISSING_JOB_OFFER", "job-offer");
@@ -76,7 +79,7 @@ export async function prepareApplicationDraft(input: {
   }
 
   const job = analyzeJobOffer(offer as never);
-  const evidence = buildCandidateEvidence(profile, extraction.structured, job);
+  const evidence = buildCandidateEvidence(profile, extraction.structured, job, userIdentity);
   const gaps = analyzeGaps(job, evidence);
   const generator = input.generator ?? resolveApplicationGenerator();
   let generated;

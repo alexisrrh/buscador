@@ -56,7 +56,7 @@ export type CandidateEvidence = {
   role_family?: RoleFamily;
   target_job?: Pick<JobAnalysis, "job_title" | "required_skills" | "preferred_skills" | "keywords">;
   identity?: {
-    name?: { value: string; source: "CANDIDATE_PROFILE" | "RESUME_EXTRACTION" | "USER_PROFILE" };
+    name?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
     email?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
     phone?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
     city?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };

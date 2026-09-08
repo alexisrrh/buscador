@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { trimmed } from "@/lib/validation";
+import { structuredUserIdentity } from "@/lib/user-identity";
 
 function values(formData: FormData) {
   const name = trimmed(formData.get("name"), 120);
@@ -40,6 +41,21 @@ export async function updateProfile(formData: FormData) {
   if (error) redirect(`/profiles/${id}?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/profiles");
   redirect(`/profiles/${id}?message=Perfil%20actualizado`);
+}
+
+export async function updateUserIdentity(formData: FormData) {
+  const profileId = trimmed(formData.get("profile_id"), 36);
+  const identity = structuredUserIdentity({
+    first_name: formData.get("first_name"),
+    last_name: formData.get("last_name"),
+  });
+  if (!identity) redirect(`/profiles/${profileId}?error=${encodeURIComponent("Introduce un nombre y apellido(s) válidos.")}`);
+  const { supabase, user } = await requireUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.from("profiles").update(identity).eq("id", user.id);
+  if (error) redirect(`/profiles/${profileId}?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/profiles");
+  redirect(`/profiles/${profileId}?message=Identidad%20actualizada`);
 }
 
 export async function archiveProfile(formData: FormData) {

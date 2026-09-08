@@ -5,6 +5,7 @@ import type {
   ResumeStructure,
 } from "./types";
 import { enrichEvidence } from "./evidence-priority";
+import { isPersonalName, structuredUserIdentity, type UserIdentityInput } from "@/lib/user-identity";
 
 const SKILLS = [
   "Angular", "AWS", "Azure", "CSS", "Docker", "Flutter", "Git", "GraphQL",
@@ -133,6 +134,7 @@ export function buildCandidateEvidence(
   profile: ProfileInput,
   resume: ResumeStructure,
   job: JobAnalysis,
+  userIdentity?: UserIdentityInput | null,
 ): CandidateEvidence {
   const sourceText = resume.lines.join("\n");
   const verifiedSkills = skillsInText(sourceText);
@@ -154,28 +156,23 @@ export function buildCandidateEvidence(
     language_lines: sectionLines(/language|idioma/i),
     source_text: sourceText,
   }, resume, job);
-  return { ...enriched, identity: extractVerifiedIdentity(profile, resume, enriched.links ?? []) };
+  return { ...enriched, identity: extractVerifiedIdentity(userIdentity, resume, enriched.links ?? []) };
 }
 
-function extractVerifiedIdentity(profile: ProfileInput, resume: ResumeStructure, links: NonNullable<CandidateEvidence["links"]>) {
+function extractVerifiedIdentity(userIdentity: UserIdentityInput | null | undefined, resume: ResumeStructure, links: NonNullable<CandidateEvidence["links"]>) {
   const header = resume.sections.filter((section, index) => index === 0 || /^(perfil|profile|contact|contacto|personal details)$/i.test(section.heading)).flatMap(section => section.lines);
-  const personName = [profile.name, ...header].find(isPersonalName);
+  const savedIdentity = structuredUserIdentity(userIdentity);
+  const extractedName = header.find(isPersonalName);
   const email = header.flatMap(line => line.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/ig) ?? [])[0];
   const phone = header.flatMap(line => line.match(/(?:\+?\d[\d ()-]{7,}\d)/g) ?? [])[0];
   const city = header.map(line => line.match(/(?:ciudad|city|ubicación|ubicacion|location)\s*[:—-]\s*([^|·,]+)/i)?.[1]?.trim()).find(Boolean);
   return {
-    ...(personName ? { name: { value: personName, source: personName === profile.name ? "CANDIDATE_PROFILE" as const : "RESUME_EXTRACTION" as const } } : {}),
+    ...(savedIdentity ? { name: { value: `${savedIdentity.first_name} ${savedIdentity.last_name}`, source: "USER_PROFILE" as const } } : extractedName ? { name: { value: extractedName, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(email ? { email: { value: email, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(phone ? { phone: { value: phone, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(city ? { city: { value: city, source: "RESUME_EXTRACTION" as const } } : {}),
     links: links.map(link => ({ label: linkLabel(link.url), url: link.url, source: "RESUME_EXTRACTION" as const })),
   };
-}
-
-function isPersonalName(value: string) {
-  const candidate = value.trim();
-  if (!/^[a-záéíóúüñ]+(?:[ -][a-záéíóúüñ]+){1,4}$/i.test(candidate)) return false;
-  return !/\b(developer|desarrollador|frontend|backend|full\s*stack|web|software|engineer|ingenier[oa]|react|node)\b/i.test(candidate);
 }
 
 function linkLabel(value: string): "LinkedIn" | "GitHub" | "Portfolio" {

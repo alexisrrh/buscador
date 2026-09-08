@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ProfileForm } from "@/components/profile-form";
 import { SearchForm } from "@/components/search-form";
+import { UserIdentityForm } from "@/components/user-identity-form";
 
 const profile = {
   id: "profile-a", user_id: "user-a", name: "Frontend", headline: null,
@@ -26,5 +27,12 @@ describe("MVP forms", () => {
     expect(screen.getByLabelText("¿A partir de qué compatibilidad quieres recibir avisos?")).toHaveAttribute("max", "100");
     expect(screen.getByText(/No hay postulación automática activa/i)).toBeInTheDocument();
     expect(screen.getByLabelText("¿Qué tecnologías o conocimientos quieres que tengan las ofertas?")).toBeInTheDocument();
+  });
+
+  it("shows structured identity fields with saved values for editing", () => {
+    render(<UserIdentityForm action={vi.fn()} profileId="profile-a" identity={{ first_name: "Ana", last_name: "Pérez López" }} />);
+    expect(screen.getByLabelText("Nombre")).toHaveValue("Ana");
+    expect(screen.getByLabelText("Apellido(s)")).toHaveValue("Pérez López");
+    expect(screen.getByText(/No cambia el nombre de este perfil profesional/i)).toBeInTheDocument();
   });
 });

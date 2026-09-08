@@ -29,7 +29,9 @@ async function contentFromSource(input: Context, source: Awaited<ReturnType<type
     throw new DerivedResumeError("SOURCE_INTEGRITY_FAILED");
   }
   const extraction = await extractResume(bytes, resume.mime_type);
-  return buildResumeContent(draft.resume_adaptation, draft.profile_analysis, extraction.structured, draft.job_analysis);
+  const { data: userIdentity } = await input.authClient.from("profiles")
+    .select("first_name,last_name").eq("id", input.userId).maybeSingle();
+  return buildResumeContent(draft.resume_adaptation, draft.profile_analysis, extraction.structured, draft.job_analysis, userIdentity);
 }
 
 export async function previewDerivedResume(input: Context): Promise<ResumeContent> {
