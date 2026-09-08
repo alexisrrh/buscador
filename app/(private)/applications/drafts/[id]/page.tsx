@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DerivedResumePanel } from "@/components/derived-resume-panel";
 import { notFound } from "next/navigation";
 
 import {
@@ -47,6 +48,7 @@ export default async function ApplicationDraftPage({
     </div>
     <Feedback message={query.message} error={query.error} />
     <section className="application-grid">
+      <DerivedResumePanel draftId={draft.id} sourceResumeId={draft.source_resume_id} approved={draft.status === "APPROVED"} offerTitle={offer?.title ?? job.job_title} />
       <article className="card"><h2>Por qué encajas</h2><ItemList values={[...gaps.strong_matches, ...gaps.partial_matches]} empty="No se encontró evidencia directa para destacar." /></article>
       <article className="card"><h2>Lo que te falta</h2><ItemList values={[...gaps.missing_requirements, ...gaps.unknown_requirements]} empty="No se detectaron gaps explícitos." /></article>
       <article className="card full"><h2>CV adaptado</h2><h3>Resumen profesional</h3><p>{adaptation.professional_summary || "Sin resumen verificable."}</p><h3>Skills priorizadas</h3><ItemList values={adaptation.prioritized_skills} empty="Sin skills verificadas coincidentes." /><h3>Experiencia priorizada</h3><ItemList values={adaptation.experience_sections} empty="El extractor no identificó una sección de experiencia." /><h3>Skills solicitadas no acreditadas</h3><ItemList values={adaptation.excluded_requested_skills} empty="Ninguna." /></article>

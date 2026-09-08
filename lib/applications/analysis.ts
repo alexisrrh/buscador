@@ -157,7 +157,7 @@ export function analyzeGaps(job: JobAnalysis, evidence: CandidateEvidence): GapA
 function isHeading(line: string) {
   return line.length <= 50 && (
     /^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s/&-]+$/.test(line) ||
-    /^(profile|summary|skills|experience|projects|education|languages|perfil|resumen|habilidades|experiencia|proyectos|formaci[oó]n|idiomas)$/i.test(line)
+    /^(profile|summary|professional summary|skills|experience|projects|education|languages|certifications|certificates|contact|contacto|certificaciones|certificados|perfil|resumen|resumen profesional|habilidades|experiencia|proyectos|educaci[oó]n|formaci[oó]n|idiomas)$/i.test(line)
   );
 }
 
