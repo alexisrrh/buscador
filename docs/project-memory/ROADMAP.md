@@ -15,10 +15,19 @@ Status: COMPLETE.
 - Replaced the public static company-board list with the persisted `company_career_sources` registry, shared with live search.
 - Reused board health and an explicit local development seed; no migration was required.
 
-## Next priority - Source Coverage / Persistent Ingestion
+## Milestone 2B - Persistent opportunity catalog
 
-- First design how persisted JobOffer, job_offer_sources and freshness can power broad Spain/Europe and tech/non-tech coverage without synchronous fan-out to hundreds of boards per user search.
-- Then add permitted coverage and health/backoff policy incrementally.
+Status: COMPLETE.
+
+- Registered boards now ingest globally into neutral JobOffers and public catalog search does not perform visitor-triggered live fan-out.
+- The catalog includes only `ACTIVE` offers seen in the last 45 days and preserves existing public relevance and ranking.
+- Local validation: 4 providers, 21 boards, 2,256 received offers, and catalog-only public search around 160–230 ms.
+- Scheduling, source lifecycle reconciliation, board-identity dedupe repair and new coverage remain out of scope.
+
+## Next priority - Milestone 2C: Source Coverage Expansion
+
+- Increase permitted Spain, Galicia, non-tech and Europe coverage while retaining global ingestion and catalog-first public search.
+- Do not add a scheduler, repair source identity dedupe or redesign relevance inside this milestone.
 - Legacy UI cleanup is deferred until Oportunidades and candidacy fully replace the old flow: remove Automation Command Center, old Inicio/dashboard and Inicio navigation; replace Ofertas with Oportunidades; remove unconsumed legacy UI while preserving useful backend.
 
 ## Milestone 0 — Clean checkpoint

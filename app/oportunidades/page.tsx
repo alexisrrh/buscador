@@ -16,8 +16,6 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 
   const result = await searchPublicOpportunities(intent);
   const query = intentQuery(intent);
-  const partialFailure = result.sourcesFailed > 0 && result.sourcesSucceeded > 0;
-  const allFailed = result.registryEmpty || (result.sourcesAttempted > 0 && result.sourcesSucceeded === 0);
 
   return <main className="opportunities-page">
     <section className="opportunities-header">
@@ -27,10 +25,8 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       <p>{intent.location || "Cualquier ubicación"} · {modeLabel(intent.workMode)}</p>
     </section>
 
-    {partialFailure ? <p className="opportunities-notice" role="status">Alguna fuente no respondió. Te mostramos las oportunidades disponibles.</p> : null}
-    {allFailed ? <section className="opportunities-state" role="alert"><h2>No pudimos consultar las fuentes ahora mismo.</h2><p>Prueba de nuevo en unos minutos. No hemos creado ningún perfil ni guardado datos personales.</p><Link className="button" href={`/?${query}`}>Volver a intentar</Link></section> : null}
-    {!allFailed && result.opportunities.length === 0 ? <section className="opportunities-state"><h2>No encontramos oportunidades suficientemente cercanas a tu búsqueda.</h2><p>Prueba con otro puesto, una ubicación más amplia o modalidad Cualquiera.</p><Link className="button secondary" href={`/?${query}`}>Ajustar búsqueda</Link></section> : null}
-    {!allFailed && result.opportunities.length > 0 ? <section className="opportunities-list" aria-label="Oportunidades encontradas">
+    {result.opportunities.length === 0 ? <section className="opportunities-state"><h2>No encontramos oportunidades suficientemente cercanas a tu búsqueda.</h2><p>Prueba con otro puesto, una ubicación más amplia o modalidad Cualquiera.</p><Link className="button secondary" href={`/?${query}`}>Ajustar búsqueda</Link></section> : null}
+    {result.opportunities.length > 0 ? <section className="opportunities-list" aria-label="Oportunidades encontradas">
       {result.opportunities.map((opportunity) => <OpportunityCard key={`${opportunity.sourceUrl}-${opportunity.title}`} opportunity={opportunity} intent={intent} />)}
     </section> : null}
   </main>;
@@ -54,8 +50,8 @@ function OpportunityCard({ opportunity, intent }: { opportunity: PublicOpportuni
   </article>;
 }
 
-function modeLabel(value: SearchIntent["workMode"] | PublicOpportunity["workMode"]) {
-  return { ANY: "Cualquier modalidad", REMOTE: "Remoto", HYBRID: "Híbrido", ONSITE: "Presencial", UNKNOWN: "Modalidad no informada" }[value] ?? "Modalidad no informada";
+function modeLabel(value: SearchIntent["workMode"] | PublicOpportunity["workMode"] | null) {
+  return { ANY: "Cualquier modalidad", REMOTE: "Remoto", HYBRID: "Híbrido", ONSITE: "Presencial", UNKNOWN: "Modalidad no informada" }[value ?? "UNKNOWN"] ?? "Modalidad no informada";
 }
 
 function formatDate(value: string) {

@@ -2,6 +2,16 @@
 
 Last verified: 2026-09-09.
 
+## PRODUCT RESET MILESTONE 2B COMPLETE - PERSISTENT CATALOG
+
+- The public opportunity path queries fresh, neutral `ACTIVE` JobOffers server-side, followed by the existing public-intent relevance evaluator; it does not invoke source adapters during the public request.
+- Global ingestion reuses the registered source registry, adapters, normalization, batch persistence and board health without a user, CandidateProfile, SearchProfile or JobMatch.
+- There is no scheduler yet. A developer-only, server-only entrypoint can populate a local catalog for validation; production must not fall back to visitor-triggered board fan-out when the catalog is empty.
+- Current freshness policy is the existing 45-day `last_seen_at` window. Full reconciliation after a successful source run remains future work.
+- Local validation ingested 2,256 offers from 4 providers and 21 boards. Catalog-only public searches completed in approximately 160–230 ms with no adapters called during the request.
+- Before aggressive board growth, resolve source identity dedupe: `job_source_id` identifies a provider rather than a concrete board, so equal external IDs across boards of one provider can collide.
+- Coverage remains limited to the existing 4 providers and 21 boards. The next priority is Milestone 2C — Source Coverage Expansion for permitted Spain, Galicia, non-tech and Europe sources. PUBLIC RELEVANCE CALIBRATION and LEGACY UI CLEANUP remain separate pending work.
+
 ## PRODUCT RESET MILESTONE 2A COMPLETE - DYNAMIC SOURCE REGISTRY
 
 - `company_career_sources` is the persisted SourceRegistry for public `/oportunidades` and private/live search. It currently contains 4 providers (Greenhouse, Ashby, SmartRecruiters and Lever) and 21 company boards, not 21 independent job portals.

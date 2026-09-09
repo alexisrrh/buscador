@@ -10,6 +10,10 @@ Deliver public opportunities before authentication; require auth only for person
 
 Use persisted `company_career_sources` as the server-side registry for public and live searches. A hardcoded list is permitted only as an explicit, idempotent development seed when the local registry is empty; production must not depend on it. This makes adding a board for an existing provider configuration-only while preserving source isolation and health.
 
+## ADR-037 - Persistent public opportunity catalog
+
+Ingest registered sources globally into neutral `JobOffer`/`job_offer_sources`, then serve public opportunity requests from fresh `ACTIVE` catalog entries before applying existing public-intent relevance and ranking. Visitor requests must not trigger live board fan-out; scheduling and lifecycle reconciliation are separate work.
+
 | ID | Origin | Decision | Rationale / consequence |
 | --- | --- | --- | --- |
 | ADR-001 | Product architecture | Build SaaS-ready from the MVP, even while one initial user is the test case. | Personal values cannot be embedded in code or workflows. |

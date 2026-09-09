@@ -4,7 +4,11 @@
 
 - [x] Complete Product Reset Milestone 1A: intent-first public search and personalized-action auth gate.
 - [x] Complete Product Reset Milestone 2A: replace the static 21-company-board public list with the persisted Dynamic SourceRegistry.
-- [ ] Design persisted ingestion/freshness reuse before expanding search coverage or adding hundreds of synchronous boards.
+- [x] Design persisted ingestion/freshness reuse before expanding search coverage or adding hundreds of synchronous boards.
+- [x] Complete Product Reset Milestone 2B: validate persistent public catalog search and prepare its independent checkpoint.
+- [ ] Complete Milestone 2C: expand permitted Spain, Galicia, non-tech and Europe source coverage without changing the user flow.
+- [ ] Add scheduling and successful-run lifecycle reconciliation only after the catalog vertical slice is complete.
+- [ ] Repair provider-vs-board source identity before aggressive board expansion.
 - [ ] Add broader permitted coverage for Spain, Galicia and non-tech roles; activate InfoJobs only with application credentials.
 - [ ] Add source health, latency, rate-limit/backoff and temporary-disable tracking.
 - [ ] Extend canonical dedupe across ATS, career site and permitted portal origins.

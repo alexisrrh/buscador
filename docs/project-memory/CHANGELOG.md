@@ -2,6 +2,13 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-09-09 - Product Reset Milestone 2B complete
+
+- Added server-only, global registered-board ingestion into the neutral persistent JobOffer catalog, reusing existing adapters, normalization, persistence and board health.
+- Public `/oportunidades` now searches `ACTIVE` JobOffers seen in the prior 45 days and applies the existing public relevance/ranking logic without visitor-triggered adapter fan-out.
+- Local validation ingested 2,256 offers across 4 providers and 21 boards; catalog-only public searches completed in approximately 160–230 ms. No migration was needed.
+- Scheduling, lifecycle reconciliation, provider-vs-board source identity, coverage expansion, public relevance calibration and legacy UI cleanup remain separate follow-ups. Milestone 2C — Source Coverage Expansion is next.
+
 ## 2026-09-09 - Product Reset Milestone 2A complete
 
 - Added a server-side Dynamic SourceRegistry backed by persisted `company_career_sources`, shared by public opportunities and private/live search.
