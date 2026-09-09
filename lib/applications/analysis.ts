@@ -5,6 +5,7 @@ import type {
   ResumeStructure,
 } from "./types";
 import { enrichEvidence } from "./evidence-priority";
+import { mergeProfessionalEvidence } from "./professional-evidence";
 import { isPersonalName, structuredUserIdentity, type UserIdentityInput } from "@/lib/user-identity";
 
 const SKILLS = [
@@ -135,6 +136,7 @@ export function buildCandidateEvidence(
   resume: ResumeStructure,
   job: JobAnalysis,
   userIdentity?: UserIdentityInput | null,
+  professionalEvidence?: import("./types").ProfessionalEvidenceBank | null,
 ): CandidateEvidence {
   const sourceText = resume.lines.join("\n");
   const verifiedSkills = skillsInText(sourceText);
@@ -156,7 +158,7 @@ export function buildCandidateEvidence(
     language_lines: sectionLines(/language|idioma/i),
     source_text: sourceText,
   }, resume, job);
-  return { ...enriched, identity: extractVerifiedIdentity(userIdentity, resume, enriched.links ?? []) };
+  return mergeProfessionalEvidence({ ...enriched, identity: extractVerifiedIdentity(userIdentity, resume, enriched.links ?? []) }, professionalEvidence);
 }
 
 function extractVerifiedIdentity(userIdentity: UserIdentityInput | null | undefined, resume: ResumeStructure, links: NonNullable<CandidateEvidence["links"]>) {

@@ -62,6 +62,20 @@ export type CandidateEvidence = {
     city?: { value: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" };
     links: Array<{ label: "LinkedIn" | "GitHub" | "Portfolio"; url: string; source: "RESUME_EXTRACTION" | "USER_PROFILE" }>;
   };
+  professional_evidence?: ProfessionalEvidenceItem[];
+};
+
+export type ProfessionalEvidenceCategory = "PROBLEM" | "RESPONSIBILITY" | "FEATURE" | "FRONTEND" | "BACKEND" | "API_INTEGRATION" | "AUTH" | "DATABASE" | "STORAGE" | "ARCHITECTURE" | "TESTING" | "DEPLOYMENT" | "TECHNOLOGY" | "RESULT" | "METRIC" | "OTHER";
+export type ProfessionalEvidenceSource = "APPROVED_RESUME" | "USER_CONFIRMED" | "VERIFIED_TRAINING";
+export type ProfessionalEvidenceVerification = "VERIFIED" | "CONFIRMABLE" | "MISSING" | "UNKNOWN";
+export type ProfessionalEvidenceItem = {
+  id: string; profile_id: string; subject_type: "PROJECT" | "EMPLOYMENT"; display_name: string;
+  category: ProfessionalEvidenceCategory; exact_claim: string; source_type: ProfessionalEvidenceSource;
+  source_reference: string; verification_status: ProfessionalEvidenceVerification; confirmed_at: string | null; relevance_tags: string[];
+};
+export type ProfessionalEvidenceBank = { items: ProfessionalEvidenceItem[] };
+export type ResumeInformationCoverage = {
+  entries: Array<{ claim: string; status: "PRESERVED" | "REPRIORITIZED" | "OMITTED_FOR_RELEVANCE" | "OMITTED_FOR_SPACE" | "ADDED_FROM_VERIFIED_BANK"; reason: string }>;
 };
 
 export type GapAnalysis = {

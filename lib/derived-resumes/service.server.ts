@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createApplicationServiceClient } from "@/lib/applications/repository.server";
 import { extractResume } from "@/lib/applications/resume-extractor.server";
+import { loadProfessionalEvidenceBank } from "@/lib/applications/professional-evidence.server";
 import { buildResumeContent, DERIVED_BUCKET, DerivedResumeError, GENERATION_VERSION, type ResumeContent } from "./content";
 import { renderResumePdf } from "./renderer.server";
 
@@ -31,7 +32,8 @@ async function contentFromSource(input: Context, source: Awaited<ReturnType<type
   const extraction = await extractResume(bytes, resume.mime_type);
   const { data: userIdentity } = await input.authClient.from("profiles")
     .select("first_name,last_name").eq("id", input.userId).maybeSingle();
-  return buildResumeContent(draft.resume_adaptation, draft.profile_analysis, extraction.structured, draft.job_analysis, userIdentity);
+  const bank = await loadProfessionalEvidenceBank(input.authClient, input.userId, draft.candidate_profile_id);
+  return buildResumeContent(draft.resume_adaptation, draft.profile_analysis, extraction.structured, draft.job_analysis, userIdentity, bank);
 }
 
 export async function previewDerivedResume(input: Context): Promise<ResumeContent> {

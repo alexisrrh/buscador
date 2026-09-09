@@ -9,6 +9,7 @@ import { extractResume, RESUME_EXTRACTOR_VERSION } from "./resume-extractor.serv
 import type { CandidateApplicationGenerator } from "./types";
 import { UnsupportedApplicationClaimError, validateGeneratedApplication } from "./validation";
 import { ApplicationPreparationError } from "./errors";
+import { loadProfessionalEvidenceBank } from "./professional-evidence.server";
 export { ApplicationPreparationError } from "./errors";
 
 export async function prepareApplicationDraft(input: {
@@ -79,7 +80,8 @@ export async function prepareApplicationDraft(input: {
   }
 
   const job = analyzeJobOffer(offer as never);
-  const evidence = buildCandidateEvidence(profile, extraction.structured, job, userIdentity);
+  const bank = await loadProfessionalEvidenceBank(input.authClient, input.userId, match.candidate_profile_id);
+  const evidence = buildCandidateEvidence(profile, extraction.structured, job, userIdentity, bank);
   const gaps = analyzeGaps(job, evidence);
   const generator = input.generator ?? resolveApplicationGenerator();
   let generated;

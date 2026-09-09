@@ -1,5 +1,5 @@
 import { buildCandidateEvidence, skillsInText } from "@/lib/applications/analysis";
-import type { CandidateEvidence, JobAnalysis, ResumeAdaptation, ResumeStructure } from "@/lib/applications/types";
+import type { CandidateEvidence, JobAnalysis, ResumeAdaptation, ResumeStructure, ProfessionalEvidenceBank } from "@/lib/applications/types";
 import type { UserIdentityInput } from "@/lib/user-identity";
 import { validateGeneratedApplication } from "@/lib/applications/validation";
 
@@ -32,10 +32,10 @@ export type DerivedResume = {
   created_at: string; updated_at: string;
 };
 
-export function buildResumeContent(adaptation: ResumeAdaptation, evidence: CandidateEvidence, source: ResumeStructure, job: JobAnalysis, userIdentity?: UserIdentityInput | null): ResumeContent {
+export function buildResumeContent(adaptation: ResumeAdaptation, evidence: CandidateEvidence, source: ResumeStructure, job: JobAnalysis, userIdentity?: UserIdentityInput | null, professionalEvidence?: ProfessionalEvidenceBank | null): ResumeContent {
   try {
     // Rebuild evidence from the actual approved file; never trust only the stored analysis.
-    const fresh = buildCandidateEvidence(evidence.candidate_profile, source, job, userIdentity);
+    const fresh = buildCandidateEvidence(evidence.candidate_profile, source, job, userIdentity, professionalEvidence);
     fresh.verified_skills = fresh.verified_skills.filter(skill => evidence.verified_skills.includes(skill) &&
       !evidence.requested_skills.some(item => item.skill === skill && item.status === "NOT_FOUND"));
     try { validateGeneratedApplication({ resume_adaptation: adaptation, recruiter_message: null, cover_letter: null }, fresh); }
