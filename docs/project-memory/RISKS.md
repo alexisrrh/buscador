@@ -24,5 +24,8 @@
 | Browser SHA-256 can consume noticeable CPU/memory on weaker devices | Bounded Phase 3 risk because files are limited to 10 MiB. | Monitor UX; move hashing to a worker only if measurements justify it. |
 | Supabase Auth email/redirect configuration differs by deployment | Open operational risk. Code and route guards are tested, but delivery depends on project SMTP and allowed URLs. | Smoke-test signup confirmation, cookies, logout, and redirect URLs in each deployed environment. |
 | Raw database integration errors may reveal implementation details to authenticated users | Open Phase 3 hardening risk. React escapes output, preventing direct HTML injection. | Map expected database errors to stable user messages before public launch. |
+| Professional Evidence table grants exceed intended CRUD grants | Known follow-up. `authenticated` has effective REFERENCES/TRIGGER/TRUNCATE grants in addition to CRUD. | Assess and, if warranted, revoke only through a dedicated additive migration after validating Supabase role defaults and runtime behavior. |
+| Product Reset can discard validated backend behavior | Current transition risk. | Reuse internal models and safety gates; change user experience incrementally after a clean checkpoint. |
+| Multi-source discovery can become brittle or non-compliant | Central future product risk. | Add sources only through permitted/documented access, source isolation, health checks, throttling, partial failure and canonical dedupe. |
 
 Risks are not permission to implement later phases early. Update this register when evidence changes or a new risk is discovered.

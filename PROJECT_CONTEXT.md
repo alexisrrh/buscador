@@ -2,9 +2,9 @@
 
 ## Product
 
-This repository is evolving from a set of personal n8n job-search workflows into a multi-user, SaaS-ready job-search application focused initially on Spain and remote work.
+This repository is evolving from personal n8n job-search workflows into a multi-user job-search product focused initially on Spain and remote work.
 
-The product must help users define independent searches, collect candidate-neutral job offers, match them against professional profiles, review the best opportunities, and prepare applications under explicit user control. Its primary outcome is qualified interviews, not raw application volume.
+The official product direction is **invisible complexity, visible outcomes**: a user says what job they want, uploads a CV, and BuscaVacante performs the operational work. The product optimizes qualified interviews, not raw application volume.
 
 ## Approved Architecture
 
@@ -20,6 +20,9 @@ The product must help users define independent searches, collect candidate-neutr
 - Google Sheets may be a temporary interface or staging surface, but is not a source of truth.
 - An LLM must never be the sole authority for scoring gates or automatic-application safety decisions.
 - Application modes may eventually be manual, semi-automatic, or automatic. Auto-apply requires deterministic safety gates, auditability, limits, duplicate protection, a global kill switch, per-portal controls, and manual review whenever there is doubt. It follows semi-auto and shadow mode.
+- CandidateProfile, SearchProfile, JobPreferences, Professional Evidence Bank, Requirement Resolution, gap analysis, source adapters and detailed matching scores are internal infrastructure. Do not expose them as normal user configuration.
+- The approved base CV is the quality floor. Derived CVs may only use truthful, verified evidence and must preserve or improve professional value.
+- The user-facing MVP navigation target is Oportunidades, Candidaturas and Perfil.
 
 ## Current Boundary
 
@@ -27,9 +30,9 @@ The product must help users define independent searches, collect candidate-neutr
 - Phase 1: COMPLETE.
 - Phase 2: COMPLETE.
 - Phase 3: COMPLETE.
-- Current state: `BEFORE_PHASE_4`.
-- Next allowed phase: first neutral job source, only after explicit authorization.
-- No Phase 4 implementation has started.
+- Current state: `PRODUCT_RESET_WORKTREE_FREEZE`.
+- Before new UX work: finish checkpoint commits and leave the worktree clean.
+- The next Product Reset implementation, after explicit authorization and a clean checkpoint, is Intent-first onboarding.
 
 Detailed state and evidence live in [`docs/project-memory/`](docs/project-memory/).
 
@@ -53,16 +56,14 @@ Detailed state and evidence live in [`docs/project-memory/`](docs/project-memory
 6. Read RISKS.md.
 7. Read the current PHASE document.
 8. Verify git status.
-9. Never skip phases.
-10. Never mark work COMPLETE without validation.
+9. Do not start a new phase with a dirty worktree.
+10. Never mark work COMPLETE without validation and a real-user UX check where applicable.
 
 ### AFTER ANY IMPLEMENTATION
 
-1. Update CURRENT_STATE.md.
-2. Update TODO.md.
-3. Update CHANGELOG.md.
-4. Update the current phase document.
-5. Update RISKS.md when a new risk is discovered.
-6. Update DECISIONS.md only if an actual architectural decision changes.
-7. Record only verified facts.
-8. Never write secrets, tokens, passwords or private CV content into memory.
+1. Update CURRENT_STATE.md and TODO.md.
+2. Update CHANGELOG.md and the current phase document when a milestone is completed.
+3. Update RISKS.md when a new risk is discovered.
+4. Update DECISIONS.md only if an actual architectural decision changes.
+5. Record only verified facts.
+6. Never write secrets, tokens, passwords or private CV content into memory.

@@ -1,32 +1,53 @@
 # Current State
 
-Last verified: 2026-08-29.
+Last verified: 2026-09-09.
 
-| Item | State |
-| --- | --- |
-| Phase 0 | COMPLETE |
-| Phase 1 | COMPLETE |
-| Phase 2 | COMPLETE |
-| Phase 3 | COMPLETE |
-| Current phase | `BEFORE_PHASE_4` |
-| Next allowed phase | First neutral job source, only after explicit authorization |
+## Current Product Direction
 
-## Verified Baseline
+BuscaVacante is being reset around **invisible complexity, visible outcomes**:
 
-- All five legacy n8n workflows have `active=false`.
-- The workflows remain functionally legacy and still contain inherited logic and author-specific data.
-- The linked Supabase project has migration `20260829000100_phase1_core_identity_search.sql` applied.
-- Runtime-verified tables are `public.profiles`, `public.candidate_profiles`, `public.search_profiles`, and `public.job_preferences`.
-- The Auth profile trigger, forced RLS, tenant isolation, cross-tenant foreign keys, checks, soft deletion, and `runnable_search_profiles` behavior passed runtime tests.
-- Runtime test data was rolled back; no synthetic users or domain rows persisted.
-- Phase 2 migration `20260829000200_phase2_private_resumes.sql` is applied to the linked project.
-- Runtime-verified Resume storage includes `public.resumes`, the private `private-resumes` bucket, forced PostgreSQL RLS, Storage object policies, versioning, tenant-scoped SHA-256 deduplication, and single active approval behavior.
-- Phase 2 tests rolled back and post-checks found zero synthetic Auth users, profiles, candidate profiles, Resume rows, or Storage objects.
-- Phase 3 migration `20260829000300_phase3_minimal_web.sql` is applied and synchronized remotely.
-- The Next.js application implements email/password Auth, protected routes, dashboard, CandidateProfile CRUD, versioned SearchProfile/JobPreferences editing, and private Resume upload/approval.
-- Phase 3 validation passed 12 web tests, typecheck, lint, production build, runtime SQL A/B tests, remote schema lint, and zero-residue checks.
-- Phase 3 UX was refined into a Spanish, question-led onboarding flow. Technical field names, internal statuses, schedules, scoring gates, Storage details, and domain terminology are no longer exposed in normal forms.
+> The user says what job they want, uploads a CV, and BuscaVacante does the operational work.
 
-## Current Boundary
+The primary user experience will be **Oportunidades**, not an internal dashboard or technical configuration system. The target navigation is: **Oportunidades · Candidaturas · Perfil**.
 
-Phase 3 is complete. The project is waiting before Phase 4; no job-source adapter or scraping implementation is currently started.
+The target journey is:
+
+```text
+What job are you looking for?
+→ optional location/work mode
+→ sign up / sign in
+→ upload CV
+→ automatic CV analysis
+→ multi-source discovery
+→ ranked opportunities
+→ manual apply or future auto apply
+→ offer-specific CV adaptation
+→ application tracking
+```
+
+## Verified Technical State
+
+- Phases 0–3 established the multi-tenant Supabase/Auth, private Resume, and Next.js baseline.
+- Neutral JobOffer, JobMatch, deterministic matching, company-career ingestion, public ATS adapters, application drafts, derived resumes, and an Application Engine already exist and are reusable.
+- Current adapters cover Greenhouse, Lever, Ashby, SmartRecruiters, and configured company career sources. InfoJobs has an adapter but live availability depends on external access/credentials.
+- Multi-source target architecture is: User Job Intent → Query Expansion → Source Registry → parallel adapters → NormalizedJobOffer → deduplication → matching → ranking → unified Opportunities. A failed source must not block valid results from others.
+- The approved base CV is the quality floor. Adaptation may prioritize verified information but may never invent or gratuitously degrade it.
+- Professional Evidence Bank foundation is committed in `34981c2`.
+- Migration `20260909000100_phase9a9_professional_evidence.sql` is registered locally and remotely. Local tables exist, are empty, and retain RLS plus FORCE RLS.
+
+## Current Worktree State
+
+This is a **PRODUCT RESET / WORKTREE FREEZE** checkpoint, not the start of the new UX.
+
+- Snapshot before this memory update: 17 modified files, 16 untracked files, 33 total worktree entries.
+- Validation snapshot: 222 tests passed, 8 skipped; typecheck, lint, build, and `git diff --check` passed.
+- Commit 1 is complete. The remaining worktree still contains later checkpoint blocks: approved-CV bootstrap/normalization, requirement resolution, contextual confirmations, reference renderer, and adaptation diagnostics.
+- Do not start Product Reset implementation until those blocks have been classified, validated, committed or deliberately deferred, and the worktree is clean.
+
+## Known Follow-up
+
+`authenticated` currently has effective `REFERENCES`, `TRIGGER`, and `TRUNCATE` grants on Professional Evidence tables beyond the migration's intended CRUD grants. This is a security follow-up, not part of the migration-history reconciliation or Commit 1. Assess it with a dedicated additive migration later; do not change it opportunistically.
+
+## Immediate Next Step
+
+Finish the checkpoint sequence with small, validated commits. Do **not** begin Commit 2 or Product Reset UX without explicit authorization.

@@ -2,6 +2,13 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-09-09 — Product Reset V2 checkpoint
+
+- Adopted the official product direction: invisible complexity, visible outcomes; Oportunidades will become the primary user experience after a clean checkpoint.
+- Reconciled local migration history for `20260909000100_phase9a9_professional_evidence.sql`; the migration is registered locally and remotely, with local Professional Evidence tables empty and protected by RLS/FORCE RLS.
+- Committed Professional Evidence Bank foundation as `34981c2`.
+- Recorded the remaining worktree as checkpoint work; no Product Reset feature implementation began.
+
 ## 2026-08-29 — Phase 3 complete
 
 - Added a Next.js App Router application with Supabase SSR Auth, protected private routes, responsive UI, and server-side mutations.
