@@ -3,6 +3,7 @@ import { GreenhouseAdapter } from "@/lib/job-sources/greenhouse/adapter";
 import { ingestJobSearchResults } from "@/lib/job-sources/ingestion";
 import { LeverAdapter } from "@/lib/job-sources/lever/adapter";
 import { SmartRecruitersAdapter } from "@/lib/job-sources/smartrecruiters/adapter";
+import { JobgetherAdapter } from "@/lib/job-sources/jobgether/adapter";
 import type { PublicJsonClientConfig } from "@/lib/job-sources/public-json-client";
 import type {
   CompanyCareerSourceCheckRecorder,
@@ -12,7 +13,7 @@ import type {
   JobSourceAdapter,
 } from "@/lib/job-sources/types";
 
-export type CompanyCareerPlatform = "LEVER" | "ASHBY" | "GREENHOUSE" | "SMARTRECRUITERS";
+export type CompanyCareerPlatform = "LEVER" | "ASHBY" | "GREENHOUSE" | "SMARTRECRUITERS" | "JOBGETHER";
 
 export interface CompanyCareerSourceConfig {
   id: string;
@@ -42,6 +43,8 @@ export function createCompanyCareerAdapter(
   if (source.platform === "SMARTRECRUITERS") {
     return new SmartRecruitersAdapter({ ...httpConfig, companyIdentifier: source.identifier });
   }
+
+  if (source.platform === "JOBGETHER") return new JobgetherAdapter({ ...httpConfig, defaultLocations: source.identifier });
 
   return new AshbyAdapter({
     ...httpConfig,

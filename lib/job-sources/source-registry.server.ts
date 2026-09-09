@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { CompanyCareerSourceConfig } from "@/lib/job-sources/company-careers";
 import { ensureDevelopmentCareerSources } from "@/lib/job-sources/development-career-sources.server";
 
-const SUPPORTED_PLATFORMS = ["LEVER", "ASHBY", "GREENHOUSE", "SMARTRECRUITERS"] as const;
+const SUPPORTED_PLATFORMS = ["LEVER", "ASHBY", "GREENHOUSE", "SMARTRECRUITERS", "JOBGETHER"] as const;
 
 export type RegisteredCareerSource = CompanyCareerSourceConfig & {
   companyName: string | null;

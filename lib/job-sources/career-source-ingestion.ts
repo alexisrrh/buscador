@@ -69,7 +69,7 @@ export async function ingestCareerSourceRegistry(input: {
       provider.attempted += 1;
       report.sourcesAttempted += 1;
       try {
-        const maxOffers = source.platform === "GREENHOUSE" ? 400 : 100;
+        const maxOffers = source.platform === "GREENHOUSE" ? 400 : source.platform === "JOBGETHER" ? 75 : 100;
         const stats = await ingestCompanyCareerSource(
           source,
           input.createAdapter(source),

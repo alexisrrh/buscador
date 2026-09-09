@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { MatchJobOffer } from "@/lib/matching/types";
 
 export const PUBLIC_CATALOG_FRESHNESS_DAYS = 45;
-const PUBLIC_CATALOG_LIMIT = 1_000;
+export const PUBLIC_CATALOG_PAGE_SIZE = 1_000;
 
 export type PublicCatalogOffer = MatchJobOffer & {
   companyName: string | null;
@@ -85,16 +85,24 @@ export async function loadPublicOpportunityCatalog(
   const client = dependencies.client ?? createServiceClient();
   const now = dependencies.now ?? new Date();
   const seenAfter = new Date(now.valueOf() - PUBLIC_CATALOG_FRESHNESS_DAYS * 86_400_000).toISOString();
-  const { data, error } = await client
-    .from("job_offers")
-    .select("id,title,description,location_text,country_code,region,city,work_mode,seniority,employment_type,salary_min,salary_max,salary_currency,published_at,canonical_url,status,last_seen_at,companies(name),job_offer_sources(source_url,job_sources(name))")
-    .eq("status", "ACTIVE")
-    .gte("last_seen_at", seenAfter)
-    .order("last_seen_at", { ascending: false })
-    .limit(PUBLIC_CATALOG_LIMIT);
-  if (error) throw new Error("No se pudo consultar el catálogo de oportunidades.");
+  const rows: CatalogRow[] = [];
+  while (true) {
+    const from = rows.length;
+    const { data, error } = await client
+      .from("job_offers")
+      .select("id,title,description,location_text,country_code,region,city,work_mode,seniority,employment_type,salary_min,salary_max,salary_currency,published_at,canonical_url,status,last_seen_at,companies(name),job_offer_sources(source_url,job_sources(name))")
+      .eq("status", "ACTIVE")
+      .gte("last_seen_at", seenAfter)
+      .order("last_seen_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, from + PUBLIC_CATALOG_PAGE_SIZE - 1);
+    if (error) throw new Error("No se pudo consultar el catálogo de oportunidades.");
+    const page = (data ?? []) as unknown as CatalogRow[];
+    rows.push(...page);
+    if (page.length < PUBLIC_CATALOG_PAGE_SIZE) break;
+  }
 
-  const offers = publicCatalogOffersFromRows((data ?? []) as unknown as CatalogRow[], seenAfter);
+  const offers = publicCatalogOffersFromRows(rows, seenAfter);
 
   return { offers, catalogQueryMs: performance.now() - startedAt, seenAfter };
 }

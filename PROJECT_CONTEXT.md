@@ -26,7 +26,7 @@ The official product direction is **invisible complexity, visible outcomes**: a 
 
 ## Current Boundary
 
-Product Reset Milestone 2B is COMPLETE: normal public search reads a neutral, fresh JobOffer catalog rather than performing visitor-triggered board fan-out. Global ingestion is server-only and developer-invoked only; scheduling, lifecycle reconciliation and source expansion remain later work. The next priority is Milestone 2C, permitted source coverage expansion for Spain, Galicia, non-tech roles and Europe. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
+Product Reset Milestone 2C-A is COMPLETE: Jobgether is the first permitted provider expansion through the existing persistent catalog, including correct full-catalog pagination. Emprego Galicia is BLOCKED / RESEARCH because its published official RSS returned HTTP 404 on direct verification; HTML scraping is not an acceptable substitute. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
 
 - Phase 0: COMPLETE.
 - Phase 1: COMPLETE.

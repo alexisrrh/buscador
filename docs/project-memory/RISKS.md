@@ -5,6 +5,9 @@
 | Public relevance needs calibration | Frontend + A Coruna + Cualquier modalidad returned Full Stack Developer and Senior / Staff Fullstack Engineer. | Separately review seniority, role-family and explicit-location gates; do not weaken the current anti-irrelevance protections opportunistically. |
 | Persistent catalog has no scheduler or reconciliation yet | 2B can ingest locally but does not yet schedule runs or expire offers absent after successful board snapshots. | Add controlled scheduling, per-board successful-run markers and lifecycle reconciliation in a later dedicated phase. |
 | Source identity is provider-scoped instead of board-scoped | `job_offer_sources` dedupe uses provider `job_source_id`; duplicate external IDs across boards of one provider can collide. | Repair board identity before aggressive source growth; do not rely on this model for broad multi-board ingestion unchanged. |
+| Emprego Galicia official RSS is unavailable | Its Open Data catalogue published RSS URL returned HTTP 404 during 2026-09-09 verification. | Keep it BLOCKED / RESEARCH; re-verify only when an official downloadable resource is restored. |
+| Jobgether is an aggregator rather than the original apply host | The verified public API returns its own Jobgether listing URL, not an external application URL. | Preserve attribution and canonical Jobgether URL; do not imply a direct employer apply link or solve cross-source semantic dedupe in 2C-A. |
+| Full catalog evaluation will not scale indefinitely | Correct pagination now evaluates every fresh candidate, but deterministic relevance currently runs in-process over the full fresh catalog. | Before large catalog growth, add indexed/coarse DB candidate retrieval without reintroducing incomplete first-page behavior. |
 
 | Risk | Current state | Required treatment |
 | --- | --- | --- |

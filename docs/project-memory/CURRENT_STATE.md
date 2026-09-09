@@ -12,6 +12,16 @@ Last verified: 2026-09-09.
 - Before aggressive board growth, resolve source identity dedupe: `job_source_id` identifies a provider rather than a concrete board, so equal external IDs across boards of one provider can collide.
 - Coverage remains limited to the existing 4 providers and 21 boards. The next priority is Milestone 2C — Source Coverage Expansion for permitted Spain, Galicia, non-tech and Europe sources. PUBLIC RELEVANCE CALIBRATION and LEGACY UI CLEANUP remain separate pending work.
 
+## PRODUCT RESET MILESTONE 2C-A COMPLETE - JOBGETHER
+
+- Emprego Galicia remains BLOCKED / RESEARCH: on 2026-09-09 its official Open Data page published an RSS URL that returned HTTP 404 on direct verification; HTML scraping is not an acceptable substitute.
+- Jobgether's documented public API was verified live without an API key. It returns paginated jobs (maximum 25 per page), permits reasonable cached use for job-search agents and requires preserving Jobgether attribution and canonical listing URL.
+- Jobgether flows through the existing adapter, global ingestion, neutral persistent catalog, public relevance and `/oportunidades`. The registered `spain` source is limited to three pages / 75 offers per ingestion run with 500 ms minimum request spacing; there is no visitor-triggered API call.
+- Jobgether has no external apply URL in the verified response; its canonical Jobgether offer URL remains the public source link. Tech expansion, ETT partnerships, Tecnoempleo (ACCESS_REQUIRED), LinkedIn (PARTNERSHIP_REQUIRED), PUBLIC RELEVANCE CALIBRATION and LEGACY UI CLEANUP remain separate work.
+- Local real ingestion created 71 Jobgether offers on its first scoped run; a repeat was idempotent. The local catalog contained 2,403 ACTIVE/fresh offers, of which 2,402 had safe public source references and were evaluated.
+- Public catalog candidate retrieval is paginated server-side beyond PostgREST's 1,000-row maximum with a stable `last_seen_at DESC, id ASC` order; every fresh ACTIVE offer with a safe source reference is evaluated. At larger scale, replace full-catalog retrieval with indexed coarse candidate selection before deterministic relevance.
+- Reingesting an unchanged offer remains `UNCHANGED` for content/matching purposes while refreshing `job_offers.last_seen_at` and `job_offer_sources.last_seen_at`; this records renewed presence without claiming a content update.
+
 ## PRODUCT RESET MILESTONE 2A COMPLETE - DYNAMIC SOURCE REGISTRY
 
 - `company_career_sources` is the persisted SourceRegistry for public `/oportunidades` and private/live search. It currently contains 4 providers (Greenhouse, Ashby, SmartRecruiters and Lever) and 21 company boards, not 21 independent job portals.

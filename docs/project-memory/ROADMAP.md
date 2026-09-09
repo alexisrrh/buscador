@@ -28,6 +28,13 @@ Status: COMPLETE.
 
 - Increase permitted Spain, Galicia, non-tech and Europe coverage while retaining global ingestion and catalog-first public search.
 - Do not add a scheduler, repair source identity dedupe or redesign relevance inside this milestone.
+
+### Milestone 2C-A - Jobgether
+
+Status: COMPLETE.
+
+- Integrated the documented public Jobgether API through the persistent catalog only, preserving its attribution and canonical listing URL.
+- Emprego Galicia remains BLOCKED / RESEARCH after its official published RSS returned HTTP 404 on 2026-09-09; do not replace it with HTML scraping.
 - Legacy UI cleanup is deferred until Oportunidades and candidacy fully replace the old flow: remove Automation Command Center, old Inicio/dashboard and Inicio navigation; replace Ofertas with Oportunidades; remove unconsumed legacy UI while preserving useful backend.
 
 ## Milestone 0 — Clean checkpoint

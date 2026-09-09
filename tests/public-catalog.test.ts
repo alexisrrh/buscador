@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { PUBLIC_CATALOG_FRESHNESS_DAYS, publicCatalogOffersFromRows, type CatalogRow } from "@/lib/job-sources/public-catalog.server";
+import { searchIntent } from "@/lib/intent-first";
+import { searchPublicOpportunities } from "@/lib/job-sources/public-opportunities.server";
+import { PUBLIC_CATALOG_FRESHNESS_DAYS, loadPublicOpportunityCatalog, publicCatalogOffersFromRows, type CatalogRow } from "@/lib/job-sources/public-catalog.server";
 
 const now = new Date("2026-09-09T12:00:00.000Z");
 const seenAfter = new Date(now.valueOf() - PUBLIC_CATALOG_FRESHNESS_DAYS * 86_400_000).toISOString();
@@ -18,6 +20,20 @@ function row(id: string, status: CatalogRow["status"], lastSeenAt: string): Cata
   };
 }
 
+function pagedCatalogClient(rows: CatalogRow[], ranges: Array<[number, number]>) {
+  const query = {
+    select: () => query,
+    eq: () => query,
+    gte: () => query,
+    order: () => query,
+    range: async (from: number, to: number) => {
+      ranges.push([from, to]);
+      return { data: rows.slice(from, to + 1), error: null };
+    },
+  };
+  return { from: () => query };
+}
+
 describe("public opportunity catalog", () => {
   it("includes only fresh ACTIVE offers and emits one result for multiple source references", () => {
     const fresh = row("fresh", "ACTIVE", now.toISOString());
@@ -29,5 +45,26 @@ describe("public opportunity catalog", () => {
 
     expect(offers).toEqual([expect.objectContaining({ id: "fresh", sourceUrl: "https://jobs.example.test/fresh" })]);
     expect(JSON.stringify(offers)).not.toMatch(/raw_payload|last_seen_at|job_source_id/i);
+  });
+
+  it("loads a relevant offer after the first 1,000-row catalog page", async () => {
+    const noise = Array.from({ length: 1_000 }, (_, index) => ({
+      ...row(`noise-${index}`, "ACTIVE", now.toISOString()),
+      title: "Account Executive",
+    }));
+    const target = row("after-page-one", "ACTIVE", now.toISOString());
+    const ranges: Array<[number, number]> = [];
+    const catalog = await loadPublicOpportunityCatalog({
+      client: pagedCatalogClient([...noise, target], ranges) as never,
+      now,
+    });
+    const result = await searchPublicOpportunities(
+      searchIntent({ role: "Frontend Developer", location: "A Coruña", workMode: "REMOTE" }),
+      { loadCatalog: async () => catalog },
+    );
+
+    expect(ranges).toEqual([[0, 999], [1000, 1999]]);
+    expect(result.catalogOffersLoaded).toBe(1_001);
+    expect(result.opportunities).toEqual([expect.objectContaining({ title: "Frontend Developer" })]);
   });
 });
