@@ -15,27 +15,27 @@ declare
   payload jsonb;
 begin
   insert into public.companies (id, name, website_url)
-  values ('2c000000-0000-4000-8000-000000000002', 'Synthetic Jobgether', 'https://jobgether.example.invalid');
+  values ('2c000000-0000-4000-8000-000000000002', 'Synthetic Jobicy', 'https://jobicy.example.invalid');
 
   insert into public.company_career_sources (
     id, company_id, platform, identifier, careers_url, enabled, status
   ) values (
-    source_id, '2c000000-0000-4000-8000-000000000002', 'JOBGETHER',
-    'synthetic-spain', 'https://jobgether.example.invalid/developers', true, 'UNKNOWN'
+    source_id, '2c000000-0000-4000-8000-000000000002', 'JOBICY',
+    'synthetic-europe-engineering', 'https://jobicy.example.invalid/jobs', true, 'UNKNOWN'
   );
 
   payload := jsonb_build_array(jsonb_build_object(
     'batch_index', 0,
     'company_career_source_id', source_id,
-    'source_code', 'JOBGETHER',
-    'source_name', 'Jobgether',
-    'source_base_url', 'https://jobgether.example.invalid',
+    'source_code', 'JOBICY',
+    'source_name', 'Jobicy',
+    'source_base_url', 'https://jobicy.example.invalid',
     'external_job_id', 'unchanged-observation',
-    'source_url', 'https://jobgether.example.invalid/offer/unchanged-observation',
-    'canonical_source_url', 'https://jobgether.example.invalid/offer/unchanged-observation',
+    'source_url', 'https://jobicy.example.invalid/offer/unchanged-observation',
+    'canonical_source_url', 'https://jobicy.example.invalid/offer/unchanged-observation',
     'title', 'Synthetic Frontend Developer',
     'work_mode', 'REMOTE',
-    'canonical_url', 'https://jobgether.example.invalid/offer/unchanged-observation',
+    'canonical_url', 'https://jobicy.example.invalid/offer/unchanged-observation',
     'canonical_url_is_reliable', true,
     'status', 'ACTIVE',
     'raw_payload', jsonb_build_object('fixture', 'unchanged-observation')

@@ -8,12 +8,14 @@
 - [x] Complete Product Reset Milestone 2B: validate persistent public catalog search and prepare its independent checkpoint.
 - [ ] Complete Milestone 2C: expand permitted Spain, Galicia, non-tech and Europe source coverage without changing the user flow.
 - [x] Complete Milestone 2C-A: validate Jobgether API ingestion through the persistent catalog only.
+- [x] Complete Milestone 2C-B: validate bounded Jobicy Europe/engineering ingestion through the persistent catalog only.
 - [ ] Re-verify Emprego Galicia only if its official RSS/downloadable resource is restored; do not scrape its HTML search interface.
 - [ ] Add scheduling and successful-run lifecycle reconciliation only after the catalog vertical slice is complete.
 - [ ] Repair provider-vs-board source identity before aggressive board expansion.
 - [ ] Add broader permitted coverage for Spain, Galicia and non-tech roles; activate InfoJobs only with application credentials.
 - [ ] Add source health, latency, rate-limit/backoff and temporary-disable tracking.
 - [ ] Extend canonical dedupe across ATS, career site and permitted portal origins.
+- [ ] Evaluate Remote OK, Startup.jobs (ACCESS_REQUIRED), Get on Board and Arbeitnow as separate permitted tech-source candidates.
 - [ ] PUBLIC RELEVANCE CALIBRATION: review seniority excess, Frontend versus Full Stack relevance, and explicit A Coruna versus Europe/Remote/multi-country location interpretation. Do not change this as part of SourceRegistry.
 
 ## DEFERRED - Legacy UI cleanup

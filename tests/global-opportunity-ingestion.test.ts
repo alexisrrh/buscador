@@ -78,13 +78,13 @@ describe("global ingestion to public catalog vertical slice", () => {
 
   it("keeps a successful board when another board fails", async () => {
     const repository = new MemoryCatalogRepository();
-    const twoSources = [...sources, { ...sources[0], id: "broken", identifier: "broken" }];
+    const twoSources = [...sources, { ...sources[0], id: "broken-jobicy", platform: "JOBICY" as const, identifier: "europe-engineering" }];
     const report = await ingestRegisteredOpportunityCatalog({
       loadRegistry: async () => ({ ...registry, sources: twoSources, allSources: twoSources, boardsLoaded: 2, boardsSkippedDisabled: 0 }),
       jobOfferRepository: repository,
       createAdapter: (source) => ({
         sourceCode: "ASHBY", sourceName: "Ashby", sourceBaseUrl: "https://api.ashbyhq.com",
-        async search() { if (source.id === "broken") throw new Error("BOARD_FAILED"); return { offers: [{}], stats: { pagesRequested: 1, offersReceived: 1 } }; },
+        async search() { if (source.id === "broken-jobicy") throw new Error("BOARD_FAILED"); return { offers: [{}], stats: { pagesRequested: 1, offersReceived: 1 } }; },
         normalize() { return normalized; },
       }),
     });

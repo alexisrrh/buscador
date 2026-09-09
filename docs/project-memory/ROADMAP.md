@@ -37,6 +37,14 @@ Status: COMPLETE.
 - Emprego Galicia remains BLOCKED / RESEARCH after its official published RSS returned HTTP 404 on 2026-09-09; do not replace it with HTML scraping.
 - Legacy UI cleanup is deferred until Oportunidades and candidacy fully replace the old flow: remove Automation Command Center, old Inicio/dashboard and Inicio navigation; replace Ofertas with Oportunidades; remove unconsumed legacy UI while preserving useful backend.
 
+### Milestone 2C-B - Jobicy
+
+Status: COMPLETE.
+
+- Added the permitted documented Jobicy remote-tech API through the existing registry, global ingestion and persistent catalog only.
+- Europe/engineering is bounded to 200 offers per run. Source URLs/attribution and conservative geography are preserved; Jobicy is never on the public request path.
+- Keep Remote OK, Startup.jobs (ACCESS_REQUIRED), Get on Board, Arbeitnow, Spain/Galicia non-tech, Emprego Galicia recovery, Tecnoempleo, ETT partnerships and LinkedIn as separate follow-ups.
+
 ## Milestone 0 — Clean checkpoint
 
 Status: COMPLETE.

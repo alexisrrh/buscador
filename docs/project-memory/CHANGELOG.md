@@ -2,6 +2,13 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-09-09 - Product Reset Milestone 2C-B complete
+
+- Added Jobicy's permitted public remote-tech API through the existing server-side SourceRegistry, global ingestion, neutral persistent catalog, public relevance and `/oportunidades`; visitors never call the API directly.
+- The initial Europe/engineering source is bounded to 200 offers/run, preserves Jobicy attribution/canonical URLs, sanitizes descriptions to inert plain text and retains conservative geography.
+- Local validation ingested 195 real offers, confirmed an idempotent 195-offer `UNCHANGED` reingestion with refreshed `last_seen_at`, and raised the fresh catalog to 2,597 offers. No RLS changes were made.
+- Incremental Spain/remote results were Frontend +6, Full Stack +6, Data Engineer +2 and QA +1; Backend, Junior, DevOps and IT Support remained 0 under unchanged relevance.
+
 ## 2026-09-09 - Product Reset Milestone 2B complete
 
 - Added server-only, global registered-board ingestion into the neutral persistent JobOffer catalog, reusing existing adapters, normalization, persistence and board health.

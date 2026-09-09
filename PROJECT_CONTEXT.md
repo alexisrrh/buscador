@@ -26,7 +26,7 @@ The official product direction is **invisible complexity, visible outcomes**: a 
 
 ## Current Boundary
 
-Product Reset Milestone 2C-A is COMPLETE: Jobgether is the first permitted provider expansion through the existing persistent catalog, including correct full-catalog pagination. Emprego Galicia is BLOCKED / RESEARCH because its published official RSS returned HTTP 404 on direct verification; HTML scraping is not an acceptable substitute. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
+Product Reset Milestone 2C-B is COMPLETE: Jobicy is a permitted public remote-tech source through the existing persistent catalog, scoped to Europe/engineering. Jobgether remains the first completed provider expansion. Emprego Galicia is BLOCKED / RESEARCH because its published official RSS returned HTTP 404 on direct verification; HTML scraping is not an acceptable substitute. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
 
 - Phase 0: COMPLETE.
 - Phase 1: COMPLETE.

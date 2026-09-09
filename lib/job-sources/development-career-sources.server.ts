@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export interface DevelopmentCareerSource {
   companyName: string;
   websiteUrl: string;
-  platform: "LEVER" | "ASHBY" | "GREENHOUSE" | "SMARTRECRUITERS" | "JOBGETHER";
+  platform: "LEVER" | "ASHBY" | "GREENHOUSE" | "SMARTRECRUITERS" | "JOBGETHER" | "JOBICY";
   identifier: string;
   careersUrl: string;
 }
@@ -13,6 +13,7 @@ export interface DevelopmentCareerSource {
 // Development-only bootstrap. These public boards were live-checked on 2026-08-31.
 // Edit or remove entries here; no real company is written by a permanent migration.
 export const DEVELOPMENT_CAREER_SOURCES: DevelopmentCareerSource[] = [
+  { companyName: "Jobicy", websiteUrl: "https://jobicy.com", platform: "JOBICY", identifier: "europe-engineering", careersUrl: "https://jobicy.com/jobs-rss-feed" },
   { companyName: "Jobgether", websiteUrl: "https://jobgether.com", platform: "JOBGETHER", identifier: "spain", careersUrl: "https://jobgether.com/developers" },
   {
     companyName: "Element",

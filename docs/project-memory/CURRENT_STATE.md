@@ -22,6 +22,14 @@ Last verified: 2026-09-09.
 - Public catalog candidate retrieval is paginated server-side beyond PostgREST's 1,000-row maximum with a stable `last_seen_at DESC, id ASC` order; every fresh ACTIVE offer with a safe source reference is evaluated. At larger scale, replace full-catalog retrieval with indexed coarse candidate selection before deterministic relevance.
 - Reingesting an unchanged offer remains `UNCHANGED` for content/matching purposes while refreshing `job_offers.last_seen_at` and `job_offer_sources.last_seen_at`; this records renewed presence without claiming a content update.
 
+## PRODUCT RESET MILESTONE 2C-B COMPLETE - JOBICY
+
+- Jobicy's documented public `/api/v2/remote-jobs` endpoint was verified live without an API key. The initial source scope is `geo=europe` plus `industry=engineering`, with one bounded request and at most 200 offers per run; its fair-use guidance requires polling no more than hourly.
+- The source preserves Jobicy attribution and its canonical listing URL. The API response is normalized only from provided fields; the endpoint's documented remote-only scope is recorded as `REMOTE`, while `Europe`, `Worldwide` and multi-country eligibility are not converted into Spain.
+- A local real ingestion received 195 offers, created 195 on the initial run, and reingested all 195 as `UNCHANGED` on repeat while refreshing observation timestamps. The local fresh public catalog then held 2,597 offers (2,402 before Jobicy); `/oportunidades` does not call Jobicy.
+- Incremental local Spain/remote results were Frontend Developer +6, Full Stack Developer +6, Data Engineer +2 and QA +1. Backend Developer +0, Junior Developer +0, DevOps +0 and IT Support +0 under unchanged public relevance.
+- Pending separately: Remote OK; Startup.jobs (ACCESS_REQUIRED); Get on Board; Arbeitnow; Spain/Galicia non-tech; Emprego Galicia recovery; Tecnoempleo; ETT and LinkedIn partnerships; scheduler/lifecycle reconciliation; cross-source dedupe; PUBLIC RELEVANCE CALIBRATION; future DB candidate retrieval/indexing; and LEGACY UI CLEANUP.
+
 ## PRODUCT RESET MILESTONE 2A COMPLETE - DYNAMIC SOURCE REGISTRY
 
 - `company_career_sources` is the persisted SourceRegistry for public `/oportunidades` and private/live search. It currently contains 4 providers (Greenhouse, Ashby, SmartRecruiters and Lever) and 21 company boards, not 21 independent job portals.

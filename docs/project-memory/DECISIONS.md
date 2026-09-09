@@ -14,6 +14,10 @@ Use persisted `company_career_sources` as the server-side registry for public an
 
 Ingest registered sources globally into neutral `JobOffer`/`job_offer_sources`, then serve public opportunity requests from fresh `ACTIVE` catalog entries before applying existing public-intent relevance and ranking. Visitor requests must not trigger live board fan-out; scheduling and lifecycle reconciliation are separate work.
 
+## ADR-038 - Jobicy bounded remote-tech source
+
+Use Jobicy's documented public remote-jobs API only through the server-side SourceRegistry and persistent catalog. Start with `geo=europe` and `industry=engineering`, preserve Jobicy attribution/canonical URLs, convert its HTML descriptions to inert plain text, and honor its no-more-than-hourly polling guidance when scheduling is introduced. Do not turn broad remote eligibility into country eligibility.
+
 | ID | Origin | Decision | Rationale / consequence |
 | --- | --- | --- | --- |
 | ADR-001 | Product architecture | Build SaaS-ready from the MVP, even while one initial user is the test case. | Personal values cannot be embedded in code or workflows. |
