@@ -4,7 +4,7 @@ import type {
   JobAnalysis,
   ResumeStructure,
 } from "./types";
-import { enrichEvidence } from "./evidence-priority";
+import { enrichEvidence, safeEvidenceUrl } from "./evidence-priority";
 import { mergeProfessionalEvidence } from "./professional-evidence";
 import { resolveRequirementEvidence } from "./requirement-resolution";
 import { isPersonalName, structuredUserIdentity, type UserIdentityInput } from "@/lib/user-identity";
@@ -169,16 +169,32 @@ function extractVerifiedIdentity(userIdentity: UserIdentityInput | null | undefi
   const email = header.flatMap(line => line.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/ig) ?? [])[0];
   const phone = header.flatMap(line => line.match(/(?:\+?\d[\d ()-]{7,}\d)/g) ?? [])[0];
   const city = header.map(line => line.match(/(?:ciudad|city|ubicación|ubicacion|location)\s*[:—-]\s*([^|·,]+)/i)?.[1]?.trim()).find(Boolean);
+  const headerUrls = new Set(header.flatMap(contactUrlsInLine));
+  const contactLinks = links.flatMap(link => {
+    const label = linkLabel(link.url);
+    return label && (label !== "Portfolio" || headerUrls.has(link.url))
+      ? [{ label, url: link.url, source: "RESUME_EXTRACTION" as const }]
+      : [];
+  }).filter((link, index, values) => values.findIndex(value => value.url === link.url) === index);
   return {
     ...(savedIdentity ? { name: { value: `${savedIdentity.first_name} ${savedIdentity.last_name}`, source: "USER_PROFILE" as const } } : extractedName ? { name: { value: extractedName, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(email ? { email: { value: email, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(phone ? { phone: { value: phone, source: "RESUME_EXTRACTION" as const } } : {}),
     ...(city ? { city: { value: city, source: "RESUME_EXTRACTION" as const } } : {}),
-    links: links.map(link => ({ label: linkLabel(link.url), url: link.url, source: "RESUME_EXTRACTION" as const })),
+    links: contactLinks,
   };
 }
 
-function linkLabel(value: string): "LinkedIn" | "GitHub" | "Portfolio" {
+function contactUrlsInLine(line: string) {
+  return (line.match(/https?:\/\/[^\s|]+|\bwww\.[^\s|]+|\b[a-z0-9-]+\.(?:vercel\.app|com|dev|io)(?:\/[^\s|]*)?/gi) ?? [])
+    .flatMap(value => {
+      if (line.includes(`@${value}`)) return [];
+      const url = safeEvidenceUrl(value);
+      return url ? [url] : [];
+    });
+}
+
+function linkLabel(value: string): "LinkedIn" | "GitHub" | "Portfolio" | null {
   try {
     const host = new URL(value).hostname.toLowerCase();
     if (host === "linkedin.com" || host.endsWith(".linkedin.com")) return "LinkedIn";

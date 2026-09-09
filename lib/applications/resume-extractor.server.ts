@@ -35,9 +35,16 @@ export async function extractResume(
   }
 
   // Some PDFs emit NUL for unmapped glyphs. PostgreSQL text/jsonb cannot store
-  // U+0000 (22P05); preserve word boundaries without changing the original file.
-  const structured = structureResumeText(text.replaceAll("\u0000", " "));
+  // U+0000 (22P05). A NUL immediately before an international phone sequence
+  // is the missing plus glyph in affected PDFs; preserve that verified prefix.
+  const structured = structureResumeText(normalizeExtractedText(text));
   structured.links = links;
   if (!structured.lines.length) throw new Error("RESUME_TEXT_EXTRACTION_FAILED");
   return { text: structured.lines.join("\n"), structured };
+}
+
+export function normalizeExtractedText(text: string) {
+  return text
+    .replace(/\u0000(?=\d{1,3}(?:[ ()-]?\d){7,})/g, "+")
+    .replaceAll("\u0000", " ");
 }

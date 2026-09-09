@@ -3,7 +3,9 @@ import type { CandidateEvidence, JobAnalysis, ResumeAdaptation, ResumeStructure,
 import type { UserIdentityInput } from "@/lib/user-identity";
 import { validateGeneratedApplication } from "@/lib/applications/validation";
 
-export const GENERATION_VERSION = "resume-renderer-v3";
+// This identifies newly generated artifacts only. Existing READY artifacts keep
+// their immutable adaptive-resume-v1 snapshot and metadata.
+export const GENERATION_VERSION = "reference-template-v1";
 export const DERIVED_BUCKET = "derived-resumes";
 export const PDF_MIME = "application/pdf";
 export class DerivedResumeError extends Error {
@@ -14,6 +16,7 @@ export type ResumeContent = {
   title: string;
   target: string;
   contact: string[];
+  photo?: { data_url: string };
   sections: Array<{ heading: string; lines: string[] }>;
   header?: { metadata: string[]; links: Array<{ label: string; url: string }> };
   skill_groups?: Array<{ label: string; skills: string[] }>;
@@ -139,7 +142,7 @@ function validateFrozenAdaptation(adaptation: ResumeAdaptation, evidence: Candid
 
 function frozenSummarySupported(summary: string, evidence: CandidateEvidence, sourceLines: Set<string>) {
   if (sourceLines.has(summary) || summary === (evidence.candidate_profile.headline ?? "").trim()) return true;
-  if (!/^Desarrollador web con (?:formación Full Stack y )?experiencia práctica en proyectos de aplicaciones web\. Tecnologías acreditadas: .+\.$/i.test(summary)) return false;
+  if (!/^Desarrollador web con (?:formación Full Stack y )?experiencia práctica en proyectos de aplicaciones web\. Ha aplicado .+ en proyectos verificados\.$/i.test(summary)) return false;
   if (/\b\d+\s*(?:años?|years?)\b/i.test(summary)) return false;
   return skillsInText(summary).every(skill => evidence.verified_skills.includes(skill));
 }

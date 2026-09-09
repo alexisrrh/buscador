@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { analyzeGaps, analyzeJobOffer, buildCandidateEvidence, structureResumeText } from "@/lib/applications/analysis";
 import { EvidenceBasedApplicationGenerator } from "@/lib/applications/generator";
+import { projectHighlightBudget } from "@/lib/applications/evidence-priority";
 import { validateGeneratedApplication } from "@/lib/applications/validation";
 import { buildResumeContent } from "@/lib/derived-resumes/content";
 import type { GeneratedApplication } from "@/lib/applications/types";
@@ -94,8 +95,28 @@ describe("evidence priority v2", () => {
   });
   it("reformulates a poor headline using only verified training, projects and skills", async () => {
     const { input, output } = await generated();
-    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Tecnologías acreditadas: React, JavaScript, HTML, CSS y Node.js.");
+    expect(output.resume_adaptation.professional_summary).toBe("Desarrollador web con formación Full Stack y experiencia práctica en proyectos de aplicaciones web. Ha aplicado React, JavaScript, HTML, CSS y Node.js en proyectos verificados.");
+    expect(output.resume_adaptation.professional_title).toBe("Desarrollador web");
+    expect(output.resume_adaptation.professional_title).not.toMatch(/senior|lead|principal/i);
     expect(() => validateGeneratedApplication(output, input.evidence)).not.toThrow();
+  });
+  it("allocates verified project depth by relevance and compacts lower priority content first", () => {
+    expect([projectHighlightBudget(0), projectHighlightBudget(1), projectHighlightBudget(2)]).toEqual([3, 2, 1]);
+    expect([projectHighlightBudget(0, 1), projectHighlightBudget(1, 1), projectHighlightBudget(2, 1)]).toEqual([3, 1, 1]);
+    expect([projectHighlightBudget(0, 2), projectHighlightBudget(1, 2), projectHighlightBudget(2, 2)]).toEqual([2, 1, 1]);
+    expect([projectHighlightBudget(0, 4), projectHighlightBudget(1, 4), projectHighlightBudget(2, 4)]).toEqual([1, 0, 0]);
+  });
+  it("does not add a zero-relevance project merely to fill the page", async () => {
+    const irrelevant = sourceText.replace("EDUCACIÓN", "Proyecto: Unrelated\nJava\nConstruí una herramienta Java.\nEDUCACIÓN");
+    const { output } = await generated(scenario(irrelevant));
+    expect(output.resume_adaptation.project_details?.map(project => project.name)).not.toContain("Unrelated");
+  });
+  it("keeps grouped skills unique and excludes skills without verified evidence", async () => {
+    const { input, output } = await generated();
+    const grouped = output.resume_adaptation.technical_skill_groups!.flatMap(group => group.skills);
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect(grouped.every(skill => input.evidence.verified_skills.includes(skill))).toBe(true);
+    expect(grouped).not.toContain("TypeScript");
   });
   it("does not claim Full Stack training when only projects mention Full Stack", async () => {
     const { output } = await generated(scenario(sourceText.replace("Full Stack Software Developer\nAcademia Ejemplo\n2026", "Estudios generales\nCentro Ejemplo\n2026")));

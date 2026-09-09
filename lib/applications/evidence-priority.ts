@@ -72,7 +72,9 @@ export function enrichEvidence(evidence: CandidateEvidence, resume: ResumeStruct
       const identity = dateIndex >= 0 ? part.slice(0, dateIndex + 1) : part;
       const technical = kind === "employment" ? TECH_ROLE.test(identity.slice(0, 2).join(" "))
         : TECH_ROLE.test(part.join(" ")) || evidence.verified_skills.some(skill => skillPresent(part.join(" "), skill));
-      const blockLinks = [...links.values()].filter(link => part.some(line => line === link.text || line.includes(link.url))).map(link => link.url);
+      const blockLinks = [...links.values()]
+        .filter(link => part.some(line => line === link.text || line.includes(link.url) || safeEvidenceUrl(line) === link.url))
+        .map(link => link.url);
       const title = kind === "project" ? part.find(line => /[|]/.test(line) && !TECH_ROLE.test(line)) ?? part.find(line => safeEvidenceUrl(line)) ?? part[0] : part[0];
       blocks.push({ id: `${kind}-${blocks.filter(b => b.kind === kind).length + 1}`, kind, title, lines: part, identity_lines: identity,
         technical, skills: evidence.verified_skills.filter(skill => skillPresent(part.join(" "), skill)), links: blockLinks });
@@ -135,21 +137,45 @@ function projectPriority(project: EvidenceBlock) {
   return index < 0 ? Number.MAX_SAFE_INTEGER : index;
 }
 
-function projectDetails(project: EvidenceBlock) {
+export type ContentDepthLevel = 0 | 1 | 2 | 3 | 4;
+
+export function projectHighlightBudget(rank: number, level: ContentDepthLevel = 0) {
+  const full = rank === 0 ? 3 : rank === 1 ? 2 : 1;
+  // Lower-priority projects compact before the primary project's evidence.
+  if (level === 0) return full;
+  if (level === 1) return rank === 0 ? full : Math.max(1, full - 1);
+  if (level === 2) return rank === 0 ? Math.min(2, full) : 1;
+  if (level === 3) return 1;
+  return rank === 0 ? 1 : 0;
+}
+
+function projectDetails(project: EvidenceBlock, evidence: CandidateEvidence, rank: number, level: ContentDepthLevel = 0) {
   const content = project.lines.filter(line => !TECH_ROLE.test(line) && !safeEvidenceUrl(line));
   const titleIndex = content.findIndex(line => line === project.title);
   const body = titleIndex >= 0 ? content.filter((_, index) => index !== titleIndex) : content;
-  const narrative = body.filter(line => !/[|]/.test(line) && !project.skills.some(skill => skillPresent(line, skill)));
+  const actionLine = (line: string) => /^(?:Desarroll[ée]|Diseñ[ée]|Integr[ée]|Implement[ée]|Constru[íi]|Despleg[ée])/i.test(line);
+  // A task is either the short description or a bullet, never both. This is
+  // selection of existing evidence, not a rewritten claim.
+  const narrative = body.filter(line => !actionLine(line) && !/^proyecto\s*:/i.test(line) && !/[|]/.test(line) && !project.skills.some(skill => skillPresent(line, skill)));
   const highlights: string[] = [];
   for (let index = 0; index < body.length; index++) {
-    if (!/^(?:Desarroll[ée]|Diseñ[ée]|Integr[ée]|Implement[ée]|Constru[íi]|Despleg[ée])/i.test(body[index])) continue;
+    if (!actionLine(body[index])) continue;
     const parts = [body[index]];
     while (index + 1 < body.length && !/^(?:Desarroll[ée]|Diseñ[ée]|Integr[ée]|Implement[ée]|Constru[íi]|Despleg[ée])/i.test(body[index + 1])) parts.push(body[++index]);
     highlights.push(parts.join(" "));
   }
   const name = projectName(project);
-  const titleDescription = safeEvidenceUrl(project.title) ? "" : project.title.replace(/\s*\|.*$/, "").replace(name, "").trim();
-  return { name, description: titleDescription || narrative.slice(0, 2).join(" "), technologies: projectTechnologies(project.skills), highlights: highlights.slice(0, 4), link: project.links[0] ?? null };
+  const titleDescription = safeEvidenceUrl(project.title) ? "" : project.title.replace(/^proyecto\s*:\s*/i, "").replace(/\s*\|.*$/, "").replace(name, "").trim();
+  const description = titleDescription || narrative.slice(0, 2).join(" ");
+  const normalizedDescription = description.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+  const relevance = (line: string) => (evidence.target_job?.required_skills ?? []).reduce((sum, skill) => sum + (skillPresent(line, skill) ? 20 : 0), 0) +
+    (evidence.target_job?.preferred_skills ?? []).reduce((sum, skill) => sum + (skillPresent(line, skill) ? 10 : 0), 0) +
+    (evidence.target_job?.keywords ?? []).reduce((sum, keyword) => sum + (skillPresent(line, keyword) ? 3 : 0), 0);
+  const selected = [...new Set(highlights)]
+    .filter(line => line.replace(/\s+/g, " ").trim().toLocaleLowerCase() !== normalizedDescription)
+    .sort((a, b) => relevance(b) - relevance(a) || a.localeCompare(b))
+    .slice(0, projectHighlightBudget(rank, level));
+  return { name, description, technologies: projectTechnologies(project.skills), highlights: selected, link: project.links[0] ?? null };
 }
 
 function normalizedLanguages(lines: string[]) {
@@ -171,7 +197,7 @@ function professionalSummary(evidence: CandidateEvidence, skills: string[]) {
   const fullStack = blocks.some(b => b.kind === "education" && /full[ -]?stack/i.test(b.lines.join(" ")));
   const practice = webProjects.length ? "experiencia práctica en proyectos de aplicaciones web" : "experiencia profesional en desarrollo web";
   const strengths = skills.slice(0, 5);
-  return `Desarrollador web con ${fullStack ? "formación Full Stack y " : ""}${practice}.${strengths.length ? ` Tecnologías acreditadas: ${strengths.slice(0, -1).join(", ")}${strengths.length > 1 ? " y " : ""}${strengths.at(-1)}.` : ""}`;
+  return `Desarrollador web con ${fullStack ? "formación Full Stack y " : ""}${practice}.${strengths.length ? ` Ha aplicado ${strengths.slice(0, -1).join(", ")}${strengths.length > 1 ? " y " : ""}${strengths.at(-1)} en proyectos verificados.` : ""}`;
 }
 
 export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeAdaptation {
@@ -180,9 +206,12 @@ export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeA
   const technicalRole = evidence.role_family !== "OTHER";
   const blocks = evidence.blocks ?? [];
   const score = (block: EvidenceBlock) => block.skills.reduce((sum, skill) => sum + (evidence.target_job?.required_skills.includes(skill) ? 10 : evidence.target_job?.preferred_skills.includes(skill) ? 5 : ROLE_SKILLS[evidence.role_family ?? "OTHER"].includes(skill) ? 2 : 0), 0);
-  const projects = blocks.filter(b => b.kind === "project").sort((a, b) => {
+  const allProjects = blocks.filter(b => b.kind === "project");
+  // Never add a zero-relevance project merely to consume page space. If the
+  // offer has no measurable project signal, retain the verified set instead.
+  const projects = (allProjects.some(project => score(project) > 0) ? allProjects.filter(project => score(project) > 0) : allProjects).sort((a, b) => {
     const canonicalOrder = projectPriority(a) - projectPriority(b);
-    return canonicalOrder || Number(b.technical && technicalRole) - Number(a.technical && technicalRole) || score(b) - score(a);
+    return score(b) - score(a) || Number(b.technical && technicalRole) - Number(a.technical && technicalRole) || canonicalOrder;
   });
   const employment = blocks.filter(b => b.kind === "employment");
   const primary = technicalRole ? employment.filter(b => b.technical) : employment;
@@ -218,7 +247,7 @@ export function buildPrioritizedAdaptation(evidence: CandidateEvidence): ResumeA
     sections, selected_project_ids: projects.map(b => b.id), technical_experience_ids: primary.filter(b => b.technical).map(b => b.id),
     additional_experience: extra.lines, technical_training: technicalTraining.lines, portfolio_links: portfolio,
     technical_skill_groups: evidence.role_family === "WEB" ? technicalSkillGroups(skills) : undefined,
-    project_details: projects.map(projectDetails) };
+    project_details: projects.map((project, index) => projectDetails(project, evidence, index)) };
 }
 
 export function canonicalEvidenceValue(value: unknown): string {
