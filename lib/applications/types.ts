@@ -83,6 +83,24 @@ export type GapAnalysis = {
   partial_matches: string[];
   missing_requirements: string[];
   unknown_requirements: string[];
+  requirement_resolution?: RequirementResolution[];
+};
+
+export type RequirementClassification = "MANDATORY" | "PREFERRED" | "OPTIONAL" | "UNKNOWN";
+export type RequirementEvidenceStatus = "VERIFIED" | "CONFIRMABLE" | "MISSING" | "UNKNOWN";
+export type GapSeverity = "CRITICAL" | "IMPORTANT" | "MINOR";
+export type RequirementResolution = {
+  requirement: string;
+  classification: RequirementClassification;
+  status: RequirementEvidenceStatus;
+  severity: GapSeverity;
+  evidence_sources: Array<"APPROVED_RESUME" | "VERIFIED_PROJECT" | "VERIFIED_TRAINING" | "USER_CONFIRMED">;
+  confirmation_prompt?: { skill: string; context_required: ["context", "scope", "confirmed_at"] };
+};
+export type ApplicationReadiness = {
+  status: "READY" | "REVIEW_REQUIRED" | "BLOCKED";
+  reasons: string[];
+  pending_confirmations: RequirementResolution[];
 };
 
 export type ResumeAdaptation = {

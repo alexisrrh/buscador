@@ -54,7 +54,7 @@ export class ApplicationDraftRepository {
     resumeId: string;
   }) {
     const { data, error } = await this.client.from("application_drafts")
-      .select("id,status")
+      .select("id,status,match_summary")
       .eq("user_id", input.userId)
       .eq("job_offer_id", input.jobOfferId)
       .eq("candidate_profile_id", input.candidateProfileId)
@@ -62,7 +62,7 @@ export class ApplicationDraftRepository {
       .neq("status", "ARCHIVED")
       .maybeSingle();
     if (error) throw new ApplicationPreparationError("DRAFT_PERSISTENCE_FAILED", "draft-read", error);
-    return data as { id: string; status: string } | null;
+    return data as { id: string; status: string; match_summary?: Record<string, unknown> } | null;
   }
 
   async saveDraft(input: {

@@ -9,14 +9,15 @@ import { extractResume } from "@/lib/applications/resume-extractor.server";
 vi.mock("@/lib/applications/resume-extractor.server", () => ({ RESUME_EXTRACTOR_VERSION: "text-v1", extractResume: vi.fn() }));
 const structured = structureResumeText("EXPERIENCE\nDeveloper — Example Company — 2020–2024\nBuilt TypeScript applications.\nEDUCATION\nExample University — 2020");
 
-function scenario(options: { missing?: string; extractionError?: boolean; writeError?: boolean; cacheError?: boolean; existing?: boolean } = {}) {
+function scenario(options: { missing?: string; extractionError?: boolean; writeError?: boolean; cacheError?: boolean; existing?: boolean; confirmationDecisions?: Record<string, string> } = {}) {
   const writes: string[] = [];
+  const draftUpdates: Record<string, unknown>[] = [];
   const rows: Record<string, unknown> = {
     job_matches: { id: "match", candidate_profile_id: "profile", search_profile_id: "search", job_offer_id: "offer", score: 79, eligibility_status: "ELIGIBLE" },
     candidate_profiles: { id: "profile", name: "Synthetic", headline: "Developer", job_family: null, seniority: null },
     resumes: { id: "resume", status: "APPROVED", storage_bucket: "private-resumes", storage_path: "synthetic.pdf", mime_type: "application/pdf" },
     job_offers: { id: "offer", title: "Developer", description: "TypeScript required", companies: { name: "Synthetic Company" }, salary_min: null, salary_max: null },
-    application_drafts: options.existing ? { id: "existing-draft", status: "READY_FOR_REVIEW" } : null,
+    application_drafts: options.existing ? { id: "existing-draft", status: "READY_FOR_REVIEW", match_summary: options.confirmationDecisions ? { confirmation_decisions: options.confirmationDecisions } : {} } : null,
     resume_extractions: null,
   };
   const from = vi.fn((table: string) => {
@@ -26,7 +27,7 @@ function scenario(options: { missing?: string; extractionError?: boolean; writeE
       select: () => query, eq: () => query, in: () => query, is: () => query, neq: () => query,
       maybeSingle: async () => result(), single: async () => result(),
       insert: () => { writing = true; writes.push(table); return query; },
-      update: () => { writing = true; writes.push(table); return query; },
+      update: (values: Record<string, unknown>) => { writing = true; writes.push(table); if (table === "application_drafts") draftUpdates.push(values); return query; },
       upsert: async () => { writes.push(table); return { error: null }; },
     };
     return query;
@@ -37,7 +38,7 @@ function scenario(options: { missing?: string; extractionError?: boolean; writeE
     if (options.extractionError) throw new Error('Setting up fake worker failed: "Cannot find module pdf.worker.mjs".');
     return { text: structured.lines.join("\n"), structured };
   });
-  return { input: { authClient: client, serviceClient: client, userId: "user", jobMatchId: "match" }, writes, download };
+  return { input: { authClient: client, serviceClient: client, userId: "user", jobMatchId: "match" }, writes, draftUpdates, download };
 }
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
@@ -78,6 +79,13 @@ describe("preparation failure classification", () => {
     expect(await prepareApplicationDraft(existing.input)).toEqual({ id: "existing-draft", reused: true });
     expect(existing.writes).toEqual([]);
     expect(existing.download).not.toHaveBeenCalled();
+  });
+  it("preserves a draft-local decline when regeneration replaces its analysis", async () => {
+    const confirmationDecisions = { typescript: "DECLINED" };
+    const regeneration = scenario({ existing: true, confirmationDecisions });
+    expect(await prepareApplicationDraft({ ...regeneration.input, regenerate: true })).toEqual({ id: "new-draft", reused: false });
+    expect(regeneration.draftUpdates).toHaveLength(1);
+    expect(regeneration.draftUpdates[0]?.match_summary).toMatchObject({ confirmation_decisions: confirmationDecisions });
   });
   it("exposes distinct public codes while withholding raw causes from messages and logs", () => {
     const logger = vi.spyOn(console, "error").mockImplementation(() => {});

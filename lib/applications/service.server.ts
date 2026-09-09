@@ -110,6 +110,7 @@ export async function prepareApplicationDraft(input: {
       reasons: match.reasons,
       scoring_version: match.scoring_version,
       generator: generator.provider,
+      ...(current?.match_summary?.confirmation_decisions ? { confirmation_decisions: current.match_summary.confirmation_decisions } : {}),
     },
     generated,
   });

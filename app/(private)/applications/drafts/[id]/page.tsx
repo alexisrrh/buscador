@@ -8,8 +8,10 @@ import {
   regenerateApplication,
   saveApplicationText,
 } from "@/app/actions/applications";
+import { confirmRequirementExperience, declineRequirementConfirmation } from "@/app/actions/requirement-confirmations";
 import { prepareApplicationSubmission } from "@/app/actions/application-engine";
 import { Feedback, StatusBadge } from "@/components/feedback";
+import { RequirementConfirmations } from "@/components/requirement-confirmations";
 import type { CandidateEvidence, GapAnalysis, JobAnalysis, ResumeAdaptation } from "@/lib/applications/types";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -25,14 +27,17 @@ export default async function ApplicationDraftPage({
   const { supabase } = await requireUser();
   const { data: draft } = await supabase.from("application_drafts").select("*").eq("id", id).maybeSingle();
   if (!draft) notFound();
-  const [{ data: offer }, { data: sources }] = await Promise.all([
+  const [{ data: offer }, { data: sources }, { data: subjects }] = await Promise.all([
     supabase.from("job_offers").select("title,location_text,work_mode,canonical_url,companies(name)").eq("id", draft.job_offer_id).maybeSingle(),
     supabase.from("job_offer_sources").select("source_url,job_sources(name,code)").eq("job_offer_id", draft.job_offer_id).limit(5),
+    supabase.from("professional_evidence_profiles").select("id,subject_type,display_name").eq("user_id", draft.user_id).eq("candidate_profile_id", draft.candidate_profile_id).order("created_at"),
   ]);
   const job = draft.job_analysis as JobAnalysis;
   const evidence = draft.profile_analysis as Omit<CandidateEvidence, "source_text">;
   const summary = draft.match_summary as { score?: number; eligibility?: string; gaps?: GapAnalysis };
   const gaps = summary.gaps ?? { strong_matches: [], partial_matches: [], missing_requirements: [], unknown_requirements: [] };
+  const decisions = (summary as { confirmation_decisions?: Record<string, string> }).confirmation_decisions ?? {};
+  const confirmable = (gaps.requirement_resolution ?? []).filter(item => item.status === "CONFIRMABLE" && decisions[item.requirement.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")] !== "DECLINED");
   const adaptation = draft.resume_adaptation as ResumeAdaptation;
   const sourceUrl = sources?.[0]?.source_url ?? offer?.canonical_url;
   const sourceName = relationName(sources?.[0]?.job_sources) ?? "Fuente no informada";
@@ -48,6 +53,7 @@ export default async function ApplicationDraftPage({
     </div>
     <Feedback message={query.message} error={query.error} />
     <section className="application-grid">
+      {draft.status !== "APPROVED" && <RequirementConfirmations draftId={draft.id} requirements={confirmable} subjects={(subjects ?? []) as never[]} confirmAction={confirmRequirementExperience} declineAction={declineRequirementConfirmation} />}
       <DerivedResumePanel draftId={draft.id} sourceResumeId={draft.source_resume_id} approved={draft.status === "APPROVED"} offerTitle={offer?.title ?? job.job_title} />
       <article className="card"><h2>Por qué encajas</h2><ItemList values={[...gaps.strong_matches, ...gaps.partial_matches]} empty="No se encontró evidencia directa para destacar." /></article>
       <article className="card"><h2>Lo que te falta</h2><ItemList values={[...gaps.missing_requirements, ...gaps.unknown_requirements]} empty="No se detectaron gaps explícitos." /></article>

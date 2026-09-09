@@ -6,6 +6,7 @@ import type {
 } from "./types";
 import { enrichEvidence } from "./evidence-priority";
 import { mergeProfessionalEvidence } from "./professional-evidence";
+import { resolveRequirementEvidence } from "./requirement-resolution";
 import { isPersonalName, structuredUserIdentity, type UserIdentityInput } from "@/lib/user-identity";
 
 const SKILLS = [
@@ -187,6 +188,7 @@ function linkLabel(value: string): "LinkedIn" | "GitHub" | "Portfolio" {
 }
 
 export function analyzeGaps(job: JobAnalysis, evidence: CandidateEvidence): GapAnalysis {
+  const resolution = resolveRequirementEvidence(job, evidence);
   const verified = new Set(evidence.verified_skills);
   const strong = job.required_skills.filter((skill) => verified.has(skill));
   const partial = job.preferred_skills.filter((skill) => verified.has(skill));
@@ -200,6 +202,7 @@ export function analyzeGaps(job: JobAnalysis, evidence: CandidateEvidence): GapA
     partial_matches: partial,
     missing_requirements: missing,
     unknown_requirements: unknown,
+    requirement_resolution: resolution,
   };
 }
 
