@@ -17,7 +17,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   const result = await searchPublicOpportunities(intent);
   const query = intentQuery(intent);
   const partialFailure = result.sourcesFailed > 0 && result.sourcesSucceeded > 0;
-  const allFailed = result.sourcesSucceeded === 0;
+  const allFailed = result.registryEmpty || (result.sourcesAttempted > 0 && result.sourcesSucceeded === 0);
 
   return <main className="opportunities-page">
     <section className="opportunities-header">

@@ -2,6 +2,16 @@
 
 Last verified: 2026-09-09.
 
+## PRODUCT RESET MILESTONE 2A COMPLETE - DYNAMIC SOURCE REGISTRY
+
+- `company_career_sources` is the persisted SourceRegistry for public `/oportunidades` and private/live search. It currently contains 4 providers (Greenhouse, Ashby, SmartRecruiters and Lever) and 21 company boards, not 21 independent job portals.
+- Adding a board for a supported provider is configuration-only: it does not require changes to the orchestrator, deterministic matching or Oportunidades.
+- The public route remains unauthenticated and resolves the registry server-side; service credentials, board health details and raw errors never reach the browser.
+- Existing board health fields and RPC are reused: disabled boards are skipped, degraded boards remain isolated, and per-board checks record safe timestamps/error codes. No migration was required.
+- The hardcoded development list is an explicit, idempotent local seed only when the persisted registry is empty. Production does not silently depend on it.
+- Next priority: Source Coverage / Persistent Ingestion. Reuse persisted JobOffer, job_offer_sources and freshness before broad coverage can turn every user search into a synchronous fan-out across hundreds of boards.
+- Manual findings retained for later calibration: Enfermera + A Coruna + Hibrido and Mozo de almacen + A Coruna + Cualquier modalidad returned 0; coverage for local/non-tech and health roles is insufficient. Frontend + A Coruna + Cualquier modalidad returned Full Stack Developer and Senior / Staff Fullstack Engineer; seniority, Frontend/Full Stack relation and explicit-location interpretation need later review.
+
 ## PRODUCT RESET MILESTONE 1A COMPLETE
 
 This section supersedes the previous worktree-freeze snapshot below.

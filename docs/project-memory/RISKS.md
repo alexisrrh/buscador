@@ -1,6 +1,8 @@
 # Risk Register
 
 | Static public source list is tech/international-biased | Known Milestone 1A limitation: 21 configured company boards across four providers, not 21 portals; Spain/non-tech discovery is insufficient. | Build Dynamic SourceRegistry, permitted broader coverage and source health before claiming comprehensive opportunities. |
+| Coverage for local and non-tech roles is insufficient | Manual checks returned 0 for Enfermera + A Coruna + Hibrido and Mozo de almacen + A Coruna + Cualquier modalidad. | Design persistent ingestion/freshness reuse, then add permitted Spain/Galicia and non-tech sources incrementally. |
+| Public relevance needs calibration | Frontend + A Coruna + Cualquier modalidad returned Full Stack Developer and Senior / Staff Fullstack Engineer. | Separately review seniority, role-family and explicit-location gates; do not weaken the current anti-irrelevance protections opportunistically. |
 
 | Risk | Current state | Required treatment |
 | --- | --- | --- |

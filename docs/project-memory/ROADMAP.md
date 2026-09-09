@@ -8,9 +8,17 @@ Status: COMPLETE.
 - Current public coverage is four providers (Greenhouse, Ashby, SmartRecruiters and Lever) across 21 configured company boards; it is static and not 21 portals.
 - CV upload and candidacy continuation follow later.
 
-## Next priority - Dynamic SourceRegistry and broader permitted coverage
+## Milestone 2A - Dynamic SourceRegistry
 
-- Replace the static company-board list, add source health and permitted Spain/Galicia/non-tech coverage.
+Status: COMPLETE.
+
+- Replaced the public static company-board list with the persisted `company_career_sources` registry, shared with live search.
+- Reused board health and an explicit local development seed; no migration was required.
+
+## Next priority - Source Coverage / Persistent Ingestion
+
+- First design how persisted JobOffer, job_offer_sources and freshness can power broad Spain/Europe and tech/non-tech coverage without synchronous fan-out to hundreds of boards per user search.
+- Then add permitted coverage and health/backoff policy incrementally.
 - Legacy UI cleanup is deferred until Oportunidades and candidacy fully replace the old flow: remove Automation Command Center, old Inicio/dashboard and Inicio navigation; replace Ofertas with Oportunidades; remove unconsumed legacy UI while preserving useful backend.
 
 ## Milestone 0 — Clean checkpoint

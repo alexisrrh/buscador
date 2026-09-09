@@ -1,11 +1,11 @@
 import "server-only";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-import { createCompanyCareerAdapter, type CompanyCareerSourceConfig } from "@/lib/job-sources/company-careers";
-import { ensureDevelopmentCareerSources } from "@/lib/job-sources/development-career-sources.server";
+import { createCompanyCareerAdapter } from "@/lib/job-sources/company-careers";
 import { runPublicJobSearch } from "@/lib/job-sources/run-public-search";
 import { assertActiveSearchProfile } from "@/lib/job-sources/search-profile-access";
+import { loadPublicSourceRegistry } from "@/lib/job-sources/source-registry.server";
 import { SupabaseJobOfferRepository, type JobOfferRpcClient } from "@/lib/job-sources/supabase-repository";
 import { SupabaseMatchingRepository } from "@/lib/matching/supabase-repository.server";
 
@@ -20,30 +20,11 @@ function createServiceClient() {
   });
 }
 
-async function loadEnabledCareerSources(client: SupabaseClient) {
-  const { data, error } = await client
-    .from("company_career_sources")
-    .select("id,platform,identifier,careers_url")
-    .eq("enabled", true)
-    .in("platform", ["LEVER", "ASHBY", "GREENHOUSE", "SMARTRECRUITERS"])
-    .order("created_at", { ascending: true });
-  if (error) throw new Error("No se pudieron cargar las fuentes de empresas.");
-  return (data ?? []).map((source) => ({
-    id: source.id,
-    platform: source.platform,
-    identifier: source.identifier,
-    careersUrl: source.careers_url,
-  })) as CompanyCareerSourceConfig[];
-}
-
 export async function executeLiveJobSearch(userId: string, searchProfileId: string) {
   const client = createServiceClient();
   await assertActiveSearchProfile(client, userId, searchProfileId);
-  let sources = await loadEnabledCareerSources(client);
-  if (sources.length === 0) {
-    await ensureDevelopmentCareerSources(client);
-    sources = await loadEnabledCareerSources(client);
-  }
+  const registry = await loadPublicSourceRegistry({ client });
+  const sources = registry.sources;
   if (sources.length === 0) {
     throw new Error("No hay fuentes de empresas configuradas todavía.");
   }

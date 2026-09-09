@@ -26,7 +26,7 @@ The official product direction is **invisible complexity, visible outcomes**: a 
 
 ## Current Boundary
 
-Product Reset Milestone 1A is COMPLETE: public intent-first search leads to real opportunities before authentication. Authentication is requested only for personalized actions; CV upload/candidacy continuation is later work. The next priority is Dynamic SourceRegistry plus broader permitted source coverage. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
+Product Reset Milestone 2A is COMPLETE: the server-side Dynamic SourceRegistry loads persisted company boards for both public and live search. Authentication is still not required for public opportunity search. The next priority is Source Coverage / Persistent Ingestion; investigate how to reuse persisted JobOffer, job_offer_sources and freshness before turning each user search into a synchronous fan-out across hundreds of boards. Do not remove legacy UI until Oportunidades and candidacy fully replace it.
 
 - Phase 0: COMPLETE.
 - Phase 1: COMPLETE.

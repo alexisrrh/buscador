@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createCompanyCareerAdapter, type CompanyCareerSourceConfig } from "@/lib/job-sources/company-careers";
-import { DEVELOPMENT_CAREER_SOURCES } from "@/lib/job-sources/development-career-sources.server";
+import { loadPublicSourceRegistry, type PublicSourceRegistry } from "@/lib/job-sources/source-registry.server";
 import type { JobSourceAdapter, NormalizedJobOffer } from "@/lib/job-sources/types";
 import type { SearchIntent } from "@/lib/intent-first";
 import { evaluatePublicSearchIntent, expandPublicRoleTargets } from "@/lib/matching/engine";
@@ -26,20 +26,15 @@ export type PublicOpportunitiesResult = {
   sourcesAttempted: number;
   sourcesSucceeded: number;
   sourcesFailed: number;
+  providersLoaded: number;
+  boardsLoaded: number;
+  boardsSkippedDisabled: number;
+  usedDevelopmentFallback: boolean;
+  registryEmpty: boolean;
   durationMs: number;
 };
 
 export type PublicOpportunitySource = CompanyCareerSourceConfig & { companyName: string | null };
-
-function configuredDevelopmentSources(): PublicOpportunitySource[] {
-  return DEVELOPMENT_CAREER_SOURCES.map((source, index) => ({
-    id: `development-${index}-${source.platform}-${source.identifier}`,
-    platform: source.platform,
-    identifier: source.identifier,
-    careersUrl: source.careersUrl,
-    companyName: source.companyName,
-  }));
-}
 
 function summary(description: string | null) {
   if (!description) return null;
@@ -57,15 +52,47 @@ function withTimeout<T>(promise: Promise<T>) {
   return Promise.race([promise, timedOut]).finally(() => clearTimeout(timeout));
 }
 
+function publicErrorCode(error: unknown) {
+  if (error instanceof Error && error.message === "SOURCE_TIMEOUT") return "SOURCE_TIMEOUT";
+  if (typeof error === "object" && error !== null && "code" in error && typeof error.code === "string") {
+    return error.code.slice(0, 100);
+  }
+  return "UNEXPECTED_ERROR";
+}
+
+function registryForProvidedSources(sources: PublicOpportunitySource[]): PublicSourceRegistry {
+  const registeredSources = sources.map((source) => ({
+    ...source,
+    enabled: true,
+    status: "UNKNOWN" as const,
+    lastCheckedAt: null,
+    lastSuccessAt: null,
+    lastErrorCode: null,
+  }));
+  return {
+    sources: registeredSources,
+    allSources: registeredSources,
+    boardsLoaded: sources.length,
+    boardsSkippedDisabled: 0,
+    providersLoaded: new Set(sources.map((source) => source.platform)).size,
+    usedDevelopmentFallback: false,
+    recordCheck: async () => undefined,
+  };
+}
+
 export async function searchPublicOpportunities(
   intent: SearchIntent,
   dependencies: {
     sources?: PublicOpportunitySource[];
     createAdapter?: (source: PublicOpportunitySource) => JobSourceAdapter<unknown>;
+    loadRegistry?: () => Promise<PublicSourceRegistry>;
   } = {},
 ): Promise<PublicOpportunitiesResult> {
   const startedAt = performance.now();
-  const sources = dependencies.sources ?? configuredDevelopmentSources();
+  const registry = dependencies.sources
+    ? registryForProvidedSources(dependencies.sources)
+    : await (dependencies.loadRegistry ?? loadPublicSourceRegistry)();
+  const sources = registry.sources;
   const opportunities: PublicOpportunity[] = [];
   let offersReceivedRaw = 0;
   let discardedRole = 0;
@@ -119,8 +146,22 @@ export async function searchPublicOpportunities(
         });
         }
         sourcesSucceeded += 1;
-      } catch {
+        try {
+          await registry.recordCheck(source.id, { success: true, errorCode: null, checkedAt: new Date() });
+        } catch {
+          console.warn("public_opportunity_source_health_update_failed", { source_id: source.id });
+        }
+      } catch (error) {
         sourcesFailed += 1;
+        try {
+          await registry.recordCheck(source.id, {
+            success: false,
+            errorCode: publicErrorCode(error),
+            checkedAt: new Date(),
+          });
+        } catch {
+          console.warn("public_opportunity_source_health_update_failed", { source_id: source.id });
+        }
       }
     }
   }
@@ -143,6 +184,11 @@ export async function searchPublicOpportunities(
     sourcesAttempted: sources.length,
     sourcesSucceeded,
     sourcesFailed,
+    providersLoaded: registry.providersLoaded,
+    boardsLoaded: registry.boardsLoaded,
+    boardsSkippedDisabled: registry.boardsSkippedDisabled,
+    usedDevelopmentFallback: registry.usedDevelopmentFallback,
+    registryEmpty: sources.length === 0,
     durationMs: Math.round(performance.now() - startedAt),
   };
   console.info("public_opportunity_search_completed", JSON.stringify({
@@ -152,6 +198,12 @@ export async function searchPublicOpportunities(
     discarded_location_mode: output.discardedLocationMode,
     discarded_threshold: output.discardedThreshold,
     offers_final: output.opportunities.length,
+    providers_loaded: output.providersLoaded,
+    boards_loaded: output.boardsLoaded,
+    boards_skipped_disabled: output.boardsSkippedDisabled,
+    sources_attempted: output.sourcesAttempted,
+    sources_succeeded: output.sourcesSucceeded,
+    sources_failed: output.sourcesFailed,
     duration_ms: output.durationMs,
     titles: output.opportunities.slice(0, 10).map((opportunity) => opportunity.title),
   }));

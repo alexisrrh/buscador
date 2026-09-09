@@ -2,6 +2,13 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-09-09 - Product Reset Milestone 2A complete
+
+- Added a server-side Dynamic SourceRegistry backed by persisted `company_career_sources`, shared by public opportunities and private/live search.
+- Reused 4 existing providers and 21 registered company boards, with board-level health, disabled-board omission, failure isolation and an explicit idempotent development seed. No migration was needed.
+- Public search remains unauthenticated and does not expose service credentials, health internals or raw source errors.
+- Recorded Source Coverage / Persistent Ingestion as the next priority and PUBLIC RELEVANCE CALIBRATION as a separate follow-up. Legacy UI cleanup remains deferred.
+
 ## 2026-09-09 - Product Reset Milestone 1A complete
 
 - Added the public intent-first landing and unauthenticated real-opportunity search.

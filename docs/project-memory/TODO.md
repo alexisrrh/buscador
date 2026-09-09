@@ -1,12 +1,14 @@
 # TODO
 
-## NOW - Dynamic SourceRegistry and coverage
+## NOW - Source Coverage / Persistent Ingestion
 
 - [x] Complete Product Reset Milestone 1A: intent-first public search and personalized-action auth gate.
-- [ ] Replace the static 21-company-board list with a Dynamic SourceRegistry.
+- [x] Complete Product Reset Milestone 2A: replace the static 21-company-board public list with the persisted Dynamic SourceRegistry.
+- [ ] Design persisted ingestion/freshness reuse before expanding search coverage or adding hundreds of synchronous boards.
 - [ ] Add broader permitted coverage for Spain, Galicia and non-tech roles; activate InfoJobs only with application credentials.
 - [ ] Add source health, latency, rate-limit/backoff and temporary-disable tracking.
 - [ ] Extend canonical dedupe across ATS, career site and permitted portal origins.
+- [ ] PUBLIC RELEVANCE CALIBRATION: review seniority excess, Frontend versus Full Stack relevance, and explicit A Coruna versus Europe/Remote/multi-country location interpretation. Do not change this as part of SourceRegistry.
 
 ## DEFERRED - Legacy UI cleanup
 

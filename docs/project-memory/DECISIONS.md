@@ -6,6 +6,10 @@ Decisions here are approved defaults. Reopen one only when new verified evidence
 
 Deliver public opportunities before authentication; require auth only for personalized actions. This demonstrates real value first while preserving search intent, selected offer and a safe continuation target.
 
+## ADR-036 - Dynamic SourceRegistry
+
+Use persisted `company_career_sources` as the server-side registry for public and live searches. A hardcoded list is permitted only as an explicit, idempotent development seed when the local registry is empty; production must not depend on it. This makes adding a board for an existing provider configuration-only while preserving source isolation and health.
+
 | ID | Origin | Decision | Rationale / consequence |
 | --- | --- | --- | --- |
 | ADR-001 | Product architecture | Build SaaS-ready from the MVP, even while one initial user is the test case. | Personal values cannot be embedded in code or workflows. |

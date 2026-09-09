@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { searchIntent } from "@/lib/intent-first";
 import { searchPublicOpportunities, type PublicOpportunitySource } from "@/lib/job-sources/public-opportunities.server";
+import type { PublicSourceRegistry } from "@/lib/job-sources/source-registry.server";
 import type { JobSourceAdapter, NormalizedJobOffer } from "@/lib/job-sources/types";
 
 const offer: NormalizedJobOffer = {
@@ -50,6 +51,36 @@ describe("public opportunities", () => {
     });
     expect(result).toMatchObject({ sourcesAttempted: 2, sourcesSucceeded: 1, sourcesFailed: 1 });
     expect(result.opportunities).toHaveLength(1);
+  });
+
+  it("records board health without letting a failed board block another board", async () => {
+    const checks: Array<{ sourceId: string; success: boolean; errorCode: string | null }> = [];
+    const registeredSources = sources.map((source) => ({
+      ...source, enabled: true, status: "UNKNOWN" as const,
+      lastCheckedAt: null, lastSuccessAt: null, lastErrorCode: null,
+    }));
+    const registry: PublicSourceRegistry = {
+      sources: registeredSources,
+      allSources: registeredSources,
+      boardsLoaded: 2,
+      boardsSkippedDisabled: 0,
+      providersLoaded: 2,
+      usedDevelopmentFallback: false,
+      async recordCheck(sourceId, result) {
+        checks.push({ sourceId, success: result.success, errorCode: result.errorCode });
+      },
+    };
+    const result = await searchPublicOpportunities(searchIntent({ role: "Frontend", workMode: "ANY" }), {
+      loadRegistry: async () => registry,
+      createAdapter: (source) => adapter(source.id === "bad"),
+    });
+
+    expect(result).toMatchObject({ sourcesSucceeded: 1, sourcesFailed: 1, boardsLoaded: 2, providersLoaded: 2 });
+    expect(checks).toEqual(expect.arrayContaining([
+      { sourceId: "good", success: true, errorCode: null },
+      { sourceId: "bad", success: false, errorCode: "UNEXPECTED_ERROR" },
+    ]));
+    expect(JSON.stringify(result)).not.toMatch(/source_id|UNEXPECTED_ERROR|last_error/i);
   });
 
   it("returns a safe no-results state instead of inventing opportunities", async () => {
