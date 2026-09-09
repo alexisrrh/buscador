@@ -35,7 +35,7 @@ const COUNTRY_MARKERS: Array<[string, RegExp]> = [
   ["CA", /\b(canada|canadian)\b/],
   ["AU", /\b(australia|australian|apac)\b/],
   ["GB", /\b(uk|united kingdom|britain|england|london)\b/],
-  ["FR", /\b(france|paris)\b/],
+  ["FR", /\b(france|francia|paris)\b/],
   ["DE", /\b(germany|deutschland|berlin)\b/],
 ];
 
@@ -74,7 +74,8 @@ export function classifyJobRole(title: string, normalizedTitle = normalizeMatchT
 
 export function extractJobSeniority(title: string, explicit: string | null = null): JobSeniority {
   const value = normalizeMatchText(`${title} ${explicit ?? ""}`);
-  if (/\b(intern|internship|trainee|practicas)\b/.test(value)) return "INTERN";
+  if (/\b(intern|internship|trainee|practicas|becario|becaria)\b/.test(value)) return "INTERN";
+  if (/\b(entry level|graduate)\b/.test(value)) return "JUNIOR";
   if (/\b(junior|jr)\b/.test(value)) return "JUNIOR";
   if (/\b(staff)\b/.test(value)) return "STAFF";
   if (/\b(principal)\b/.test(value)) return "PRINCIPAL";
@@ -169,7 +170,7 @@ function locationGate(offer: MatchJobOffer, preferences: MatchJobPreferences): G
   const offerCountries = countriesFromText(offerText);
   if (offer.countryCode) offerCountries.add(offer.countryCode.toUpperCase());
   const isEurope = /\b(eu|europe|european union|emea)\b/.test(normalizedOffer);
-  if (isEurope && acceptedCountries.has("ES")) return "PASS";
+  if (isEurope && acceptedCountries.size > 0) return "PASS";
   if ([...offerCountries].some((country) => acceptedCountries.has(country))) return "PASS";
   if (offerCountries.size > 0 || isEurope) return "FAIL";
 
@@ -206,6 +207,97 @@ function seniorityGate(offer: MatchJobOffer, candidate: MatchCandidateProfile, p
   if (maximumAccepted < 0) return "UNKNOWN";
   if (rank[level] <= maximumAccepted) return "PASS";
   return level === "SENIOR" ? "UNKNOWN" : "FAIL";
+}
+
+export interface PublicSearchIntentMatch {
+  role: string;
+  location: string;
+  workMode: "ANY" | "REMOTE" | "HYBRID" | "ONSITE";
+}
+
+export type PublicIntentRejection = "ROLE" | "SENIORITY" | "LOCATION_MODE" | "THRESHOLD";
+
+export interface PublicIntentEvaluation {
+  included: boolean;
+  score: number;
+  targets: string[];
+  rejectedBy: PublicIntentRejection | null;
+}
+
+const SENIORITY_RANK: Record<JobSeniority, number> = {
+  INTERN: 0, JUNIOR: 1, MID: 2, SENIOR: 3, STAFF: 4, PRINCIPAL: 5,
+  LEAD: 4, MANAGER: 5, DIRECTOR: 6, UNKNOWN: -1,
+};
+
+/**
+ * Conservative title variants for public discovery. They intentionally stay
+ * within a recognised role family instead of broadening a free-text query to
+ * adjacent commercial or support roles.
+ */
+export function expandPublicRoleTargets(role: string) {
+  const family = classifyJobRole(role);
+  const seniority = extractJobSeniority(role);
+  const variants: Record<JobRoleFamily, string[]> = {
+    FULLSTACK: ["Full Stack Developer", "Fullstack Developer", "Full Stack Engineer", "Fullstack Engineer"],
+    FRONTEND: ["Frontend Developer", "Front End Developer", "Frontend Engineer", "Front End Engineer"],
+    BACKEND: ["Backend Developer", "Back End Developer", "Backend Engineer", "Back End Engineer"],
+    MOBILE: ["Mobile Developer", "Mobile Engineer"],
+    DATA: ["Data Engineer", "Data Analyst", "Data Scientist"],
+    DEVOPS: ["DevOps Engineer", "Site Reliability Engineer"],
+    DESIGN: ["Product Designer", "UX Designer"],
+    PRODUCT: ["Product Manager", "Product Owner"],
+    SUPPORT: ["Technical Support", "Customer Support"],
+    SALES: ["Account Executive", "Business Development Representative"],
+    MARKETING: ["Marketing Manager"], HR: ["Recruiter"], MANAGEMENT: ["Engineering Manager"], OTHER: [],
+  };
+  const withLevel = seniority === "JUNIOR"
+    ? variants[family].flatMap((variant) => [`Junior ${variant}`, variant])
+    : variants[family];
+  return [...new Set([role, ...withLevel])];
+}
+
+export function evaluatePublicSearchIntent(
+  intent: PublicSearchIntentMatch,
+  offer: MatchJobOffer,
+): PublicIntentEvaluation {
+  const targets = expandPublicRoleTargets(intent.role);
+  const desiredFamilies = new Set(targets.map((target) => classifyJobRole(target)).filter((family) => family !== "OTHER"));
+  const offerFamily = classifyJobRole(offer.title);
+  const title = titleCompatibility(offer.title, targets, offerFamily, desiredFamilies);
+  const role = roleFamilyGate(offerFamily, desiredFamilies, ["EXACT", "STRONG"].includes(title.level));
+  // Public discovery trusts the title, not incidental words in a description.
+  if (role !== "PASS" || !["EXACT", "STRONG", "RELATED"].includes(title.level)) {
+    return { included: false, score: 0, targets, rejectedBy: "ROLE" };
+  }
+
+  const requestedSeniority = extractJobSeniority(intent.role);
+  const offerSeniority = extractJobSeniority(offer.title, offer.seniority);
+  if (requestedSeniority !== "UNKNOWN" && offerSeniority !== "UNKNOWN" &&
+      SENIORITY_RANK[offerSeniority] > SENIORITY_RANK[requestedSeniority]) {
+    return { included: false, score: 0, targets, rejectedBy: "SENIORITY" };
+  }
+
+  const preferences: MatchJobPreferences = {
+    keywords: [], targetTitles: targets, excludedTitles: [],
+    locations: intent.location ? [{ label: intent.location, country: [...countriesFromText(intent.location)][0] }] : [],
+    workModes: intent.workMode === "ANY" ? [] : [intent.workMode],
+    minimumSalary: null, currency: null, acceptedSeniorities: [], minimumExperienceYears: null,
+    maximumExperienceYears: null, requiredTechnologies: [], excludedTechnologies: [], contractTypes: [],
+  };
+  const location = locationGate(offer, preferences);
+  const mode = workModeGate(offer, preferences);
+  const locationText = normalizeMatchText([offer.locationText, offer.city, offer.region, offer.countryCode].filter(Boolean).join(" "));
+  const geographicallyAmbiguous = Boolean(intent.location) &&
+    (/\b(worldwide|global|americas|north america|latam)\b/.test(locationText) || location !== "PASS");
+  if (mode === "FAIL" || (intent.workMode !== "ANY" && mode !== "PASS") || geographicallyAmbiguous) {
+    return { included: false, score: 0, targets, rejectedBy: "LOCATION_MODE" };
+  }
+
+  const score = title.points + (location === "PASS" ? 25 : 10) + (mode === "PASS" ? 15 : 5) +
+    (requestedSeniority !== "UNKNOWN" && offerSeniority === requestedSeniority ? 15 : 8);
+  return score >= 50
+    ? { included: true, score, targets, rejectedBy: null }
+    : { included: false, score, targets, rejectedBy: "THRESHOLD" };
 }
 
 function requiredExperience(offer: MatchJobOffer) {

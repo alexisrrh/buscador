@@ -1,8 +1,21 @@
 # Roadmap
 
+## Milestone 1A - Intent-first public opportunities
+
+Status: COMPLETE.
+
+- Collect role intent plus optional location/work mode, search real public opportunities without auth, and gate auth only for personalized actions.
+- Current public coverage is four providers (Greenhouse, Ashby, SmartRecruiters and Lever) across 21 configured company boards; it is static and not 21 portals.
+- CV upload and candidacy continuation follow later.
+
+## Next priority - Dynamic SourceRegistry and broader permitted coverage
+
+- Replace the static company-board list, add source health and permitted Spain/Galicia/non-tech coverage.
+- Legacy UI cleanup is deferred until Oportunidades and candidacy fully replace the old flow: remove Automation Command Center, old Inicio/dashboard and Inicio navigation; replace Ofertas with Oportunidades; remove unconsumed legacy UI while preserving useful backend.
+
 ## Milestone 0 — Clean checkpoint
 
-Status: IN PROGRESS.
+Status: COMPLETE.
 
 - Reconcile and validate Phase 9A.9 migration history.
 - Consolidate coherent checkpoint commits without `git add .`.

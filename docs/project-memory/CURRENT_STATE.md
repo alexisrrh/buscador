@@ -2,6 +2,17 @@
 
 Last verified: 2026-09-09.
 
+## PRODUCT RESET MILESTONE 1A COMPLETE
+
+This section supersedes the previous worktree-freeze snapshot below.
+
+- `/` collects a role plus optional location/work mode and sends every user to public `/oportunidades`; no CandidateProfile, SearchProfile, CV or auth is required to search.
+- The flow is: landing -> public search -> real opportunities -> auth only for a personalized action -> CV/candidacy continuation later.
+- Public search uses existing Greenhouse, Ashby, SmartRecruiters and Lever adapters across 21 configured company boards. This is not 21 independent job portals.
+- Public relevance applies prudent role expansion and title/family, seniority, location and work-mode gates. It never shows personal compatibility without a profile/CV.
+- Coverage is static, tech/international-biased and insufficient for Spain/non-tech roles. There is no discovery yet. InfoJobs has an adapter but requires application credentials.
+- Next priority: Dynamic SourceRegistry and broader permitted source coverage. Legacy dashboard cleanup remains deferred until Oportunidades and candidacy replace the old flow.
+
 ## Current Product Direction
 
 BuscaVacante is being reset around **invisible complexity, visible outcomes**:

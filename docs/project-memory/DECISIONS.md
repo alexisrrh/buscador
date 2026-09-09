@@ -2,6 +2,10 @@
 
 Decisions here are approved defaults. Reopen one only when new verified evidence or a product requirement makes that necessary.
 
+## ADR-035 - Product Reset Milestone 1A
+
+Deliver public opportunities before authentication; require auth only for personalized actions. This demonstrates real value first while preserving search intent, selected offer and a safe continuation target.
+
 | ID | Origin | Decision | Rationale / consequence |
 | --- | --- | --- | --- |
 | ADR-001 | Product architecture | Build SaaS-ready from the MVP, even while one initial user is the test case. | Personal values cannot be embedded in code or workflows. |

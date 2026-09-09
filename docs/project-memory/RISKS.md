@@ -1,5 +1,7 @@
 # Risk Register
 
+| Static public source list is tech/international-biased | Known Milestone 1A limitation: 21 configured company boards across four providers, not 21 portals; Spain/non-tech discovery is insufficient. | Build Dynamic SourceRegistry, permitted broader coverage and source health before claiming comprehensive opportunities. |
+
 | Risk | Current state | Required treatment |
 | --- | --- | --- |
 | Author personal data remains in legacy workflows | Open; workflows are disabled but retain inherited content. | Inventory and remove or externalize it only in an approved later phase. |

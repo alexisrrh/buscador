@@ -1,5 +1,21 @@
 # TODO
 
+## NOW - Dynamic SourceRegistry and coverage
+
+- [x] Complete Product Reset Milestone 1A: intent-first public search and personalized-action auth gate.
+- [ ] Replace the static 21-company-board list with a Dynamic SourceRegistry.
+- [ ] Add broader permitted coverage for Spain, Galicia and non-tech roles; activate InfoJobs only with application credentials.
+- [ ] Add source health, latency, rate-limit/backoff and temporary-disable tracking.
+- [ ] Extend canonical dedupe across ATS, career site and permitted portal origins.
+
+## DEFERRED - Legacy UI cleanup
+
+Only when Oportunidades and candidacy completely replace the old flow:
+
+- [ ] Remove Automation Command Center and old Inicio/dashboard.
+- [ ] Remove Inicio navigation and replace Ofertas with Oportunidades.
+- [ ] Remove unused legacy components/styles/routes while preserving useful backend.
+
 ## NOW — checkpoint only
 
 - [x] Reconcile local Phase 9A.9 migration history without touching remote.

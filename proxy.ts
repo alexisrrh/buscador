@@ -5,6 +5,12 @@ import { getPublicSupabaseEnv } from "@/lib/env";
 const privatePrefixes = ["/dashboard", "/profiles", "/searches", "/resumes"];
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isPrivate = privatePrefixes.some((prefix) => pathname.startsWith(prefix));
+  // Public discovery and authentication screens must never wait for an Auth
+  // round trip. Their mutations verify the session server-side when needed.
+  if (!isPrivate) return NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
   const { url, anonKey } = getPublicSupabaseEnv();
   const supabase = createServerClient(url, anonKey, {
@@ -21,22 +27,11 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getUser();
-  const isPrivate = privatePrefixes.some((prefix) =>
-    request.nextUrl.pathname.startsWith(prefix),
-  );
-
   if (isPrivate && !data.user) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
     login.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(login);
-  }
-
-  if (data.user && ["/login", "/register"].includes(request.nextUrl.pathname)) {
-    const dashboard = request.nextUrl.clone();
-    dashboard.pathname = "/dashboard";
-    dashboard.search = "";
-    return NextResponse.redirect(dashboard);
   }
 
   return response;

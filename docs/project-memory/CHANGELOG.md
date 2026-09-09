@@ -2,6 +2,14 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-09-09 - Product Reset Milestone 1A complete
+
+- Added the public intent-first landing and unauthenticated real-opportunity search.
+- Added conservative public-intent relevance, prudent query expansion and role/seniority/location/work-mode filtering without exposing personal compatibility.
+- Public search uses existing Greenhouse, Ashby, SmartRecruiters and Lever adapters across 21 configured company boards; the list remains static and tech/international-biased.
+- Auth is requested only for personalized candidacy preparation and preserves intent, selected offer and return target. CV/candidacy continuation remains later work.
+- Recorded Dynamic SourceRegistry plus broader permitted source coverage as the next priority; legacy dashboard cleanup remains deferred.
+
 ## 2026-09-09 — Product Reset V2 checkpoint
 
 - Adopted the official product direction: invisible complexity, visible outcomes; Oportunidades will become the primary user experience after a clean checkpoint.
