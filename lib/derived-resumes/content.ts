@@ -9,7 +9,11 @@ export const GENERATION_VERSION = "reference-template-v1";
 export const DERIVED_BUCKET = "derived-resumes";
 export const PDF_MIME = "application/pdf";
 export class DerivedResumeError extends Error {
-  constructor(public readonly code: string) { super(code); }
+  constructor(public readonly code: string, public readonly diagnostic?: AdaptationDiagnostic) { super(code); }
+}
+export type AdaptationDiagnostic = "INVALID_EVIDENCE_SELECTION" | "UNVERIFIED_SKILL" | "UNSUPPORTED_LINE" | "INVALID_FROZEN_ADAPTATION" | "NOT_FOUND_REQUIREMENT_RENDERED" | "STALE_EVIDENCE" | "UNKNOWN_VALIDATION_ERROR";
+class AdaptationValidationError extends Error {
+  constructor(readonly diagnostic: AdaptationDiagnostic) { super(diagnostic); }
 }
 export type ResumeContent = {
   name: string;
@@ -42,16 +46,17 @@ export function buildResumeContent(adaptation: ResumeAdaptation, evidence: Candi
     fresh.verified_skills = fresh.verified_skills.filter(skill => evidence.verified_skills.includes(skill) &&
       !evidence.requested_skills.some(item => item.skill === skill && item.status === "NOT_FOUND"));
     try { validateGeneratedApplication({ resume_adaptation: adaptation, recruiter_message: null, cover_letter: null }, fresh); }
-    catch (error) {
+    catch {
       // An APPROVED evidence-priority-v2 snapshot may predate a stricter
       // selection comparison. It remains renderable only after validating its
       // frozen claims against the re-extracted approved source.
-      if (adaptation.selection_version !== "evidence-priority-v2") throw error;
-      validateFrozenAdaptation(adaptation, fresh, source);
+      if (adaptation.selection_version !== "evidence-priority-v2") throw new AdaptationValidationError("INVALID_EVIDENCE_SELECTION");
+      try { validateFrozenAdaptation(adaptation, fresh, source); }
+      catch { throw new AdaptationValidationError("INVALID_FROZEN_ADAPTATION"); }
     }
     const sourceLines = new Set(source.lines);
     for (const line of [...adaptation.experience_sections, ...adaptation.project_sections, ...adaptation.education]) {
-      if (!sourceLines.has(line)) throw new Error("Source line missing");
+      if (!sourceLines.has(line)) throw new AdaptationValidationError("UNSUPPORTED_LINE");
     }
     const identity = fresh.identity;
     if (!identity?.name?.value.trim()) throw new DerivedResumeError("MISSING_CANDIDATE_NAME");
@@ -97,10 +102,10 @@ export function buildResumeContent(adaptation: ResumeAdaptation, evidence: Candi
     ].join("\n");
     if (skillsInText(claims).some(skill => !fresh.verified_skills.includes(skill)) ||
       evidence.requested_skills.some(item => item.status === "NOT_FOUND" && claims.toLowerCase().includes(item.skill.toLowerCase()))) {
-      throw new Error("Unverified rendered skill");
+      throw new AdaptationValidationError(evidence.requested_skills.some(item => item.status === "NOT_FOUND" && claims.toLowerCase().includes(item.skill.toLowerCase())) ? "NOT_FOUND_REQUIREMENT_RENDERED" : "UNVERIFIED_SKILL");
     }
     return content;
-  } catch (error) { throw error instanceof DerivedResumeError ? error : new DerivedResumeError("INVALID_ADAPTATION"); }
+  } catch (error) { throw error instanceof DerivedResumeError ? error : new DerivedResumeError("INVALID_ADAPTATION", error instanceof AdaptationValidationError ? error.diagnostic : "UNKNOWN_VALIDATION_ERROR"); }
 }
 
 function defaultGroups(skills: string[]) {

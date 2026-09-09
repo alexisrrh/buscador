@@ -68,6 +68,7 @@ export async function generateDerivedResume(input: Context & { format?: string }
     return { id, ...metadata, status: "READY" as const };
   } catch (error) {
     const code = error instanceof DerivedResumeError ? error.code : "GENERATION_FAILED";
+    if (error instanceof DerivedResumeError && error.diagnostic) console.error("[derived-resume-validation]", { code, diagnostic: error.diagnostic });
     const { error: failureError } = await service.from("derived_resumes").update({ status: "FAILED", failure_code: code })
       .eq("id", id).eq("status", "GENERATING");
     if (failureError) throw new DerivedResumeError("GENERATION_FINALIZE_FAILED");

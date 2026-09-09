@@ -77,7 +77,7 @@ export function analyzeJobOffer(offer: OfferInput): JobAnalysis {
     if (/^(required skills and experience|required qualifications|minimum qualifications)$/i.test(part)) { mode = "required"; continue; }
     if (/^(useful experience if you have it|preferred qualifications|nice to have)$/i.test(part)) { mode = "preferred"; continue; }
     if (/^(who you are|what we offer|benefits)$/i.test(part)) { mode = null; continue; }
-    const candidates = meaningfulLines(part);
+    const candidates = meaningfulLines(part).filter(line => !explicitlyNotRequired(line));
     if (mode === "required") mandatory.push(...candidates);
     else if (mode === "preferred") preferred.push(...candidates);
     else for (const line of candidates) {
@@ -114,6 +114,17 @@ export function analyzeJobOffer(offer: OfferInput): JobAnalysis {
     keywords: allSkills,
     mandatory_requirements: mandatory.slice(0, 20),
   };
+}
+
+// These statements reduce a barrier; they are never candidate requirements.
+// Keep the patterns anchored to negation language rather than a technology
+// substring so "not required" cannot leak into matching or gap analysis.
+export function explicitlyNotRequired(value: string) {
+  const text = cleanText(value).toLowerCase();
+  return /\bno\s+(?:prior|previous)?\s*(?:background|experience|professional experience)\b.*\b(?:required|necessary)\b/.test(text) ||
+    /\bno\s+background\s+in\b.*\b(?:required|necessary)\b/.test(text) ||
+    /\bno\s+(?:prior|previous)\b.*\bexperience\b.*\b(?:required|necessary)\b/.test(text) ||
+    /\b(?:is\s+)?not\s+(?:required|necessary)\b/.test(text);
 }
 
 export function structureResumeText(rawText: string): ResumeStructure {

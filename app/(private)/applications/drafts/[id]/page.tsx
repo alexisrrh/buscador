@@ -10,7 +10,7 @@ import {
 } from "@/app/actions/applications";
 import { confirmRequirementExperience, declineRequirementConfirmation } from "@/app/actions/requirement-confirmations";
 import { prepareApplicationSubmission } from "@/app/actions/application-engine";
-import { Feedback, StatusBadge } from "@/components/feedback";
+import { Feedback } from "@/components/feedback";
 import { RequirementConfirmations } from "@/components/requirement-confirmations";
 import type { CandidateEvidence, GapAnalysis, JobAnalysis, ResumeAdaptation } from "@/lib/applications/types";
 import { requireUser } from "@/lib/supabase/server";
@@ -49,7 +49,7 @@ export default async function ApplicationDraftPage({
         <h1>{offer?.title ?? job.job_title}</h1>
         <p>{companyName(offer?.companies) ?? job.company ?? "Empresa no informada"} · Score {summary.score ?? "—"} · {sourceName}</p>
       </div>
-      <div className="actions"><StatusBadge status={draft.status} />{summary.eligibility && <StatusBadge status={summary.eligibility} />}</div>
+      <div className="actions"><span className={`badge ${draft.status}`}>{draft.status === "APPROVED" ? "Borrador aprobado" : draft.status === "READY_FOR_REVIEW" ? "Borrador pendiente de revisión" : `Borrador: ${draft.status}`}</span>{summary.eligibility && <span className={`badge ${summary.eligibility}`}>Match: {summary.eligibility === "REVIEW" ? "Revisar" : summary.eligibility}</span>}</div>
     </div>
     <Feedback message={query.message} error={query.error} />
     <section className="application-grid">

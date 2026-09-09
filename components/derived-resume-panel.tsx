@@ -17,16 +17,16 @@ export async function DerivedResumePanel({ draftId, sourceResumeId, approved, of
   const readyVersions = versions.filter(version => version.status === "READY");
   const historyVersions = versions.filter(version => version.status !== "READY");
   let preview: ResumeContent | null = null;
-  let previewFailed = false;
+  let previewDiagnostic: string | null = null;
   if (approved) {
     try { preview = await previewDerivedResume({ authClient: supabase, userId: user.id, draftId }); }
-    catch { previewFailed = true; }
+    catch (error) { previewDiagnostic = error instanceof Error && "diagnostic" in error ? String(error.diagnostic) : "UNKNOWN_VALIDATION_ERROR"; }
   }
   return <article className="card full">
     <h2>CV adaptado</h2>
     <p>Basado en: CV aprobado v{source?.version ?? "—"} · Oferta: {offerTitle} · Renderer actual: v3</p>
     {preview && <details><summary>Revisar contenido antes de generar</summary><ContentPreview content={preview} /></details>}
-    {previewFailed && <p role="alert">No se pudo validar el contenido del CV aprobado. La generación volverá a comprobarlo.</p>}
+    {previewDiagnostic && <p role="alert">CV adaptado: error de validación{process.env.NODE_ENV !== "production" ? ` (${previewDiagnostic})` : ""}. La generación volverá a comprobarlo.</p>}
     {approved ? <form action={generateAdaptedResume}><input type="hidden" name="application_draft_id" value={draftId} /><button type="submit">{readyVersions.length ? "Regenerar" : "Generar CV adaptado"}</button></form> : <p>Aprueba el borrador para generar el CV.</p>}
     <section className="derived-ready-list" aria-label="Versiones listas">
       <h3>Versiones listas</h3>
