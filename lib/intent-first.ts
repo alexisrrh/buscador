@@ -12,6 +12,7 @@ export type OfferPreparationContext = {
   offerUrl: string;
   action: "prepare";
   returnTo: string;
+  resumeId: string | null;
 };
 
 const WORK_MODES = new Set<IntentWorkMode>(["ANY", "REMOTE", "HYBRID", "ONSITE"]);
@@ -71,6 +72,12 @@ function safeOfferUrl(value: unknown) {
   }
 }
 
+function safeResumeId(value: unknown) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : null;
+}
+
 export function offerPreparationContextFromQuery(input: Record<string, string | undefined>): OfferPreparationContext | null {
   const intent = intentFromQuery(input);
   const offerTitle = input.offer_title?.trim() ?? "";
@@ -82,6 +89,7 @@ export function offerPreparationContextFromQuery(input: Record<string, string | 
     offerUrl,
     action: "prepare",
     returnTo: safeReturnTarget(input.return_to, opportunitiesDestination(intent)),
+    resumeId: safeResumeId(input.resume_id),
   };
 }
 
@@ -91,6 +99,7 @@ export function offerPreparationDestination(context: OfferPreparationContext) {
   query.set("offer_url", context.offerUrl);
   query.set("action", context.action);
   query.set("return_to", context.returnTo);
+  if (context.resumeId) query.set("resume_id", context.resumeId);
   return `/resumes?${query}`;
 }
 

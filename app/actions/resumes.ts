@@ -15,6 +15,10 @@ type PrepareInput = {
   contentSha256: string;
 };
 
+type ContextualPrepareInput = Omit<PrepareInput, "candidateProfileId"> & {
+  candidateProfileId?: string;
+};
+
 type PublicError = { code?: string };
 
 function publicResumeError(operation: string, error: PublicError | null | undefined, fallback: string) {
@@ -60,6 +64,21 @@ export async function prepareResumeUpload(input: PrepareInput) {
   return resume
     ? { resume } as const
     : { error: "No se pudo preparar la subida del CV." } as const;
+}
+
+export async function prepareContextualResumeUpload(input: ContextualPrepareInput) {
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Sesión no válida." } as const;
+  let candidateProfileId = input.candidateProfileId?.trim() ?? "";
+  if (!candidateProfileId) {
+    const { data, error } = await supabase.rpc("ensure_contextual_candidate_profile");
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row || row.resolution === "AMBIGUOUS" || typeof row.candidate_profile_id !== "string") {
+      return { error: "Necesitamos que elijas la trayectoria profesional a la que pertenece este CV." } as const;
+    }
+    candidateProfileId = row.candidate_profile_id;
+  }
+  return prepareResumeUpload({ ...input, candidateProfileId });
 }
 
 export async function finishResumeUpload(id: string) {

@@ -2,12 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { finishResumeUpload, prepareResumeUpload, rejectResumeUpload } from "@/app/actions/resumes";
+import { finishResumeUpload, prepareContextualResumeUpload, prepareResumeUpload, rejectResumeUpload } from "@/app/actions/resumes";
 import { createClient } from "@/lib/supabase/browser";
 import { sha256Hex, validateResumeFile } from "@/lib/validation";
-import type { CandidateProfile } from "@/lib/types";
+type ResumeProfile = { id: string; name: string };
 
-export function ResumeUploader({ profiles }: { profiles: CandidateProfile[] }) {
+export function ResumeUploader({ profiles, contextual = false }: { profiles: ResumeProfile[]; contextual?: boolean }) {
   const router = useRouter(); const formRef = useRef<HTMLFormElement>(null);
   const [busy, setBusy] = useState(false); const [feedback, setFeedback] = useState<{ error?: string; message?: string }>({});
 
@@ -21,7 +21,9 @@ export function ResumeUploader({ profiles }: { profiles: CandidateProfile[] }) {
     if (validationError) { setFeedback({ error: validationError }); setBusy(false); return; }
     try {
       const contentSha256 = await sha256Hex(file);
-      const prepared = await prepareResumeUpload({ candidateProfileId, originalFilename: file.name, mimeType: file.type, fileSizeBytes: file.size, contentSha256 });
+      const prepared = contextual
+        ? await prepareContextualResumeUpload({ candidateProfileId: candidateProfileId || undefined, originalFilename: file.name, mimeType: file.type, fileSizeBytes: file.size, contentSha256 })
+        : await prepareResumeUpload({ candidateProfileId, originalFilename: file.name, mimeType: file.type, fileSizeBytes: file.size, contentSha256 });
       if ("error" in prepared) throw new Error(prepared.error);
       const resume = prepared.resume; const supabase = createClient();
       const { error: uploadError } = await supabase.storage.from(resume.storage_bucket).upload(resume.storage_path, file, {
@@ -38,5 +40,6 @@ export function ResumeUploader({ profiles }: { profiles: CandidateProfile[] }) {
     } finally { setBusy(false); }
   }
 
-  return <form ref={formRef} onSubmit={upload} className="card stack"><h2>Sube tu CV</h2><p className="muted">Guardaremos cada archivo como una versión nueva y privada.</p>{feedback.error && <p className="alert error" role="alert">{feedback.error}</p>}{feedback.message && <p className="alert" role="status">{feedback.message}</p>}<div className="form-grid"><div className="field"><label htmlFor="resume-profile">¿Para qué perfil profesional es este CV?</label><select id="resume-profile" name="candidate_profile_id" required>{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></div><div className="field"><label htmlFor="resume-file">Selecciona tu CV</label><input className="file-input" id="resume-file" name="file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required /><span className="hint">Puede ser PDF o Word y ocupar hasta 10 MiB. Lo verificaremos antes de guardarlo.</span></div></div><div className="actions"><button disabled={busy} type="submit">{busy ? "Guardando…" : "Guardar este CV"}</button></div></form>;
+  const singleProfile = profiles.length === 1 ? profiles[0] : null;
+  return <form ref={formRef} onSubmit={upload} className="card stack"><h2>Sube tu CV</h2><p className="muted">Guardaremos cada archivo como una versión nueva y privada.</p>{feedback.error && <p className="alert error" role="alert">{feedback.error}</p>}{feedback.message && <p className="alert" role="status">{feedback.message}</p>}<div className="form-grid">{contextual && singleProfile ? <input type="hidden" name="candidate_profile_id" value={singleProfile.id} /> : contextual && profiles.length === 0 ? null : <div className="field"><label htmlFor="resume-profile">{contextual ? "Este CV corresponde a" : "¿Para qué perfil profesional es este CV?"}</label><select id="resume-profile" name="candidate_profile_id" required={!contextual || profiles.length > 1}>{contextual && profiles.length > 1 && <option value="">Elige una trayectoria</option>}{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></div>}<div className="field"><label htmlFor="resume-file">Selecciona tu CV</label><input className="file-input" id="resume-file" name="file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required /><span className="hint">Puede ser PDF o Word y ocupar hasta 10 MiB. Lo verificaremos antes de guardarlo.</span></div></div><div className="actions"><button disabled={busy} type="submit">{busy ? "Guardando…" : contextual ? "Preparar este CV" : "Guardar este CV"}</button></div></form>;
 }

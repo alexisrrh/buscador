@@ -6,6 +6,7 @@ import { MAX_RESUME_BYTES } from "@/lib/validation";
 
 const mocks = vi.hoisted(() => ({
   prepare: vi.fn(),
+  prepareContextual: vi.fn(),
   finish: vi.fn(),
   reject: vi.fn(),
   upload: vi.fn(),
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/app/actions/resumes", () => ({
   prepareResumeUpload: mocks.prepare,
+  prepareContextualResumeUpload: mocks.prepareContextual,
   finishResumeUpload: mocks.finish,
   rejectResumeUpload: mocks.reject,
 }));
@@ -56,6 +58,14 @@ describe("Resume upload coordinator", () => {
         mime_type: "application/pdf", file_size_bytes: 100,
         content_sha256: "a".repeat(64), created_at: "", approved_at: null,
         archived_at: null, deleted_at: null,
+      },
+    });
+    mocks.prepareContextual.mockResolvedValue({
+      resume: {
+        id: "resume-a", user_id: "user-a", candidate_profile_id: "profile-a",
+        version: 2, status: "PROCESSING", original_filename: "resume.pdf",
+        storage_bucket: "private-resumes", storage_path: "user-a/profile-a/resume-a/v2/resume.pdf",
+        mime_type: "application/pdf", file_size_bytes: 100, content_sha256: "a".repeat(64), created_at: "", approved_at: null, archived_at: null, deleted_at: null,
       },
     });
     mocks.upload.mockResolvedValue({ error: null });
@@ -121,5 +131,17 @@ describe("Resume upload coordinator", () => {
     submitForm();
     expect(await screen.findByRole("alert")).toHaveTextContent(/10 MiB/);
     expect(mocks.prepare).not.toHaveBeenCalled();
+  });
+
+  it("starts contextual onboarding without exposing a profile selector for a new user", async () => {
+    const user = userEvent.setup();
+    render(<ResumeUploader profiles={[]} contextual />);
+    const file = new File(["synthetic"], "resume.pdf", { type: "application/pdf" });
+    await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
+    submitForm();
+
+    expect(await screen.findByText(/versión 2 subido/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/perfil profesional/i)).not.toBeInTheDocument();
+    expect(mocks.prepareContextual).toHaveBeenCalledWith(expect.objectContaining({ candidateProfileId: undefined }));
   });
 });

@@ -2,6 +2,13 @@
 
 Last verified: 2026-09-10.
 
+## PRODUCT RESET MILESTONE 3A-2 COMPLETE - CONTEXTUAL CV ONBOARDING
+
+- CandidateProfile remains an internal owner of private Resume records. Contextual preparation no longer requires a user to create or select one when a single safe path exists.
+- `ensure_contextual_candidate_profile()` derives `auth.uid()`, serializes the no-profile path per user and creates the neutral `Perfil principal` only when no active profile exists. Ambiguous active profiles are reported rather than selected arbitrarily.
+- Contextual CV onboarding reuses the private upload lifecycle and keeps explicit `READY` to `APPROVED` confirmation. It does not run resume extraction, bootstrap Evidence Bank, create matching, JobMatch or ApplicationDraft records.
+- Pending next slices remain 3A-3 public-offer to internal-preparation bridge, 3A-4 candidature review and 3A-5 legacy navigation containment. PUBLIC RELEVANCE CALIBRATION and LEGACY UI CLEANUP remain separate.
+
 ## PRODUCT RESET MILESTONE 3A-1 COMPLETE - PUBLIC OFFER CONTINUITY
 
 - Public Oportunidades preparation now distinguishes a server-verified session: authenticated visitors continue directly to the contextual Resume handoff, while anonymous visitors use the existing auth gate.

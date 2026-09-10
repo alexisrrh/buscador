@@ -63,6 +63,19 @@ describe("intent-first entry", () => {
     expect(safeReturnTarget("https://attacker.example", "/resumes")).toBe("/resumes");
   });
 
+  it("keeps only a valid selected resume id in contextual offer state", () => {
+    const context = offerPreparationContextFromQuery({
+      intent_role: "Frontend Developer", intent_mode: "REMOTE", offer_title: "Frontend Engineer",
+      offer_url: "https://jobs.example.test/frontend", action: "prepare",
+      resume_id: "00000000-0000-4000-8000-000000000001",
+    });
+    expect(context?.resumeId).toBe("00000000-0000-4000-8000-000000000001");
+    expect(offerPreparationContextFromQuery({
+      intent_role: "Frontend Developer", intent_mode: "REMOTE", offer_title: "Frontend Engineer",
+      offer_url: "https://jobs.example.test/frontend", action: "prepare", resume_id: "foreign-id",
+    })?.resumeId).toBeNull();
+  });
+
   it("renders offer context only for a valid preparation handoff", () => {
     const context = offerPreparationContextFromQuery({
       intent_role: "Frontend Developer", intent_mode: "REMOTE", offer_title: "Frontend Engineer",

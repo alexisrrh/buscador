@@ -38,7 +38,7 @@ Only when Oportunidades and candidacy completely replace the old flow:
 ## NEXT — Product Reset
 
 - [x] Complete Milestone 3A-1: preserve public offer context through auth and into the Resume handoff; do not add matching yet.
-- [ ] 3A-2: contextual CV onboarding.
+- [x] Complete Milestone 3A-2: contextual CV onboarding without matching or extraction.
 - [ ] 3A-3: public offer to internal preparation bridge.
 - [ ] 3A-4: candidature review.
 - [ ] 3A-5: legacy navigation containment.
