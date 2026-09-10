@@ -6,6 +6,14 @@ export type SearchIntent = {
   workMode: IntentWorkMode;
 };
 
+export type OfferPreparationContext = {
+  intent: SearchIntent;
+  offerTitle: string;
+  offerUrl: string;
+  action: "prepare";
+  returnTo: string;
+};
+
 const WORK_MODES = new Set<IntentWorkMode>(["ANY", "REMOTE", "HYBRID", "ONSITE"]);
 
 export function searchIntent(input: { role?: unknown; location?: unknown; workMode?: unknown }): SearchIntent {
@@ -44,4 +52,55 @@ export function resumeContinuationDestination(intent: SearchIntent, offer?: { ti
     query.set("return_to", opportunitiesDestination(intent));
   }
   return `/resumes?${query}`;
+}
+
+export function safeReturnTarget(value: unknown, fallback: string) {
+  if (typeof value !== "string") return fallback;
+  return value.startsWith("/resumes?") || value.startsWith("/oportunidades?")
+    ? value
+    : fallback;
+}
+
+function safeOfferUrl(value: unknown) {
+  if (typeof value !== "string" || value.length > 2_048) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export function offerPreparationContextFromQuery(input: Record<string, string | undefined>): OfferPreparationContext | null {
+  const intent = intentFromQuery(input);
+  const offerTitle = input.offer_title?.trim() ?? "";
+  const offerUrl = safeOfferUrl(input.offer_url);
+  if (!intent || input.action !== "prepare" || !offerTitle || offerTitle.length > 160 || !offerUrl) return null;
+  return {
+    intent,
+    offerTitle,
+    offerUrl,
+    action: "prepare",
+    returnTo: safeReturnTarget(input.return_to, opportunitiesDestination(intent)),
+  };
+}
+
+export function offerPreparationDestination(context: OfferPreparationContext) {
+  const query = new URLSearchParams(intentQuery(context.intent));
+  query.set("offer_title", context.offerTitle);
+  query.set("offer_url", context.offerUrl);
+  query.set("action", context.action);
+  query.set("return_to", context.returnTo);
+  return `/resumes?${query}`;
+}
+
+export function preparationCtaDestination(
+  intent: SearchIntent,
+  offer: { title: string; url: string },
+  authenticated: boolean,
+) {
+  const destination = resumeContinuationDestination(intent, offer);
+  return authenticated
+    ? destination
+    : `/register?${intentQuery(intent)}&return_to=${encodeURIComponent(destination)}`;
 }

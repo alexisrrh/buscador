@@ -30,7 +30,11 @@ export async function proxy(request: NextRequest) {
   if (isPrivate && !data.user) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
-    login.searchParams.set("next", request.nextUrl.pathname);
+    if (pathname === "/resumes" && request.nextUrl.searchParams.get("action") === "prepare") {
+      login.searchParams.set("return_to", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    } else {
+      login.searchParams.set("next", request.nextUrl.pathname);
+    }
     return NextResponse.redirect(login);
   }
 

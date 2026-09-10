@@ -1,11 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { IntentEntry } from "@/components/intent-entry";
+import { OfferPreparationContextCard } from "@/components/offer-preparation-context";
 import {
+  offerPreparationContextFromQuery,
+  offerPreparationDestination,
   opportunitiesDestination,
   intentFromQuery,
   intentQuery,
+  preparationCtaDestination,
   resumeContinuationDestination,
+  safeReturnTarget,
   searchIntent,
 } from "@/lib/intent-first";
 
@@ -35,6 +40,39 @@ describe("intent-first entry", () => {
     expect(destination).toContain("offer_url=https%3A%2F%2Fjobs.example.test%2Ffrontend");
     expect(destination).toContain("action=prepare");
     expect(destination).toContain("return_to=%2Foportunidades%3F");
+  });
+
+  it("sends an anonymous visitor through auth and an authenticated visitor directly to the contextual resume handoff", () => {
+    const intent = searchIntent({ role: "Frontend Developer", location: "España", workMode: "REMOTE" });
+    const offer = { title: "Frontend Engineer", url: "https://jobs.example.test/frontend" };
+    expect(preparationCtaDestination(intent, offer, false)).toMatch(/^\/register\?.*return_to=/);
+    expect(preparationCtaDestination(intent, offer, true)).toMatch(/^\/resumes\?.*action=prepare/);
+  });
+
+  it("validates the offer handoff and rejects unsafe URLs or return targets", () => {
+    const context = offerPreparationContextFromQuery({
+      intent_role: "Frontend Developer", intent_location: "España", intent_mode: "REMOTE",
+      offer_title: "Frontend Engineer", offer_url: "https://jobs.example.test/frontend", action: "prepare",
+      return_to: "/oportunidades?intent_role=Frontend+Developer",
+    });
+    expect(context).toMatchObject({ offerTitle: "Frontend Engineer", action: "prepare" });
+    expect(context && offerPreparationDestination(context)).toContain("/resumes?intent_role=Frontend+Developer");
+    expect(offerPreparationContextFromQuery({
+      intent_role: "Frontend Developer", intent_mode: "REMOTE", offer_title: "Unsafe", offer_url: "javascript:alert(1)", action: "prepare",
+    })).toBeNull();
+    expect(safeReturnTarget("https://attacker.example", "/resumes")).toBe("/resumes");
+  });
+
+  it("renders offer context only for a valid preparation handoff", () => {
+    const context = offerPreparationContextFromQuery({
+      intent_role: "Frontend Developer", intent_mode: "REMOTE", offer_title: "Frontend Engineer",
+      offer_url: "https://jobs.example.test/frontend", action: "prepare",
+    });
+    const { rerender } = render(<OfferPreparationContextCard context={context} />);
+    expect(screen.getByRole("heading", { name: "Frontend Engineer" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Ver oferta original/i })).toHaveAttribute("href", "https://jobs.example.test/frontend");
+    rerender(<OfferPreparationContextCard context={null} />);
+    expect(screen.queryByLabelText("Contexto de candidatura")).not.toBeInTheDocument();
   });
 
   it("renders an accessible, model-free mobile-friendly entry form", () => {

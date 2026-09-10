@@ -86,3 +86,11 @@ Discovery candidates to research in priority order: Recruitee, Teamtailor, Perso
 Only after source-specific support and validated controls: thresholds, user rules, mandatory evidence, valid CV, idempotency, limits, audit trail, kill switch and NEEDS ATTENTION routing.
 
 Auto apply optimizes qualified interviews, never application volume.
+
+## Milestone 3A-1 - Public offer continuity
+
+Status: COMPLETE.
+
+- Preserve the selected public offer and search intent through the personalized-action auth gate and into the contextual Resume handoff.
+- Do not create matching or alter the legacy CandidateProfile requirement in this slice.
+- Next: 3A-2 contextual CV onboarding; 3A-3 public offer to internal preparation bridge; 3A-4 candidature review; 3A-5 legacy navigation containment.

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { intentFromQuery, intentQuery, opportunitiesDestination } from "@/lib/intent-first";
+import { intentFromQuery, intentQuery, opportunitiesDestination, safeReturnTarget } from "@/lib/intent-first";
 import { trimmed } from "@/lib/validation";
 
 function intentFromFormData(formData: FormData) {
@@ -11,13 +11,6 @@ function intentFromFormData(formData: FormData) {
     intent_location: String(formData.get("intent_location") ?? ""),
     intent_mode: String(formData.get("intent_mode") ?? ""),
   });
-}
-
-function safeReturnTarget(value: FormDataEntryValue | null, fallback: string) {
-  const target = typeof value === "string" ? value : "";
-  return target.startsWith("/resumes?") || target.startsWith("/oportunidades?")
-    ? target
-    : fallback;
 }
 
 function continuation(formData: FormData) {

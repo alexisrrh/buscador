@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
+import { safeReturnTarget } from "@/lib/intent-first";
 import { MAX_RESUME_BYTES, RESUME_MIME_TYPES } from "@/lib/validation";
 import type { Resume } from "@/lib/types";
 
@@ -85,11 +86,12 @@ export async function approveResume(formData: FormData) {
   const { supabase, user } = await requireUser();
   if (!user) redirect("/login");
   const { error } = await supabase.rpc("approve_resume", { p_resume_id: id });
+  const destination = safeReturnTarget(formData.get("return_to"), "/resumes");
   if (error) {
-    redirect(`/resumes?error=${encodeURIComponent(publicResumeError("approve", error, "No se pudo aprobar este CV."))}`);
+    redirect(`${destination}${destination.includes("?") ? "&" : "?"}error=${encodeURIComponent(publicResumeError("approve", error, "No se pudo aprobar este CV."))}`);
   }
   revalidatePath("/resumes");
-  redirect("/resumes?message=CV%20aprobado");
+  redirect(`${destination}${destination.includes("?") ? "&" : "?"}message=CV%20aprobado`);
 }
 
 export async function setResumeStatus(formData: FormData) {
@@ -99,9 +101,10 @@ export async function setResumeStatus(formData: FormData) {
   if (!user) redirect("/login");
   const operation = intent === "delete" ? "soft_delete_resume" : "archive_resume";
   const { error } = await supabase.rpc(operation, { p_resume_id: id });
+  const destination = safeReturnTarget(formData.get("return_to"), "/resumes");
   if (error) {
-    redirect(`/resumes?error=${encodeURIComponent(publicResumeError(intent, error, "No se pudo actualizar este CV."))}`);
+    redirect(`${destination}${destination.includes("?") ? "&" : "?"}error=${encodeURIComponent(publicResumeError(intent, error, "No se pudo actualizar este CV."))}`);
   }
   revalidatePath("/resumes");
-  redirect("/resumes?message=CV%20actualizado");
+  redirect(`${destination}${destination.includes("?") ? "&" : "?"}message=CV%20actualizado`);
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { IntentEntry } from "@/components/intent-entry";
-import { intentFromQuery, intentQuery, resumeContinuationDestination, type SearchIntent } from "@/lib/intent-first";
+import { intentFromQuery, intentQuery, preparationCtaDestination, type SearchIntent } from "@/lib/intent-first";
 import { searchPublicOpportunities, type PublicOpportunity } from "@/lib/job-sources/public-opportunities.server";
+import { requireUser } from "@/lib/supabase/server";
 
 type OpportunitiesParams = {
   intent_role?: string;
@@ -14,7 +15,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   const intent = intentFromQuery(params);
   if (!intent) return <main className="opportunities-page"><section className="opportunities-header"><p className="eyebrow">Oportunidades</p><h1>Cuéntanos qué quieres encontrar.</h1><IntentEntry /></section></main>;
 
-  const result = await searchPublicOpportunities(intent);
+  const [{ user }, result] = await Promise.all([requireUser(), searchPublicOpportunities(intent)]);
   const query = intentQuery(intent);
 
   return <main className="opportunities-page">
@@ -27,15 +28,14 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 
     {result.opportunities.length === 0 ? <section className="opportunities-state"><h2>No encontramos oportunidades suficientemente cercanas a tu búsqueda.</h2><p>Prueba con otro puesto, una ubicación más amplia o modalidad Cualquiera.</p><Link className="button secondary" href={`/?${query}`}>Ajustar búsqueda</Link></section> : null}
     {result.opportunities.length > 0 ? <section className="opportunities-list" aria-label="Oportunidades encontradas">
-      {result.opportunities.map((opportunity) => <OpportunityCard key={`${opportunity.sourceUrl}-${opportunity.title}`} opportunity={opportunity} intent={intent} />)}
+      {result.opportunities.map((opportunity) => <OpportunityCard key={`${opportunity.sourceUrl}-${opportunity.title}`} opportunity={opportunity} intent={intent} authenticated={Boolean(user)} />)}
     </section> : null}
   </main>;
 }
 
-function OpportunityCard({ opportunity, intent }: { opportunity: PublicOpportunity; intent: SearchIntent }) {
+function OpportunityCard({ opportunity, intent, authenticated }: { opportunity: PublicOpportunity; intent: SearchIntent; authenticated: boolean }) {
   const offerUrl = opportunity.canonicalUrl ?? opportunity.sourceUrl;
-  const continuation = resumeContinuationDestination(intent, { title: opportunity.title, url: offerUrl });
-  const authHref = `/register?${intentQuery(intent)}&return_to=${encodeURIComponent(continuation)}`;
+  const preparationHref = preparationCtaDestination(intent, { title: opportunity.title, url: offerUrl }, authenticated);
   return <article className="opportunity-card">
     <div className="opportunity-card__content">
       <p className="opportunity-company">{opportunity.companyName ?? "Empresa no informada"}</p>
@@ -45,7 +45,7 @@ function OpportunityCard({ opportunity, intent }: { opportunity: PublicOpportuni
     </div>
     <div className="opportunity-card__actions">
       <a className="button secondary" href={offerUrl} target="_blank" rel="noreferrer">Ver oferta</a>
-      <Link className="button" href={authHref}>Preparar mi candidatura</Link>
+      <Link className="button" href={preparationHref}>Preparar mi candidatura</Link>
     </div>
   </article>;
 }

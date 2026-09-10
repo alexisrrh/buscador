@@ -1,6 +1,13 @@
 # Current State
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
+
+## PRODUCT RESET MILESTONE 3A-1 COMPLETE - PUBLIC OFFER CONTINUITY
+
+- Public Oportunidades preparation now distinguishes a server-verified session: authenticated visitors continue directly to the contextual Resume handoff, while anonymous visitors use the existing auth gate.
+- The handoff carries validated role, location, mode, offer title, offer URL and `action=prepare`; safe return targets remain limited to contextual `/resumes` or `/oportunidades` destinations.
+- `/resumes` now visibly identifies the selected offer during a valid preparation handoff and preserves that context through Resume approval/archive/delete redirects. It does not create a JobMatch or alter Evidence, adaptation or Application Engine behavior.
+- Pending next slices remain 3A-2 contextual CV onboarding, 3A-3 public-offer to internal-preparation bridge, 3A-4 candidature review and 3A-5 legacy navigation containment. PUBLIC RELEVANCE CALIBRATION and LEGACY UI CLEANUP remain separate.
 
 ## PRODUCT RESET MILESTONE 2B COMPLETE - PERSISTENT CATALOG
 
