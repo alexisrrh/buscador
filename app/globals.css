@@ -33,6 +33,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline: 3px solid rgba(21, 94, 239, .25);
   outline-offset: 2px;
 }
+.register-submit-button { display: inline-grid; min-inline-size: 11.5rem; }
+.register-submit-button > span { grid-area: 1 / 1; }
+.register-submit-button__sizer { visibility: hidden; }
+.register-submit-button:disabled { cursor: wait; opacity: .78; }
 .button.secondary, button.secondary { color: var(--text); background: var(--surface-soft); border-color: var(--line); }
 .button.danger, button.danger { color: var(--danger); background: #2c1720; border-color: #693442; }
 .button.small, button.small { min-height: 34px; padding: .4rem .7rem; font-size: .875rem; }

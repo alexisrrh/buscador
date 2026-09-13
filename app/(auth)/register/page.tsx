@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { register } from "@/app/actions/auth";
 import { Feedback } from "@/components/feedback";
+import { RegisterSubmitButton } from "@/components/register-submit-button";
 import { intentFromQuery, intentQuery } from "@/lib/intent-first";
 
 type RegisterParams = { error?: string; intent_role?: string; intent_location?: string; intent_mode?: string; return_to?: string };
@@ -19,7 +20,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
       {params.return_to?.startsWith("/") ? <input type="hidden" name="return_to" value={params.return_to} /> : null}
       <div className="field"><label htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" required /></div>
       <div className="field"><label htmlFor="password">Contraseña</label><input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required /><span className="hint">Mínimo 8 caracteres.</span></div>
-      <button type="submit">Crear cuenta</button>
+      <RegisterSubmitButton />
     </form>
     <p className="switch">¿Ya tienes cuenta? <Link href={loginHref}>Inicia sesión</Link></p>
   </section>;

@@ -31,6 +31,14 @@ function authError(path: string, message: string, formData: FormData): never {
   redirect(`${path}?error=${encodeURIComponent(message)}${preserved ? `&${preserved}` : ""}`);
 }
 
+function registerErrorMessage(error: { code?: string; status?: number; message?: string }) {
+  if (error.code === "over_email_send_rate_limit" ||
+      (error.status === 429 && error.message === "email rate limit exceeded")) {
+    return "Has intentado crear varias cuentas en poco tiempo. Espera unos minutos y vuelve a intentarlo.";
+  }
+  return "No se pudo crear la cuenta.";
+}
+
 export async function login(formData: FormData) {
   const email = trimmed(formData.get("email"), 320).toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -51,7 +59,7 @@ export async function register(formData: FormData) {
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) authError("/register", "No se pudo crear la cuenta.", formData);
+  if (error) authError("/register", registerErrorMessage(error), formData);
   if (data.session) redirect(continuation(formData));
 
   const preserved = preservedParams(formData);

@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { getPublicSupabaseEnv } from "@/lib/env";
 
@@ -22,9 +23,9 @@ export async function createClient() {
   });
 }
 
-export async function requireUser() {
+export const requireUser = cache(async () => {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return { supabase, user: null };
   return { supabase, user: data.user };
-}
+});

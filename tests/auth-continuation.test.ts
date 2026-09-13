@@ -40,6 +40,23 @@ describe("auth preparation continuity", () => {
     expect(mocks.redirect).toHaveBeenCalledWith(expect.stringContaining("action%3Dprepare"));
   });
 
+  it("shows a friendly message for Supabase email-send rate limits while preserving continuation", async () => {
+    mocks.signUp.mockResolvedValue({ data: { session: null }, error: { code: "over_email_send_rate_limit", status: 429, message: "email rate limit exceeded" } });
+    await expect(register(preparationForm())).rejects.toThrow(/REDIRECT:\/register\?error=Has%20intentado%20crear%20varias%20cuentas/);
+    expect(mocks.redirect).toHaveBeenCalledWith(expect.stringContaining("action%3Dprepare"));
+  });
+
+  it("keeps the generic message for unrelated Auth errors", async () => {
+    mocks.signUp.mockResolvedValue({ data: { session: null }, error: { code: "unexpected_auth_error", status: 400, message: "Unexpected failure" } });
+    await expect(register(preparationForm())).rejects.toThrow(/REDIRECT:\/register\?error=No%20se%20pudo%20crear%20la%20cuenta/);
+  });
+
+  it("continues directly to the preserved target when signUp returns a session", async () => {
+    mocks.signUp.mockResolvedValue({ data: { session: { access_token: "synthetic" } }, error: null });
+    await expect(register(preparationForm())).rejects.toThrow(/REDIRECT:\/resumes\?.*action=prepare/);
+    expect(mocks.signUp).toHaveBeenCalledWith({ email: "candidate@example.test", password: "password-123" });
+  });
+
   it("rejects an unsafe return target", async () => {
     const form = preparationForm();
     form.set("return_to", "https://attacker.example/steal");
