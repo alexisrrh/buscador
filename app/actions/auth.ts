@@ -15,7 +15,7 @@ function intentFromFormData(formData: FormData) {
 
 function continuation(formData: FormData) {
   const intent = intentFromFormData(formData);
-  return safeReturnTarget(formData.get("return_to"), intent ? opportunitiesDestination(intent) : "/dashboard");
+  return safeReturnTarget(formData.get("return_to"), intent ? opportunitiesDestination(intent) : "/resumes");
 }
 
 function preservedParams(formData: FormData) {

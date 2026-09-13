@@ -24,6 +24,21 @@ function preparationForm() {
   return form;
 }
 
+function intentOnlyForm() {
+  const form = preparationForm();
+  form.delete("return_to");
+  return form;
+}
+
+function contextlessForm() {
+  const form = preparationForm();
+  form.delete("intent_role");
+  form.delete("intent_location");
+  form.delete("intent_mode");
+  form.delete("return_to");
+  return form;
+}
+
 describe("auth preparation continuity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,6 +70,16 @@ describe("auth preparation continuity", () => {
     mocks.signUp.mockResolvedValue({ data: { session: { access_token: "synthetic" } }, error: null });
     await expect(register(preparationForm())).rejects.toThrow(/REDIRECT:\/resumes\?.*action=prepare/);
     expect(mocks.signUp).toHaveBeenCalledWith({ email: "candidate@example.test", password: "password-123" });
+  });
+
+  it("uses the public intent destination when signup has intent but no return target", async () => {
+    mocks.signUp.mockResolvedValue({ data: { session: { access_token: "synthetic" } }, error: null });
+    await expect(register(intentOnlyForm())).rejects.toThrow(/REDIRECT:\/oportunidades\?intent_role=Frontend\+Developer/);
+  });
+
+  it("uses resumes, never the legacy dashboard, when signup has no context", async () => {
+    mocks.signUp.mockResolvedValue({ data: { session: { access_token: "synthetic" } }, error: null });
+    await expect(register(contextlessForm())).rejects.toThrow("REDIRECT:/resumes");
   });
 
   it("rejects an unsafe return target", async () => {
