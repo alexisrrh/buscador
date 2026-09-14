@@ -9,11 +9,9 @@ export default async function PrivateLayout({ children }: { children: React.Reac
   return (
     <div className="app-shell">
       <header className="topbar">
-        <Link className="brand" href="/dashboard">BuscaVacante</Link>
+        <Link className="brand" href="/oportunidades">BuscaVacante</Link>
         <nav className="nav" aria-label="Navegación principal">
-          <Link href="/dashboard">Inicio</Link>
-          <Link href="/jobs">Ofertas</Link>
-          <Link href="/applications">Candidaturas</Link>
+          <Link href="/oportunidades">Oportunidades</Link>
           <Link href="/profiles">Perfil</Link>
           <form action={logout}><button className="secondary small" type="submit">Salir</button></form>
         </nav>

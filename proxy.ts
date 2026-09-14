@@ -6,6 +6,7 @@ const privatePrefixes = ["/dashboard", "/profiles", "/searches", "/resumes"];
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const isLegacyDashboard = pathname === "/dashboard";
   const isPrivate = privatePrefixes.some((prefix) => pathname.startsWith(prefix));
   // Public discovery and authentication screens must never wait for an Auth
   // round trip. Their mutations verify the session server-side when needed.
@@ -36,6 +37,13 @@ export async function proxy(request: NextRequest) {
       login.searchParams.set("next", request.nextUrl.pathname);
     }
     return NextResponse.redirect(login);
+  }
+
+  if (isLegacyDashboard) {
+    const opportunities = request.nextUrl.clone();
+    opportunities.pathname = "/oportunidades";
+    opportunities.search = "";
+    return NextResponse.redirect(opportunities);
   }
 
   return response;

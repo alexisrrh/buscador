@@ -30,10 +30,11 @@ describe("private route protection", () => {
     expect(response.headers.get("location")).not.toContain("next=");
   });
 
-  it("allows an authenticated private request", async () => {
+  it("redirects the authenticated legacy dashboard route to opportunities", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "user-a" } } });
     const { proxy } = await import("@/proxy");
     const response = await proxy(new NextRequest("https://app.example/dashboard"));
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.example/oportunidades");
   });
 });
