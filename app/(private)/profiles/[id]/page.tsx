@@ -5,7 +5,6 @@ import { Feedback } from "@/components/feedback";
 import { ProfileForm } from "@/components/profile-form";
 import { UserIdentityForm } from "@/components/user-identity-form";
 import { requireUser } from "@/lib/supabase/server";
-import { bootstrapApprovedResumeEvidence } from "@/lib/applications/professional-evidence-bootstrap.server";
 import type { CandidateProfile } from "@/lib/types";
 import { structuredUserIdentity } from "@/lib/user-identity";
 
@@ -13,7 +12,6 @@ export default async function EditProfilePage({ params, searchParams }: { params
   const { id } = await params;
   const query = await searchParams;
   const { supabase, user } = await requireUser();
-  if (user) await bootstrapApprovedResumeEvidence(supabase, user.id, id);
   const [{ data }, { data: identityData }] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("id", id).eq("user_id", user!.id).maybeSingle(),
     supabase.from("profiles").select("first_name,last_name").eq("id", user!.id).maybeSingle(),

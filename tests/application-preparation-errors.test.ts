@@ -7,6 +7,8 @@ import { structureResumeText } from "@/lib/applications/analysis";
 import { extractResume } from "@/lib/applications/resume-extractor.server";
 
 vi.mock("@/lib/applications/resume-extractor.server", () => ({ RESUME_EXTRACTOR_VERSION: "text-v1", extractResume: vi.fn() }));
+const bootstrap = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/applications/professional-evidence-bootstrap.server", () => ({ bootstrapApprovedResumeEvidence: bootstrap }));
 const structured = structureResumeText("EXPERIENCE\nDeveloper — Example Company — 2020–2024\nBuilt TypeScript applications.\nEDUCATION\nExample University — 2020");
 
 function scenario(options: { missing?: string; extractionError?: boolean; writeError?: boolean; cacheError?: boolean; existing?: boolean; confirmationDecisions?: Record<string, string> } = {}) {
@@ -41,7 +43,7 @@ function scenario(options: { missing?: string; extractionError?: boolean; writeE
   return { input: { authClient: client, serviceClient: client, userId: "user", jobMatchId: "match" }, writes, draftUpdates, download };
 }
 
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); bootstrap.mockReset(); bootstrap.mockResolvedValue({ createdSubjects: 0, createdItems: 0, createdUrls: 0 }); });
 
 describe("preparation failure classification", () => {
   it("reports the PDF.js worker failure as RESUME_EXTRACTION_FAILED before any write", async () => {
@@ -60,6 +62,18 @@ describe("preparation failure classification", () => {
   it("classifies a draft insert error and a cache read error", async () => {
     await expect(prepareApplicationDraft(scenario({ writeError: true }).input)).rejects.toMatchObject({ code: "DRAFT_PERSISTENCE_FAILED", stage: "draft-write" });
     await expect(prepareApplicationDraft(scenario({ cacheError: true }).input)).rejects.toMatchObject({ code: "DRAFT_PERSISTENCE_FAILED", stage: "extraction-cache-read" });
+  });
+  it("defensively bootstraps historical approved CV evidence before preparation", async () => {
+    const { input } = scenario();
+    await expect(prepareApplicationDraft(input)).resolves.toMatchObject({ id: "new-draft" });
+    expect(bootstrap).toHaveBeenCalledWith(input.authClient, "user", "profile");
+  });
+  it("fails preparation safely when the defensive evidence ensure cannot complete", async () => {
+    bootstrap.mockRejectedValueOnce(new Error("private database detail"));
+    await expect(prepareApplicationDraft(scenario().input)).rejects.toMatchObject({
+      code: "EVIDENCE_BOOTSTRAP_FAILED",
+      stage: "evidence-bootstrap",
+    });
   });
   it("does not need external generator keys and classifies invalid generation", async () => {
     vi.stubEnv("APPLICATION_GENERATOR_PROVIDER", "evidence-based");

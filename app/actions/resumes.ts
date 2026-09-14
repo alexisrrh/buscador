@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { safeReturnTarget } from "@/lib/intent-first";
+import { bootstrapApprovedResumeEvidence } from "@/lib/applications/professional-evidence-bootstrap.server";
 import { MAX_RESUME_BYTES, RESUME_MIME_TYPES } from "@/lib/validation";
 import type { Resume } from "@/lib/types";
 
@@ -28,6 +29,31 @@ function publicResumeError(operation: string, error: PublicError | null | undefi
   return error?.code === "23505"
     ? "Este CV ya existe en el perfil seleccionado."
     : fallback;
+}
+
+function logEvidenceBootstrapFailure(stage: "auto-approval" | "manual-approval", error: unknown) {
+  const code = error && typeof error === "object" && "code" in error ? error.code : null;
+  // Never log CV contents, storage paths, identities, or database messages.
+  console.error("resume_evidence_bootstrap_failed", JSON.stringify({
+    stage,
+    causeClass: error instanceof Error ? error.constructor.name : "Unknown",
+    causeCode: typeof code === "string" && /^(?:[0-9A-Z]{5}|PGRST\d{3})$/.test(code) ? code : null,
+  }));
+}
+
+async function bootstrapEvidenceAfterApproval(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+  candidateProfileId: string,
+  stage: "auto-approval" | "manual-approval",
+) {
+  try {
+    await bootstrapApprovedResumeEvidence(supabase, userId, candidateProfileId);
+    return true;
+  } catch (error) {
+    logEvidenceBootstrapFailure(stage, error);
+    return false;
+  }
 }
 
 export async function prepareResumeUpload(input: PrepareInput) {
@@ -103,6 +129,7 @@ export async function finishResumeUpload(id: string, autoApproveFirst = false) {
 
   const { error: approvalError } = await supabase.rpc("approve_resume", { p_resume_id: id });
   if (approvalError) return { error: publicResumeError("approve-first", approvalError, "No se pudo seleccionar el CV subido.") };
+  await bootstrapEvidenceAfterApproval(supabase, user.id, resume.candidate_profile_id, "auto-approval");
   revalidatePath("/resumes");
   return { ok: true, approved: true };
 }
@@ -124,6 +151,19 @@ export async function approveResume(formData: FormData) {
   const destination = safeReturnTarget(formData.get("return_to"), "/resumes");
   if (error) {
     redirect(`${destination}${destination.includes("?") ? "&" : "?"}error=${encodeURIComponent(publicResumeError("approve", error, "No se pudo aprobar este CV."))}`);
+  }
+  const { data: approvedResume, error: approvedResumeError } = await supabase
+    .from("resumes")
+    .select("candidate_profile_id")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .eq("status", "APPROVED")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (approvedResumeError || !approvedResume?.candidate_profile_id) {
+    logEvidenceBootstrapFailure("manual-approval", approvedResumeError ?? new Error("Approved resume was not found"));
+  } else {
+    await bootstrapEvidenceAfterApproval(supabase, user.id, approvedResume.candidate_profile_id, "manual-approval");
   }
   revalidatePath("/resumes");
   redirect(`${destination}${destination.includes("?") ? "&" : "?"}message=CV%20aprobado`);

@@ -6,8 +6,13 @@ import { analyzeJobOffer, buildCandidateEvidence, structureResumeText } from "@/
 import { buildPrioritizedAdaptation } from "@/lib/applications/evidence-priority";
 import { buildResumeContent, PDF_MIME } from "@/lib/derived-resumes/content";
 import { RESUME_BODY_FONT_SIZE, renderResumePdf, renderResumePdfWithStrategy, selectResumeDensity } from "@/lib/derived-resumes/renderer.server";
-import { generateDerivedResume, loadRenderSource } from "@/lib/derived-resumes/service.server";
+import { generateDerivedResume, loadRenderSource, previewDerivedResume } from "@/lib/derived-resumes/service.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+const bootstrap = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/applications/professional-evidence-bootstrap.server", () => ({ bootstrapApprovedResumeEvidence: bootstrap }));
+const extract = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/applications/resume-extractor.server", () => ({ extractResume: extract }));
 
 const source = structureResumeText(`María Ejemplo\nmaria@example.test\nhttps://example.test\nEXPERIENCIA\nExample Company — Web Developer — 2020–2024\nDesarrollo de aplicaciones con TypeScript y SQL.\nPROYECTOS\nPortal de documentación — 2023\nEDUCACIÓN\nUniversidad Ejemplo — Grado en Informática — 2016–2020\nCERTIFICACIONES\nCertificación de ejemplo — 2022\nIDIOMAS\nEspañol nativo; inglés B2`);
 const job = analyzeJobOffer({ title: "Web Developer", description: "TypeScript required. AWS preferred.", companies: { name: "Example Hiring" }, location_text: null, work_mode: null, employment_type: null, salary_min: null, salary_max: null, salary_currency: null });
@@ -35,6 +40,18 @@ describe("Phase 9A deterministic rendering", () => {
     await expect(loadRenderSource({ ...context, authClient: mockClient({ status: "APPROVED" }, { status: "READY" }) })).rejects.toMatchObject({ code: "SOURCE_RESUME_NOT_APPROVED" });
     await expect(loadRenderSource({ ...context, authClient: mockClient({ status: "APPROVED" }, null) })).rejects.toMatchObject({ code: "SOURCE_RESUME_NOT_FOUND" });
     await expect(generateDerivedResume({ ...context, authClient: mockClient(null, null), format: "DOCX" })).rejects.toMatchObject({ code: "UNSUPPORTED_FORMAT" });
+  });
+  it("defensively ensures approved-resume evidence before rendering a historical derived CV", async () => {
+    const bytes = Buffer.from("synthetic approved source");
+    const draft = { id: "draft", status: "APPROVED", source_resume_id: "resume", candidate_profile_id: "profile", resume_adaptation: {}, profile_analysis: {}, job_analysis: {} };
+    const resume = { id: "resume", status: "APPROVED", storage_bucket: "private-resumes", storage_path: "source.pdf", mime_type: "application/pdf", file_size_bytes: bytes.byteLength, content_sha256: createHash("sha256").update(bytes).digest("hex") };
+    const authClient = mockClient(draft, resume);
+    const serviceClient = { storage: { from: () => ({ download: async () => ({ data: new Blob([bytes]), error: null }) }) } } as unknown as SupabaseClient;
+    extract.mockResolvedValue({ structured: source });
+    bootstrap.mockRejectedValueOnce(new Error("temporary bootstrap failure"));
+
+    await expect(previewDerivedResume({ authClient, serviceClient, userId: "user", draftId: "draft" })).rejects.toMatchObject({ code: "EVIDENCE_BOOTSTRAP_FAILED" });
+    expect(bootstrap).toHaveBeenCalledWith(authClient, "user", "profile");
   });
   it("rejects unsupported skills, summaries and altered dates or employers", () => {
     for (const altered of [

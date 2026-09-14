@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createApplicationServiceClient } from "@/lib/applications/repository.server";
 import { extractResume } from "@/lib/applications/resume-extractor.server";
 import { loadProfessionalEvidenceBank } from "@/lib/applications/professional-evidence.server";
+import { bootstrapApprovedResumeEvidence } from "@/lib/applications/professional-evidence-bootstrap.server";
 import { buildResumeContent, DERIVED_BUCKET, DerivedResumeError, GENERATION_VERSION, type ResumeContent } from "./content";
 import { renderResumePdf } from "./renderer.server";
 
@@ -30,6 +31,11 @@ async function contentFromSource(input: Context, source: Awaited<ReturnType<type
     throw new DerivedResumeError("SOURCE_INTEGRITY_FAILED");
   }
   const extraction = await extractResume(bytes, resume.mime_type);
+  try {
+    await bootstrapApprovedResumeEvidence(input.authClient, input.userId, draft.candidate_profile_id);
+  } catch {
+    throw new DerivedResumeError("EVIDENCE_BOOTSTRAP_FAILED");
+  }
   const { data: userIdentity } = await input.authClient.from("profiles")
     .select("first_name,last_name").eq("id", input.userId).maybeSingle();
   const bank = await loadProfessionalEvidenceBank(input.authClient, input.userId, draft.candidate_profile_id);

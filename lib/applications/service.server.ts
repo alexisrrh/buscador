@@ -10,6 +10,7 @@ import type { CandidateApplicationGenerator } from "./types";
 import { UnsupportedApplicationClaimError, validateGeneratedApplication } from "./validation";
 import { ApplicationPreparationError } from "./errors";
 import { loadProfessionalEvidenceBank } from "./professional-evidence.server";
+import { bootstrapApprovedResumeEvidence } from "./professional-evidence-bootstrap.server";
 export { ApplicationPreparationError } from "./errors";
 
 export async function prepareApplicationDraft(input: {
@@ -46,6 +47,14 @@ export async function prepareApplicationDraft(input: {
   if (!profile) throw new ApplicationPreparationError("MISSING_CANDIDATE_PROFILE", "candidate-profile");
   if (!offer) throw new ApplicationPreparationError("MISSING_JOB_OFFER", "job-offer");
   const approvedResume = requireApprovedResume(resume);
+
+  // The lifecycle normally bootstraps this on approval. Keep a defensive,
+  // idempotent ensure here for historical CVs and transient lifecycle failures.
+  try {
+    await bootstrapApprovedResumeEvidence(input.authClient, input.userId, match.candidate_profile_id);
+  } catch (error) {
+    throw new ApplicationPreparationError("EVIDENCE_BOOTSTRAP_FAILED", "evidence-bootstrap", error);
+  }
 
   const serviceClient = input.serviceClient ?? createApplicationServiceClient();
   const repository = new ApplicationDraftRepository(serviceClient);

@@ -11,6 +11,7 @@ const PUBLIC_ERRORS: Record<string, string> = {
   GENERATION_FAILED: "No se pudo generar la adaptación de la candidatura.",
   APPLICATION_SERVICE_NOT_CONFIGURED: "El servicio de candidaturas no está configurado.",
   APPROVED_DRAFT_IMMUTABLE: "La candidatura aprobada no puede regenerarse.",
+  EVIDENCE_BOOTSTRAP_FAILED: "No se pudo preparar la evidencia verificada del CV.",
   PREPARATION_FAILED: "No se pudo preparar la candidatura.",
 };
 
