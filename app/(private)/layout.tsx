@@ -12,7 +12,6 @@ export default async function PrivateLayout({ children }: { children: React.Reac
         <Link className="brand" href="/oportunidades">BuscaVacante</Link>
         <nav className="nav" aria-label="Navegación principal">
           <Link href="/oportunidades">Oportunidades</Link>
-          <Link href="/profiles">Perfil</Link>
           <form action={logout}><button className="secondary small" type="submit">Salir</button></form>
         </nav>
       </header>

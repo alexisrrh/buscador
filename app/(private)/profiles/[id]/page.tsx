@@ -1,28 +1,7 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { archiveProfile, updateProfile, updateUserIdentity } from "@/app/actions/profiles";
-import { Feedback } from "@/components/feedback";
-import { ProfileForm } from "@/components/profile-form";
-import { UserIdentityForm } from "@/components/user-identity-form";
-import { requireUser } from "@/lib/supabase/server";
-import type { CandidateProfile } from "@/lib/types";
-import { structuredUserIdentity } from "@/lib/user-identity";
+import { redirect } from "next/navigation";
+import { intentFromQuery, intentQuery } from "@/lib/intent-first";
 
-export default async function EditProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; message?: string }> }) {
-  const { id } = await params;
-  const query = await searchParams;
-  const { supabase, user } = await requireUser();
-  const [{ data }, { data: identityData }] = await Promise.all([
-    supabase.from("candidate_profiles").select("*").eq("id", id).eq("user_id", user!.id).maybeSingle(),
-    supabase.from("profiles").select("first_name,last_name").eq("id", user!.id).maybeSingle(),
-  ]);
-  if (!data) notFound();
-  const profile = data as CandidateProfile;
-  return <>
-    <div className="page-header"><div><h1>Tu perfil profesional</h1><p>Actualiza cómo quieres presentarte para este tipo de trabajo.</p></div>{!profile.deleted_at && <Link className="button" href="/searches/new">Continuar: crear una búsqueda</Link>}</div>
-    <Feedback error={query.error} message={query.message} />
-    <UserIdentityForm action={updateUserIdentity} profileId={profile.id} identity={structuredUserIdentity(identityData)} />
-    <ProfileForm action={updateProfile} profile={profile} />
-    {!profile.deleted_at && <form action={archiveProfile} className="actions"><input type="hidden" name="id" value={profile.id} /><button className="danger" type="submit">Ya no quiero usar este perfil</button></form>}
-  </>;
+export default async function EditProfilePage({ searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
+  const intent = intentFromQuery(await searchParams);
+  redirect(intent ? `/onboarding?${intentQuery(intent)}` : "/onboarding");
 }

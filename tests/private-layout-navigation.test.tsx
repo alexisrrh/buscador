@@ -17,7 +17,7 @@ describe("private navigation", () => {
     expect(screen.queryByRole("link", { name: "Inicio" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Oportunidades" })).toHaveAttribute("href", "/oportunidades");
     expect(screen.getByRole("link", { name: "BuscaVacante" })).toHaveAttribute("href", "/oportunidades");
-    expect(screen.getByRole("link", { name: "Perfil" })).toHaveAttribute("href", "/profiles");
+    expect(screen.queryByRole("link", { name: "Perfil" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Ofertas" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Candidaturas" })).not.toBeInTheDocument();
   });
