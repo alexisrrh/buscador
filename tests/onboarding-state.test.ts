@@ -5,7 +5,7 @@ function input(overrides: Partial<OnboardingStateInput> = {}): OnboardingStateIn
   return { authenticated: true, intent: null, profiles: [{ id: "profile-1", headline: null, jobFamily: null }], searches: [], preferences: [], resumes: [], ...overrides };
 }
 function readyInput(overrides: Partial<OnboardingStateInput> = {}): OnboardingStateInput {
-  return input({ intent: { role: "Frontend Developer", location: "", workMode: "REMOTE" }, searches: [{ id: "search-1", candidateProfileId: "profile-1", name: "Frontend Developer", status: "ACTIVE", version: 1 }], preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [], workModes: ["REMOTE"], minimumSalary: null, currency: "EUR" }], ...overrides });
+  return input({ intent: { role: "Frontend Developer", location: "", workMode: "REMOTE" }, searches: [{ id: "search-1", candidateProfileId: "profile-1", name: "Frontend Developer", status: "ACTIVE", version: 1 }], preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [], workModes: ["REMOTE"], minimumSalary: null, currency: "EUR", locationPreferenceState: "UNKNOWN", workModePreferenceState: "SPECIFIED", salaryPreferenceState: "UNKNOWN" }], ...overrides });
 }
 
 describe("deterministic onboarding state", () => {
@@ -24,7 +24,7 @@ describe("deterministic onboarding state", () => {
     expect(snapshot.optionalSignals).toEqual(["LOCATION", "SALARY"]);
   });
   it("does not ask for optional signals already persisted", () => {
-    const snapshot = resolveOnboardingState(readyInput({ preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [{ label: "Madrid" }], workModes: ["REMOTE"], minimumSalary: 30000, currency: "EUR" }] }));
+    const snapshot = resolveOnboardingState(readyInput({ preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [{ label: "Madrid" }], workModes: ["REMOTE"], minimumSalary: 30000, currency: "EUR", locationPreferenceState: "SPECIFIED", workModePreferenceState: "SPECIFIED", salaryPreferenceState: "SPECIFIED" }] }));
     expect(snapshot.location).toMatchObject({ value: "Madrid", source: "PERSISTED_PREFERENCE" });
     expect(snapshot.salary).toMatchObject({ minimum: 30000, source: "PERSISTED_PREFERENCE" });
     expect(snapshot.optionalSignals).toEqual([]);
@@ -42,7 +42,7 @@ describe("deterministic onboarding state", () => {
     expect(resolveOnboardingState(readyInput({ preparingApplication: true, resumes: [{ id: "resume-1", candidateProfileId: "profile-1", status: "APPROVED" }, { id: "resume-2", candidateProfileId: "profile-1", status: "APPROVED" }] }))).toMatchObject({ state: "CV_SELECTION_REQUIRED", approvedResume: { state: "AMBIGUOUS" } });
   });
   it("does not let query intent overwrite persisted preferences", () => {
-    const snapshot = resolveOnboardingState(readyInput({ intent: { role: "Backend Developer", location: "Barcelona", workMode: "ONSITE" }, preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [{ label: "Madrid" }], workModes: ["REMOTE"], minimumSalary: null, currency: "EUR" }] }));
+    const snapshot = resolveOnboardingState(readyInput({ intent: { role: "Backend Developer", location: "Barcelona", workMode: "ONSITE" }, preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [{ label: "Madrid" }], workModes: ["REMOTE"], minimumSalary: null, currency: "EUR", locationPreferenceState: "SPECIFIED", workModePreferenceState: "SPECIFIED", salaryPreferenceState: "UNKNOWN" }] }));
     expect(snapshot.role).toMatchObject({ value: "Frontend Developer", source: "PERSISTED_PREFERENCE" });
     expect(snapshot.location).toMatchObject({ value: "Madrid", source: "PERSISTED_PREFERENCE" });
     expect(snapshot.modality).toMatchObject({ value: "REMOTE", source: "PERSISTED_PREFERENCE" });
@@ -50,5 +50,13 @@ describe("deterministic onboarding state", () => {
   it("returns the same result for the same input", () => {
     const value = readyInput();
     expect(resolveOnboardingState(value)).toEqual(resolveOnboardingState(value));
+  });
+  it("distinguishes unknown, unrestricted, and specified optional preferences", () => {
+    const unknown = resolveOnboardingState(readyInput());
+    expect(unknown.optionalSignals).toEqual(["LOCATION", "SALARY"]);
+
+    const unrestricted = resolveOnboardingState(readyInput({ preferences: [{ searchProfileId: "search-1", searchProfileVersion: 1, locations: [], workModes: [], minimumSalary: null, currency: null, locationPreferenceState: "UNRESTRICTED", workModePreferenceState: "UNRESTRICTED", salaryPreferenceState: "UNRESTRICTED" }] }));
+    expect(unrestricted.modality).toMatchObject({ value: "ANY", preferenceState: "UNRESTRICTED" });
+    expect(unrestricted.optionalSignals).toEqual([]);
   });
 });

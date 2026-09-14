@@ -1,6 +1,7 @@
 import type { IntentWorkMode, SearchIntent } from "@/lib/intent-first";
 
 export type OnboardingValueSource = "PERSISTED_PREFERENCE" | "CURRENT_INTENT" | "PROFILE" | "UNKNOWN";
+export type OnboardingPreferenceState = "UNKNOWN" | "UNRESTRICTED" | "SPECIFIED";
 export type CandidateProfileState = "NONE" | "RESOLVED" | "AMBIGUOUS";
 export type ApprovedResumeState = "NONE" | "SINGLE_APPROVED" | "AMBIGUOUS";
 export type OnboardingState =
@@ -34,6 +35,9 @@ export type OnboardingPreferences = {
   workModes: IntentWorkMode[];
   minimumSalary: number | null;
   currency: string | null;
+  locationPreferenceState: OnboardingPreferenceState;
+  workModePreferenceState: OnboardingPreferenceState;
+  salaryPreferenceState: OnboardingPreferenceState;
 };
 export type OnboardingResume = { id: string; candidateProfileId: string; status: "READY" | "APPROVED" };
 
@@ -54,9 +58,9 @@ export type OnboardingSnapshot = {
   optionalSignals: OnboardingSignal[];
   candidateProfile: { state: CandidateProfileState; id: string | null };
   role: { value: string | null; source: OnboardingValueSource };
-  location: { value: string | null; source: OnboardingValueSource };
-  modality: { value: IntentWorkMode | null; source: OnboardingValueSource; explicitlyUnrestricted: boolean };
-  salary: { minimum: number | null; currency: string | null; source: OnboardingValueSource };
+  location: { value: string | null; source: OnboardingValueSource; preferenceState: OnboardingPreferenceState };
+  modality: { value: IntentWorkMode | null; source: OnboardingValueSource; preferenceState: OnboardingPreferenceState; explicitlyUnrestricted: boolean };
+  salary: { minimum: number | null; currency: string | null; source: OnboardingValueSource; preferenceState: OnboardingPreferenceState };
   approvedResume: { state: ApprovedResumeState; id: string | null };
   searchReady: boolean;
   preparationReady: boolean;
@@ -84,24 +88,16 @@ export function resolveOnboardingState(input: OnboardingStateInput): OnboardingS
     [profile?.headline, "PROFILE"],
     [profile?.jobFamily, "PROFILE"],
   ]);
-  const location = firstKnown([
-    [firstLocation(persistedPreferences?.locations ?? []), "PERSISTED_PREFERENCE"],
-    [input.intent?.location, "CURRENT_INTENT"],
-  ]);
-  const modality = firstMode([
-    [persistedPreferences?.workModes?.[0], "PERSISTED_PREFERENCE"],
-    [input.intent?.workMode, "CURRENT_INTENT"],
-  ]);
-  const salary = persistedPreferences?.minimumSalary !== null && persistedPreferences?.minimumSalary !== undefined
-    ? { minimum: persistedPreferences.minimumSalary, currency: persistedPreferences.currency, source: "PERSISTED_PREFERENCE" as const }
-    : { minimum: null, currency: null, source: "UNKNOWN" as const };
+  const location = resolveLocation(persistedPreferences, input.intent);
+  const modality = resolveMode(persistedPreferences, input.intent);
+  const salary = resolveSalary(persistedPreferences);
   const approvedResume = resolveApprovedResume(input.resumes, profile?.id ?? null, input.selectedResumeId ?? null);
   const searchReady = Boolean(profile && role.value && modality.value && persistedSearch && normalized(persistedSearch.name) === normalized(role.value));
   const preparingApplication = input.preparingApplication === true;
   const preparationReady = searchReady && approvedResume.state === "SINGLE_APPROVED";
   const optionalSignals: OnboardingSignal[] = [
-    ...(location.value ? [] : ["LOCATION" as const]),
-    ...(salary.minimum === null ? ["SALARY" as const] : []),
+    ...(location.preferenceState === "UNKNOWN" ? ["LOCATION" as const] : []),
+    ...(salary.preferenceState === "UNKNOWN" ? ["SALARY" as const] : []),
   ];
 
   if (!role.value) return snapshot({ state: "ROLE_REQUIRED", nextSignal: "ROLE", optionalSignals, candidateProfile, role, location, modality, salary, approvedResume, searchReady, preparationReady });
@@ -114,19 +110,31 @@ export function resolveOnboardingState(input: OnboardingStateInput): OnboardingS
 }
 
 function emptySnapshot(state: OnboardingState, nextSignal: OnboardingSignal | null, candidateState: CandidateProfileState = "NONE"): OnboardingSnapshot {
-  return snapshot({ state, nextSignal, optionalSignals: [], candidateProfile: { state: candidateState, id: null }, role: unknownText(), location: unknownText(), modality: { value: null, source: "UNKNOWN", explicitlyUnrestricted: false }, salary: { minimum: null, currency: null, source: "UNKNOWN" }, approvedResume: { state: "NONE", id: null }, searchReady: false, preparationReady: false });
+  return snapshot({ state, nextSignal, optionalSignals: [], candidateProfile: { state: candidateState, id: null }, role: unknownText(), location: { ...unknownText(), preferenceState: "UNKNOWN" }, modality: { value: null, source: "UNKNOWN", preferenceState: "UNKNOWN", explicitlyUnrestricted: false }, salary: { minimum: null, currency: null, source: "UNKNOWN", preferenceState: "UNKNOWN" }, approvedResume: { state: "NONE", id: null }, searchReady: false, preparationReady: false });
 }
 function snapshot(value: OnboardingSnapshot): OnboardingSnapshot { return value; }
 function unknownText() { return { value: null, source: "UNKNOWN" as const }; }
 function normalized(value: string) { return value.trim().toLocaleLowerCase("es"); }
-function firstLocation(locations: Array<{ label?: string | null }>) { return locations.map((location) => location.label?.trim() ?? "").find(Boolean) ?? null; }
 function firstKnown(values: Array<[string | null | undefined, OnboardingValueSource]>): { value: string | null; source: OnboardingValueSource } {
   for (const [value, source] of values) if (value?.trim()) return { value: value.trim(), source };
   return unknownText();
 }
-function firstMode(values: Array<[IntentWorkMode | null | undefined, OnboardingValueSource]>) {
-  for (const [value, source] of values) if (value && ["ANY", "REMOTE", "HYBRID", "ONSITE"].includes(value)) return { value, source, explicitlyUnrestricted: value === "ANY" };
-  return { value: null, source: "UNKNOWN" as const, explicitlyUnrestricted: false };
+function resolveLocation(preferences: OnboardingPreferences | null, intent: SearchIntent | null) {
+  if (preferences?.locationPreferenceState === "SPECIFIED") return { value: preferences.locations.map((location) => location.label?.trim() ?? "").find(Boolean) ?? null, source: "PERSISTED_PREFERENCE" as const, preferenceState: "SPECIFIED" as const };
+  if (preferences?.locationPreferenceState === "UNRESTRICTED") return { value: null, source: "PERSISTED_PREFERENCE" as const, preferenceState: "UNRESTRICTED" as const };
+  if (intent?.location) return { value: intent.location, source: "CURRENT_INTENT" as const, preferenceState: "SPECIFIED" as const };
+  return { value: null, source: "UNKNOWN" as const, preferenceState: "UNKNOWN" as const };
+}
+function resolveMode(preferences: OnboardingPreferences | null, intent: SearchIntent | null) {
+  if (preferences?.workModePreferenceState === "SPECIFIED") return { value: preferences.workModes[0] ?? null, source: "PERSISTED_PREFERENCE" as const, preferenceState: "SPECIFIED" as const, explicitlyUnrestricted: false };
+  if (preferences?.workModePreferenceState === "UNRESTRICTED") return { value: "ANY" as const, source: "PERSISTED_PREFERENCE" as const, preferenceState: "UNRESTRICTED" as const, explicitlyUnrestricted: true };
+  if (intent?.workMode) return { value: intent.workMode, source: "CURRENT_INTENT" as const, preferenceState: intent.workMode === "ANY" ? "UNRESTRICTED" as const : "SPECIFIED" as const, explicitlyUnrestricted: intent.workMode === "ANY" };
+  return { value: null, source: "UNKNOWN" as const, preferenceState: "UNKNOWN" as const, explicitlyUnrestricted: false };
+}
+function resolveSalary(preferences: OnboardingPreferences | null) {
+  if (preferences?.salaryPreferenceState === "SPECIFIED") return { minimum: preferences.minimumSalary, currency: preferences.currency, source: "PERSISTED_PREFERENCE" as const, preferenceState: "SPECIFIED" as const };
+  if (preferences?.salaryPreferenceState === "UNRESTRICTED") return { minimum: null, currency: null, source: "PERSISTED_PREFERENCE" as const, preferenceState: "UNRESTRICTED" as const };
+  return { minimum: null, currency: null, source: "UNKNOWN" as const, preferenceState: "UNKNOWN" as const };
 }
 function uniqueById<T extends { id: string }>(values: T[]) { return [...new Map(values.map((value) => [value.id, value])).values()]; }
 function resolveApprovedResume(resumes: OnboardingResume[], candidateProfileId: string | null, selectedResumeId: string | null): { state: ApprovedResumeState; id: string | null } {
