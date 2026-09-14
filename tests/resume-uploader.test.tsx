@@ -80,7 +80,7 @@ describe("Resume upload coordinator", () => {
     await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
     submitForm();
 
-    expect(await screen.findByText(/versión 2 subido/i)).toBeInTheDocument();
+    expect(await screen.findByText(/CV subido correctamente/i)).toBeInTheDocument();
     expect(mocks.prepare).toHaveBeenCalledWith(expect.objectContaining({
       candidateProfileId: "profile-a",
       contentSha256: "a".repeat(64),
@@ -140,8 +140,20 @@ describe("Resume upload coordinator", () => {
     await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
     submitForm();
 
-    expect(await screen.findByText(/versión 2 subido/i)).toBeInTheDocument();
+    expect(await screen.findByText(/CV subido correctamente/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/perfil profesional/i)).not.toBeInTheDocument();
     expect(mocks.prepareContextual).toHaveBeenCalledWith(expect.objectContaining({ candidateProfileId: undefined }));
+  });
+
+  it("uses the uploaded CV automatically only when the onboarding marks it unambiguous", async () => {
+    const user = userEvent.setup();
+    mocks.finish.mockResolvedValue({ ok: true, approved: true });
+    render(<ResumeUploader profiles={[]} contextual autoApproveFirst />);
+    const file = new File(["synthetic"], "resume.pdf", { type: "application/pdf" });
+    await user.upload(screen.getByLabelText("Selecciona tu CV"), file);
+    submitForm();
+
+    expect(await screen.findByText("CV listo.")).toBeInTheDocument();
+    expect(mocks.finish).toHaveBeenCalledWith("resume-a", true);
   });
 });

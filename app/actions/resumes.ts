@@ -81,14 +81,30 @@ export async function prepareContextualResumeUpload(input: ContextualPrepareInpu
   return prepareResumeUpload({ ...input, candidateProfileId });
 }
 
-export async function finishResumeUpload(id: string) {
+export async function finishResumeUpload(id: string, autoApproveFirst = false) {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesión no válida." };
-  const { error } = await supabase.rpc("complete_resume_upload", { p_resume_id: id });
+  const { data, error } = await supabase.rpc("complete_resume_upload", { p_resume_id: id });
   revalidatePath("/resumes");
-  return error
-    ? { error: publicResumeError("complete", error, "No se pudo verificar el archivo subido.") }
-    : { ok: true };
+  if (error || !data) return { error: publicResumeError("complete", error, "No se pudo verificar el archivo subido.") };
+
+  const resume = (Array.isArray(data) ? data[0] : data) as Pick<Resume, "candidate_profile_id">;
+  if (!autoApproveFirst || !resume?.candidate_profile_id) return { ok: true, approved: false };
+
+  const { data: otherResumes, error: otherResumesError } = await supabase
+    .from("resumes")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("candidate_profile_id", resume.candidate_profile_id)
+    .in("status", ["READY", "APPROVED"])
+    .is("deleted_at", null)
+    .neq("id", id);
+  if (otherResumesError || (otherResumes ?? []).length) return { ok: true, approved: false };
+
+  const { error: approvalError } = await supabase.rpc("approve_resume", { p_resume_id: id });
+  if (approvalError) return { error: publicResumeError("approve-first", approvalError, "No se pudo seleccionar el CV subido.") };
+  revalidatePath("/resumes");
+  return { ok: true, approved: true };
 }
 
 export async function rejectResumeUpload(id: string) {

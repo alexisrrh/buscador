@@ -116,6 +116,8 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .checks input { width: auto; min-height: auto; }
 .section-title { margin: 1.5rem 0 .8rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
 .file-input { padding: .5rem; border: 1px dashed #98a6b5; }
+.resume-onboarding-result { max-width: 620px; }
+.secondary-link { width: fit-content; color: var(--primary); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
 .match-generator { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: .45rem .65rem; align-items: end; }
 .match-generator label { grid-column: 1 / -1; }
 .jobs-filters { display: grid; grid-template-columns: 1.35fr repeat(4, minmax(120px, 1fr)) auto; gap: .75rem; align-items: end; margin-bottom: 1rem; }
