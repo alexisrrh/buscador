@@ -2,7 +2,7 @@
 
 ## ADR-040 - Integración continua y flujo Git Flow
 
-Por instrucción del usuario, usar ramas de trabajo y PR con la plantilla hacia develop; main solo recibe una promoción validada por PR. Convención de commits: tipo en inglés, descripción/cuerpo en español. CI ejecuta npm ci y npm run check, sin despliegue ni secretos de producción; cobertura agregada del 80 % en cuatro métricas sobre el núcleo documentado en ../ci-quality-gates.md. Exigir Quality gate y revisión en ambas ramas permanentes; configuración remota pendiente de acceso administrativo.
+Por instrucción del usuario, usar ramas de trabajo y PR con la plantilla hacia develop; main solo recibe una promoción validada por PR. Convención de commits: tipo en inglés, descripción/cuerpo en español. CI ejecuta npm ci y npm run check, sin despliegue ni secretos de producción; cobertura agregada del 80 % en cuatro métricas sobre el núcleo documentado en ../ci-quality-gates.md. Exigir Quality gate y revisión en ambas ramas permanentes; reglas remotas activadas y verificadas el 6 de noviembre mediante la sesión de Git existente; el PR sigue pendiente de revisión humana.
 
 The user-adopted requirements and ADR-039 govern target architecture planning. Earlier decisions describe the existing Supabase implementation until their components are replaced through the priority checklist; they are not evidence that the transition has run.
 

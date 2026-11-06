@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-06 Cierre de tarea 05: protecciones de ramas
+
+- Activadas y verificadas en develop/main: PR, una aprobación, revisión del último push, invalidación de aprobaciones, Quality gate de GitHub Actions y rama actualizada; conversaciones resueltas, administradores sujetos a reglas, sin force push ni eliminación.
+- CI de push y PR 9943b36 aprobado en Ubuntu. PR #1 bloqueado hasta aprobación humana; main y develop permanecen en 0913134.
+- Sesión existente de Git Credential Manager utilizada sin mostrar ni guardar credenciales; evidencia de reglas fuera de Git. Sin integración ni despliegue.
+
 ## 2026-11-06 Tarea 05 y flujo de colaboración
 
 - Workflow GitHub Actions y npm run check: lint estricto, tipos de rutas/TypeScript, cobertura y build; lockfile y Node fijado.
