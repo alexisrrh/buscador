@@ -20,6 +20,6 @@ No hay borrado físico automático: las FKs impiden eliminar referencias con res
 
 ## Validación y siguiente entrega
 
-npm run check: lint, tipos, pruebas generales con cobertura y build; 502 aprobadas y 15 omitidas. npm run test:db usa PostgreSQL 17 temporal en CI: salida del motor, servicio existente, dos usuarios, contexto ausente, versiones, rollback, decisiones, concurrencia y permisos. Docker local sigue sin responder; los resultados reales de PostgreSQL se registran en el PR.
+npm run check: lint, tipos, pruebas generales con cobertura y build; 502 aprobadas y 15 omitidas. npm run test:db: 63 pruebas aprobadas en PostgreSQL 17 temporal de CI sobre 8187ffb, incluyendo salida del motor, servicio existente, dos usuarios, contexto ausente, versiones, rollback, decisiones, concurrencia y permisos. [Ejecución del PR](https://github.com/alexisrrh/buscador/actions/runs/42224164954). Docker local sigue sin responder; el último estado remoto se registra en PR #6.
 
 Pendiente revisión/fusión por el usuario; después 06E CV/evidencia. Importación, Better Auth, Tigris, conexión del destino y aceptación integral siguen el proceso de trabajo.

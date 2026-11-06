@@ -4,7 +4,7 @@
 
 PR #5 de proceso integrado en develop (ee78586). Rama feat/matching-postgresql: migración 0004, repositorio MatchingRepository con actor y snapshot, catálogo separado, upsert transaccional y estados heredados según legado. Motor y servicio existentes intactos; diez tablas de 22 preparadas, runtime Supabase conservado. Ver ../../db/MATCHING.md.
 
-Local: 502 pruebas aprobadas, 15 omitidas; lint, tipos, build y cuatro umbrales de cobertura al 80 % correctos. Se añaden pruebas PostgreSQL reales a CI; evidencia remota y revisión en el PR. Sin importación de datos ni activación de infraestructura. Tras revisar/fusionar, próxima 06E CV/evidencia; tarea 06 abierta.
+Local y CI sobre 8187ffb: 502 pruebas aprobadas, 15 omitidas; lint, tipos, build y cuatro umbrales de cobertura al 80 % correctos. PostgreSQL 17 real: 63 pruebas aprobadas en Actions (42224164954 y 42224117932). Último estado remoto y revisión en PR #6. Sin importación de datos ni activación de infraestructura. Tras revisar/fusionar, próxima 06E CV/evidencia; tarea 06 abierta.
 
 ## 2026-11-06 Organización del proceso y cierre de 06C
 

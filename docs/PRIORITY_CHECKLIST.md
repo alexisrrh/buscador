@@ -59,7 +59,7 @@ Esta lista organiza el trabajo pendiente. La secuencia de entregas, dependencias
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
 | 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
 | 05 | Completada | [CI, cobertura y protecciones verificadas](ci-quality-gates.md). PR #1 integrado en develop por el usuario; develop en modo individual. |
-| 06 | En curso | PR #5 de proceso integrado. 06D matching implementada, pendiente de CI y revisión/fusión. Próxima 06E; secuencia 06E–06H y dependencias en el proceso de trabajo. |
+| 06 | En curso | PR #5 de proceso integrado. 06D matching implementada, CI registrado en el PR; revisión/fusión pendiente. Próxima 06E; secuencia 06E–06H y dependencias en el proceso de trabajo. |
 | 07 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 
 Al cerrar una tarea: marcar la casilla, registrar pruebas y checkpoint, actualizar el contraste afectado y seleccionar la siguiente dependencia disponible. Esta checklist no marca como pendiente de reconstrucción aquello que ya existe: cada tarea debe reutilizar su implementación válida y cerrar las brechas identificadas.
