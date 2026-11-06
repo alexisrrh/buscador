@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-06 Organización del proceso pendiente
+
+- PR #4 integrado en develop; las tres primeras entregas de tarea 06 están incorporadas.
+- WORK_PROCESS define alcance/cierre de 06D–06H, el ciclo de rama/PR/CI y la dependencia del ensayo integral respecto de Better Auth/Tigris.
+- Checklist, TODO y estado alineados. Solo documentación; matching y demás entregas continúan pendientes, sin cambios de runtime ni datos.
+
 ## 2026-11-06 Tarea 06C: catálogo e ingesta PostgreSQL
 
 - Rama desde develop 172dd94 tras PR #3 integrado por el usuario.
