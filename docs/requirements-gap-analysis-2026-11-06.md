@@ -35,7 +35,7 @@ Actualización posterior del 6 de noviembre: la [tarea 02](lint-cleanup-2026-11-
 | Discrepancia | Se identificó un comportamiento que difiere expresamente del PDF. |
 | Sin verificar | Requiere medición, configuración operativa o evidencia que no proporciona esta revisión local. |
 
-Resultado de las 126 filas: 17 implementadas en el alcance local revisado, 67 parciales, 11 pendientes, 10 con discrepancias y 21 sin verificar. Son recuentos de requisitos, no una estimación de esfuerzo ni de avance porcentual.
+Resultado de las 126 filas: 18 implementadas en el alcance local revisado, 67 parciales, 10 pendientes, 11 con discrepancias y 20 sin verificar. Son recuentos de requisitos, no una estimación de esfuerzo ni de avance porcentual.
 
 ## Evidencias de código
 
@@ -122,7 +122,7 @@ Fuente: sección 4.2, páginas 18 y 19.
 | RNF-13 | Timeout y backoff | Parcial | E08/E03. Cliente con timeout y reintentos acotados; espera de Retry-After sin máximo global explícito y política no uniforme entre todas las integraciones. |
 | RNF-14 | Backups y restauración | Sin verificar | No se verificó backup cada 24 h ni restauración probada de DB y documentos. |
 | RNF-15 | Observabilidad | Parcial | E04/E11. Logs estructurados de algunas operaciones; no hay evidencia completa de monitorización, alertas y redacción uniforme. |
-| RNF-16 | Cobertura de negocio 80 % | Sin verificar | E16. Pruebas existentes; no se generó cobertura ni se encontró umbral configurado en Vitest. 373 pruebas no equivalen al 80 %. |
+| RNF-16 | Cobertura de negocio 80 % | Implementado | [Tarea 05](ci-quality-gates.md): cuatro umbrales de 80 % y 22 módulos explícitos; líneas 95,93 %, sentencias 91,24 %, funciones 94,82 %, ramas 81,20 % en copia limpia. No equivale a cobertura de toda la aplicación. |
 | RNF-17 | Vulnerabilidades mitigadas | Sin verificar | E16. No se ejecutó auditoría actual de dependencias; no inferir ausencia de vulnerabilidades por build correcto. |
 | RNF-18 | UTF-8 | Parcial | Código y renderizado permiten español. Falta validar entradas/salidas, almacenamiento, logs y documentos de extremo a extremo. |
 
@@ -226,9 +226,9 @@ Fuente: sección 4.7, páginas 24 y 25.
 | RT-08 | Integraciones desde servidor | Parcial | E03/E08. Fuentes y geografía desde servidor; subida privada directa del navegador a Supabase difiere del control de archivos esperado en destino. Verificar todos los canales sensibles. |
 | RT-09 | Adaptadores de fuentes | Implementado | E08. Proveedores desacoplados del modelo común. |
 | RT-10 | Secretos de servidor | Parcial | E16. Separación de entorno y server-only; falta verificación integral de historial, logs y despliegue. |
-| RT-11 | Vitest antes de integrar | Parcial | E16. Suite existe y pasa salvo omitidas; no se encontró control CI obligatorio de integración. |
-| RT-12 | Git privado y estrategia | Parcial | Git existente; privacidad del remoto y protección/revisión de ramas no verificadas. Trabajo local extenso sin consolidar. |
-| RT-13 | CI/CD obligatorio | Pendiente | E16. Scripts locales existen; no se encontró pipeline versionado que imponga tipos, pruebas y build. Comprobar además reglas del proveedor remoto. |
+| RT-11 | Vitest antes de integrar | Parcial | [Tarea 05](ci-quality-gates.md): workflow y ejecución local reproducible; falta verificar ejecución remota y checks obligatorios. |
+| RT-12 | Git privado y estrategia | Discrepancia | Remoto público verificado el 6 de noviembre; develop creada desde main y flujo PR documentado. Checkpoints consolidados; protección/revisión obligatoria pendientes. Visibilidad sin cambios. |
+| RT-13 | CI/CD obligatorio | Parcial | [Tarea 05](ci-quality-gates.md): pipeline con lint, tipos, cobertura, pruebas y build. Falta ejecución remota y bloqueo de merges; sin despliegue automático. |
 | RT-14 | WebGL con alternativa | Parcial | E15. Fallback y movimiento reducido presentes; comprobar también fallo de contexto y funcionalidad completa de landing/globo. |
 | RT-15 | UTF-8 | Parcial | Igual que RNF-18; verificar fronteras de integración/documentos. |
 | RT-16 | Entornos separados | Sin verificar | E16. Configuración local no acredita separación efectiva de desarrollo, pruebas y producción. |

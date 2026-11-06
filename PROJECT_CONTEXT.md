@@ -12,7 +12,7 @@ The user-adopted requirements specify PostgreSQL, a project-controlled backend, 
 
 This is a planned target, not the running implementation: Supabase Auth, RPC/Data API and Storage remain active in the current code. No production data, services or credentials were changed during task 04. UUID preservation, tenant authorization, verified file migration and rollback after target writes are mandatory design gates.
 
-Tasks 01 to 04 are complete. The checkpoint branch is `chore/checkpoint-base-20261106`; main and both stashes are preserved. Next: task 05, CI validation. Follow `docs/PRIORITY_CHECKLIST.md` before implementing the infrastructure transition.
+Tasks 01 to 04 are complete. Task 05 CI is implemented and validated locally; remote execution and branch protection remain acceptance gates. See `docs/ci-quality-gates.md`. The user requires work branches, PRs to `develop` using the repository template, and a later reviewed PR from `develop` to stable `main`. Commit types remain English with Spanish descriptions. Both stashes are preserved. Follow `docs/PRIORITY_CHECKLIST.md` before implementing the infrastructure transition.
 
 ## Existing Architecture Before Transition
 

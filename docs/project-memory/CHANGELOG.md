@@ -1,5 +1,12 @@
 # Project Changelog
 
+## 2026-11-06 Tarea 05 y flujo de colaboración
+
+- Workflow GitHub Actions y npm run check: lint estricto, tipos de rutas/TypeScript, cobertura y build; lockfile y Node fijado.
+- Cuatro mínimos del 80 % superados en copia limpia; 377 pruebas aprobadas y 15 omitidas. Fallos de tipos y cobertura detienen el control.
+- AGENTS registra commits con descripción en español y flujo rama de trabajo → PR develop → PR main con plantilla.
+- develop creada desde main; ejecución remota y protección pendientes. Sin integración ni despliegue.
+
 This file records verified project-level milestones. It does not replace Git history.
 
 ## 2026-11-06 - Task 04 architecture transition design

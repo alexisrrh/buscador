@@ -112,6 +112,15 @@ Esta estructura es una referencia. Antes de crear carpetas o archivos, revisar l
 
 ## Flujo de trabajo
 
+### Ramas y Pull Requests
+
+- `main` contiene la versión estable; `develop` es la rama de integración.
+- Crear cada cambio en una rama independiente desde `develop`, por ejemplo `feat/perfil-profesional`, `fix/acceso-documentos` o `ci/controles-calidad`.
+- Subir la rama a GitHub y abrir un Pull Request hacia `develop`. No trabajar ni hacer push directo a `develop` o `main`.
+- Completar todas las secciones de `.github/PULL_REQUEST_TEMPLATE.md`, indicando cambios, pruebas, pendientes y observaciones. No marcar revisiones o validaciones que no hayan ocurrido.
+- Integrar en `develop` después de aprobar CI y la revisión correspondiente. Promover `develop` a `main` mediante otro Pull Request cuando el conjunto esté validado.
+- Los títulos de los Pull Requests siguen la misma convención de tipos en inglés y descripción en español que los commits.
+
 ### Mensajes de commit
 
 - Seguir [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).

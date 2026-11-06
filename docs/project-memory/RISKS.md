@@ -1,5 +1,12 @@
 # Risk Register
 
+## 2026-11-06 Integración y repositorio
+
+- Un job fallido no impide por sí solo un merge. Exigir Quality gate y revisión en develop/main; conector sin acceso administrativo (403) y navegador sin sesión.
+- Remoto público verificado; contradice Git privado en RT-12. No se cambió visibilidad.
+- npm install informó 18 vulnerabilidades (11 moderadas, 6 altas, 1 crítica); no se atribuyen al nuevo complemento sin análisis ni se aplican actualizaciones indiscriminadas. Revisar en tarea 26 antes de publicación.
+- Cobertura agregada de 22 módulos no equivale a cobertura total; las 15 pruebas omitidas no acreditan servicios reales.
+
 ## Architecture transition design risks recorded on 2026-11-06
 
 | Risk | Required gate before implementation/cutover |
