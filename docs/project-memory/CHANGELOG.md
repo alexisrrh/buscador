@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-06 Tarea 06B: búsquedas y preferencias
+
+- PR #2 integrado en develop por el usuario; nueva rama desde fd9daa5.
+- Migración portable de búsquedas y preferencias con RLS/FKs, snapshots, commit atómico y permisos append-only. Repositorio con validación, versiones esperadas, conflictos concurrentes y transiciones/planificación.
+- 480 pruebas locales aprobadas, 15 omitidas; CI PostgreSQL ampliado a 35 casos. No se activa TARGET ni se modifica el backend Supabase actual.
+
 ## 2026-11-06 Tarea 06A: primera base PostgreSQL
 
 - Base de rama: develop 5c16ffc tras integración de PR #1 por el usuario.

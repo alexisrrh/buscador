@@ -1,6 +1,6 @@
-# Base PostgreSQL propia — tarea 06A
+# Base PostgreSQL propia — tareas 06A/06B
 
-Primera entrega de la tarea 06, no sustitución del backend actual. Implementa dos de las 22 tablas inventariadas: `profiles` y `candidate_profiles`, con UUID y campos actuales conservados, RLS ENABLE/FORCE, permisos mínimos y repositorio transaccional. Las otras 20 tablas y sus reglas se trasladarán en entregas posteriores.
+06A, integrada en develop mediante PR #2, implementa profiles y candidate_profiles, con UUID conservados, RLS, permisos mínimos y repositorio transaccional. 06B añade [búsquedas y preferencias](SEARCH_PREFERENCES.md): cuatro de las 22 tablas inventariadas, 18 pendientes. No sustituye todavía el backend actual.
 
 La aplicación sigue usando Supabase. Ninguna página, acción ni API llama todavía al repositorio nuevo. No se migran datos reales, se cambia proveedor ni se crea infraestructura de pago. La FK de identidad hacia Better Auth se incorporará en la tarea 07 antes de activar el destino; esta base aislada no constituye autenticación implementada.
 
@@ -53,4 +53,4 @@ La suite local suma 409 aprobadas y 15 omitidas, incluidas 32 pruebas nuevas de 
 
 ## Pendientes de la tarea 06
 
-Trasladar búsquedas/preferencias y sus versiones, catálogo/ingesta, matching, CV/evidencia y candidaturas; conservar FKs compuestas, locks, unicidad y contratos. Añadir funciones/roles específicos según el diseño. Probar importación de UUID/datos y reconciliación completa en una base aislada. No activar TARGET antes de autenticación, almacenamiento y ensayo de migración/corte. El cierre de 06A no marca completada la tarea 06 ni los requisitos de aceptación de producción.
+Trasladar catálogo/ingesta, matching, CV/evidencia y candidaturas; conservar FKs compuestas, locks, unicidad y contratos. Añadir funciones/roles específicos según el diseño. Probar importación de UUID/datos y reconciliación completa en una base aislada. No activar TARGET antes de autenticación, almacenamiento y ensayo de migración/corte. El cierre de 06A no marca completada la tarea 06 ni los requisitos de aceptación de producción.

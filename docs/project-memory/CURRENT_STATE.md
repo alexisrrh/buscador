@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-06 Tarea 06B: búsquedas y preferencias
+
+PR #2 integrado por el usuario en develop (fd9daa5). Rama nueva: feat/busquedas-preferencias-postgresql. Entrega 06B: search_profiles/job_preferences con FKs de propiedad, snapshots de preferencias append-only, commit completo mediante FK diferida, validación, versiones esperadas, locks y transiciones/planificación. Ver ../../db/SEARCH_PREFERENCES.md. No se cambia el runtime Supabase ni se migran datos reales.
+
+Control local completo: 480 pruebas aprobadas y 15 omitidas, lint/tipos/build correctos; cobertura superior al 80 % en cuatro métricas. Se amplía test:db a 35 casos PostgreSQL reales en CI; resultados de Actions en el PR. Tarea 06 en curso: cuatro tablas preparadas de 22, faltan las demás entidades e importación.
+
 ## 2026-11-06 Tarea 06A: base PostgreSQL y autorización
 
 PR #1 integrado por el usuario en develop (5c16ffc). Rama nueva desde develop: feat/base-postgresql-autorizacion. Primera entrega de tarea 06: actor de servidor validado, pool, transacciones con contexto local, roles mínimos/RLS, perfiles y migrador portable con ledger/checksum. Ver ../../db/README.md. No está conectado a las rutas actuales ni a Better Auth; Supabase sigue activo.
