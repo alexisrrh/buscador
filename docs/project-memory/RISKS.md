@@ -1,5 +1,21 @@
 # Risk Register
 
+## Architecture transition design risks recorded on 2026-11-06
+
+| Risk | Required gate before implementation/cutover |
+| --- | --- |
+| Loss of user ownership during identity replacement | Preserve UUIDs, verify FK reconciliation and account state; abort collisions rather than auto-link by email. |
+| Imported users cannot recover access | Rehearse credential creation/reset, email delivery, expiry and revocation on synthetic imported accounts before any production cutover. |
+| Tenant context leaks through pooled connections | One client and transaction with local context; runtime without ownership/BYPASSRLS; A/B, exception and concurrency tests. |
+| Cached session remains usable after global logout | Start with database sessions without cookieCache; prove next-request revocation and account-state checks. |
+| Presigned upload overwrites bytes after validation | Client only writes staging. Final object receives the same verified bytes under backend-only key; test replay and duplicate finalization. |
+| A valid file is lost or reported ready after partial failure | Metadata states, bounded verification, SHA-256 and idempotent reconciliation; no network calls inside long SQL transactions. |
+| Cutback loses target writes, users or objects | Freeze writes and reconcile journal, credentials and object/tombstone delta; rehearse both cutover stages. No blind rollback after target writes. |
+| Legacy bootstrap labels extracted evidence as confirmed | Preserve historical snapshots but require reconfirmation provenance for future use; do not promote imported VERIFIED labels automatically. |
+| External storage, database and email details remain untested | Select provider/region/configuration before provisioning and validate contracts in isolated environments; this design is not operational acceptance. |
+
+Design and execution gates: `../architecture/TRANSITION_PLAN.md`. Older risk entries below describe the existing implementation and remain applicable until verified replacement.
+
 | Static public source list is tech/international-biased | Known Milestone 1A limitation: 21 configured company boards across four providers, not 21 portals; Spain/non-tech discovery is insufficient. | Build Dynamic SourceRegistry, permitted broader coverage and source health before claiming comprehensive opportunities. |
 | Coverage for local and non-tech roles is insufficient | Manual checks returned 0 for Enfermera + A Coruna + Hibrido and Mozo de almacen + A Coruna + Cualquier modalidad. | Design persistent ingestion/freshness reuse, then add permitted Spain/Galicia and non-tech sources incrementally. |
 | Public relevance needs calibration | Frontend + A Coruna + Cualquier modalidad returned Full Stack Developer and Senior / Staff Fullstack Engineer. | Separately review seniority, role-family and explicit-location gates; do not weaken the current anti-irrelevance protections opportunistically. |

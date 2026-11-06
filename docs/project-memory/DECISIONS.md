@@ -1,6 +1,20 @@
 # Architectural Decisions
 
-Decisions here are approved defaults. Reopen one only when new verified evidence or a product requirement makes that necessary.
+The user-adopted requirements and ADR-039 govern target architecture planning. Earlier decisions describe the existing Supabase implementation until their components are replaced through the priority checklist; they are not evidence that the transition has run.
+
+## ADR-039 - Requirements-driven infrastructure transition design
+
+Status: target design recorded on 2026-11-06; implementation pending. See `../architecture/TRANSITION_PLAN.md`.
+
+- Keep the backend as modular server-side Next.js code, PostgreSQL as source of truth, and reuse current domain engines and adapters.
+- Replace Supabase identity and storage with Better Auth and Tigris in phased, separately validated implementation. Supersedes the future target of ADR-003/019/024/028 where they prescribe Supabase; does not remove current runtime behavior.
+- Retain UUIDs, tenant composite FKs and RLS; replace auth.uid and service-role assumptions with server-validated identity, least-privilege roles and transaction-local context.
+- Do not import legacy sessions or assume password hash compatibility. Require recovery for imported accounts using a rehearsed identity migration.
+- Use private object staging, backend verification and immutable final objects. Database readiness and storage writes require idempotent reconciliation.
+- A single coherent production authority writes at a time. Rollback after target writes requires a verified delta/identity/object procedure or repair in maintenance, never a blind traffic reversal.
+- Initial scope excludes automatic external application submission. Neither retained AUTO data nor old architecture records authorize activation.
+
+ADR-025's existing CSS and the newly supplied design guidance are preserved during infrastructure work; no Tailwind migration or UI redesign is part of this decision.
 
 ## ADR-035 - Product Reset Milestone 1A
 

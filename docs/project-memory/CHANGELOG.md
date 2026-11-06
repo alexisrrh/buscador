@@ -2,6 +2,14 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-11-06 - Task 04 architecture transition design
+
+- Added an actionable migration design for modular Next.js backend, PostgreSQL, Better Auth and Tigris, with source-code mapping and official documentation references.
+- Recorded a static inventory of 22 migrations, 22 public table declarations, 34 function names and 42 coupled modules.
+- Defined UUID preservation, transaction-local authorization, account recovery, verified private object migration, cutover, tests and rollback after new writes.
+- Updated target context, ADR-039 and transition risks while explicitly preserving the current Supabase runtime. No package/config changes, SQL, remote mutation or production migration.
+- Closed task 04; task 05 CI validation is next.
+
 ## 2026-11-06 - Task 03 reproducible local checkpoint
 
 - Consolidated contributor guides, requirements, asset retention, catalog diagnostics and the complete public experience/runtime into local checkpoints on `chore/checkpoint-base-20261106`.

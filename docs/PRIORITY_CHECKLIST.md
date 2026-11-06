@@ -9,7 +9,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 - [x] **01. Inventariar y proteger el trabajo local.** Cerrada el 6 de noviembre de 2026: 1.101 archivos clasificados, copia ZIP verificada por SHA-256, bundle validado y ambos stashes preservados. [Inventario, dependencias y propuesta de checkpoints](worktree-inventory-2026-11-06.md).
 - [x] **02. Resolver los errores de lint.** Cerrada el 6 de noviembre de 2026: 0 errores y 0 advertencias, sin supresiones ni cambios de reglas; tipos/build correctos y 377 pruebas aprobadas, 15 omitidas. [Cambios y validación](lint-cleanup-2026-11-06.md).
 - [x] **03. Consolidar una base reproducible.** Cerrada el 6 de noviembre de 2026 en `chore/checkpoint-base-20261106`: checkpoints locales, reconstrucción desde Git validada y política de assets preservados. `main` y ambos stashes conservados; sin push. [Base y evidencias](checkpoint-baseline-2026-11-06.md).
-- [ ] **04. Diseñar la transición de Supabase a la arquitectura del PDF.** Definir PostgreSQL, Better Auth, backend propio y Tigris; mapear usuarios, sesiones, tablas, RPC, políticas y archivos. Determinar dónde se ejecuta el backend sin asumir que debe ser otro servicio separado de Next.js. Cierre: diseño, pasos de migración, pruebas de aislamiento y reversión; ningún cambio de producción todavía.
+- [x] **04. Diseñar la transición de Supabase a la arquitectura del PDF.** Cerrada el 6 de noviembre de 2026: backend modular Next.js, PostgreSQL, Better Auth y Tigris; 22 tablas y 34 funciones clasificadas, inventario de 42 módulos, migración, aislamiento y reversión definidos. [Diseño y condiciones de implementación](architecture/TRANSITION_PLAN.md). Sin migración ejecutada ni cambios de producción.
 - [ ] **05. Establecer controles automáticos de integración.** Configurar tipos, lint, pruebas y build obligatorios, más cobertura de lógica crítica. Cierre: pipeline reproducible y comprobación de que los fallos bloquean la integración; umbral del 80 % aplicado al alcance de negocio definido.
 
 ## Prioridad 2 Identidad y datos privados
@@ -57,7 +57,8 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 | 01 | Completada | [Inventario y copia verificada](worktree-inventory-2026-11-06.md). Sin cambios funcionales ni commits. |
 | 02 | Completada | [Lint limpio y regresión](lint-cleanup-2026-11-06.md). Sin commits ni push. |
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
-| 04 | Próxima | Diseñar transición de arquitectura con pruebas y reversión. |
-| 05 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
+| 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
+| 05 | Próxima | CI con validaciones obligatorias y cobertura de negocio definida. |
+| 06 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 
 Al cerrar una tarea: marcar la casilla, registrar pruebas y checkpoint, actualizar el contraste afectado y seleccionar la siguiente dependencia disponible. Esta checklist no marca como pendiente de reconstrucción aquello que ya existe: cada tarea debe reutilizar su implementación válida y cerrar las brechas identificadas.

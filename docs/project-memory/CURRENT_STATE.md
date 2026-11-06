@@ -1,5 +1,13 @@
 # Current State
 
+## 2026-11-06 Task 04 architecture transition design complete
+
+See `../architecture/TRANSITION_PLAN.md` and `../architecture/current-dependencies.json`. The local inventory covers 22 migrations, 22 declared public tables, 34 public function names and 42 Supabase/RPC-coupled modules. This is not a live schema or user-data audit.
+
+The target is a modular Next.js server backend, PostgreSQL 17, Better Auth and private Tigris storage. The design retains UUIDs, composite ownership constraints and RLS, isolates connection context per transaction, requires session recovery rather than importing Supabase sessions, and uses staging/verification/finalization for objects. It defines cutover and rollback both before and after target writes.
+
+No runtime implementation, package/config changes, SQL execution, credentials, remote resources or production data were involved. Supabase remains the existing runtime. Task 05 CI validation is next; target implementation starts through tasks 06 onward. The historical 377 passed/15 skipped, strict lint, types and build baseline remains task 03 evidence; functional tests were not rerun for this design-only change.
+
 ## 2026-11-06 Task 03 checkpoint consolidation complete
 
 Current baseline branch: `chore/checkpoint-base-20261106`. Main remains at `0913134`; both original stash OIDs are preserved. See `../checkpoint-baseline-2026-11-06.md` for the local checkpoint sequence, asset policy and reconstruction evidence. No merge, push or deployment was performed.
