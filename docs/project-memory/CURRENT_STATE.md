@@ -1,5 +1,13 @@
 # Current State
 
+## 2026-11-06 Task 03 checkpoint consolidation complete
+
+Current baseline branch: `chore/checkpoint-base-20261106`. Main remains at `0913134`; both original stash OIDs are preserved. See `../checkpoint-baseline-2026-11-06.md` for the local checkpoint sequence, asset policy and reconstruction evidence. No merge, push or deployment was performed.
+
+The staged application tree was reconstructed using Git archive without private environment files or authoring assets. Installed dependency bytes were reused locally; a fresh registry install was not tested. Lint has zero errors/warnings; types and production build pass; full suite: 377 passed, 15 skipped. A CRLF-sensitive migration assertion was made newline-independent; SQL was unchanged.
+
+All 1,033 deferred authoring/review files remain on disk and match the task 01 hashes; they are explicitly ignored while eight public runtime assets are committed. The closing documentation checkpoint leaves the worktree clean. Next: task 04 architecture transition design. Earlier snapshots below are historical.
+
 ## 2026-11-06 Task 02 lint cleanup complete
 
 See `../lint-cleanup-2026-11-06.md`. ESLint passes with `--max-warnings 0`: zero errors and zero warnings, without rule overrides or suppressions. Browser state subscriptions, visual resets, owned Three.js textures and imperative scene refs were corrected; unused internal helpers were removed. Asset bytes, CSS and business logic remain unchanged.

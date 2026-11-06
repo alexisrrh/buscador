@@ -6,7 +6,7 @@ Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted re
 
 - [x] Task 01: classify and protect the local worktree; see `../worktree-inventory-2026-11-06.md`.
 - [x] Task 02: lint has zero errors/warnings with unchanged rules; types/build pass and 377 tests pass, 15 skipped. See `../lint-cleanup-2026-11-06.md`.
-- [ ] Task 03: review and consolidate coherent checkpoints, preserve both stashes and decide asset retention/versioning.
+- [x] Task 03: coherent local checkpoints on `chore/checkpoint-base-20261106`, reconstructed-tree validation and asset retention policy. Both stashes and main preserved; see `../checkpoint-baseline-2026-11-06.md`.
 - [ ] Task 04 onward: follow the requirements checklist, including the planned architecture transition.
 
 ## NOW - Source Coverage / Persistent Ingestion

@@ -2,6 +2,14 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-11-06 - Task 03 reproducible local checkpoint
+
+- Consolidated contributor guides, requirements, asset retention, catalog diagnostics and the complete public experience/runtime into local checkpoints on `chore/checkpoint-base-20261106`.
+- Preserved main and both stashes. Deferred 1,033 authoring/review files remain in place and match their original hashes; public runtime assets are versioned.
+- Validated a reconstruction exported from Git without private environment configuration, reusing installed dependencies: strict lint, types, build and 377 tests passed; 15 tests remain skipped.
+- Fixed a newline-sensitive migration test for Windows CRLF without changing SQL. No merge, push or deployment.
+- Closed task 03; task 04 architecture transition design is next.
+
 ## 2026-11-06 - Task 02 lint cleanup complete
 
 - Fixed all 25 lint errors and 28 warnings without changing ESLint rules or adding suppressions.
