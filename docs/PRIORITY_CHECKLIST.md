@@ -2,7 +2,7 @@
 
 Referencia: especificación aportada por el usuario y [contraste de requisitos del 6 de noviembre de 2026](requirements-gap-analysis-2026-11-06.md).
 
-Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cumplen sus condiciones de cierre y se registra la evidencia. Las funciones existentes se conservan y se adaptan según corresponda.
+Esta lista organiza el trabajo pendiente. La secuencia de entregas, dependencias y revisión se detalla en [Proceso de trabajo](WORK_PROCESS.md). Una casilla solo se marca cuando se cumplen sus condiciones de cierre y se registra la evidencia. Las funciones existentes se conservan y se adaptan según corresponda.
 
 ## Prioridad 1 Base recuperable y arquitectura
 
@@ -14,7 +14,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 
 ## Prioridad 2 Identidad y datos privados
 
-- [ ] **06. Preparar persistencia y autorización del backend propio.** En curso: 06A/06B integradas mediante PR #2/#3; [06C, catálogo e ingesta neutral](../db/CATALOG_INGESTION.md). Nueve tablas preparadas de 22. Faltan matching, CV/evidencia, candidaturas, importación y aceptación integral. Sin activar el destino.
+- [ ] **06. Preparar persistencia y autorización del backend propio.** En curso: 06A/06B/06C integradas mediante PR #2/#3/#4, nueve tablas preparadas de 22. Siguiente 06D: matching; después CV/evidencia, candidaturas y preparación de importación. El ensayo integral 06H depende de 07/08 y no bloquea su inicio tras 06G. [Entregas y criterios de cierre](WORK_PROCESS.md). Sin activar el destino.
 - [ ] **07. Implementar Better Auth y completar la cuenta.** Registro con email de hasta 254 caracteres y contraseña de 12 a 128; login, recuperación de un uso con máximo de 15 minutos y cierre de sesión actual/todas. Cierre: flujos principales y fallidos probados, sin enumeración pública de cuentas.
 - [ ] **08. Implementar almacenamiento privado en Tigris.** Subida, acceso temporal, descarga, versiones y eliminación autorizados desde backend. Validar PDF/DOCX, extensión, MIME, tamaño y pertenencia. Cierre: acceso cruzado denegado y conservación de versión previa ante fallos; acordar MB/MiB del límite.
 - [ ] **09. Completar perfil profesional e historial.** Permitir consultar y actualizar datos, gestionar trayectorias y conservar el contexto usado por evaluaciones anteriores. Cierre: nombre entre 2 y 80 caracteres y cambios relevantes trazables sin modificar resultados históricos.
@@ -59,7 +59,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
 | 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
 | 05 | Completada | [CI, cobertura y protecciones verificadas](ci-quality-gates.md). PR #1 integrado en develop por el usuario; develop en modo individual. |
-| 06 | En curso | PR #3 integrado; entrega 06C de catálogo/ingesta. Matching, CV/evidencia, candidaturas e importación pendientes; identidad de fuentes en tarea 14. |
+| 06 | En curso | PR #4 integrado. Próxima 06D (matching); secuencia 06E–06H y dependencias en el proceso de trabajo. |
 | 07 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 
 Al cerrar una tarea: marcar la casilla, registrar pruebas y checkpoint, actualizar el contraste afectado y seleccionar la siguiente dependencia disponible. Esta checklist no marca como pendiente de reconstrucción aquello que ya existe: cada tarea debe reutilizar su implementación válida y cerrar las brechas identificadas.

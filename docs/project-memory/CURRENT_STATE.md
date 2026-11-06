@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-06 Organización del proceso y cierre de 06C
+
+PR #4 integrado por el usuario en develop (a589a0f). 06A/06B/06C integradas; nueve tablas de 22 preparadas. Última evidencia de código: 495 pruebas generales aprobadas, 15 omitidas y 51 PostgreSQL aprobadas, CI correcto. Supabase sigue como runtime, main sin promoción.
+
+Ver ../WORK_PROCESS.md: próxima 06D matching; 06E seis tablas de CV/evidencia; 06F seis de candidaturas; 06G preparación de importación/contratos. Después 07 Better Auth y 08 Tigris permiten 06H, ensayo integral. La tarea 06 no tiene que estar cerrada para iniciar 07/08 tras 06G. Este cambio solo organiza documentación; no implementa matching ni mueve datos.
+
 ## 2026-11-06 Tarea 06C: catálogo e ingesta
 
 PR #3 integrado en develop por el usuario (172dd94); rama feat/catalogo-ingesta-postgresql. Se preparan cinco tablas neutrales, roles de lectura/ingesta separados, RPC SQL invocador y lector público por columnas, registro/salud e ingesta individual/lote compatible. Ver ../../db/CATALOG_INGESTION.md. Nueve tablas de 22 preparadas; Supabase sigue activo y no hay migración real ni scheduler.
