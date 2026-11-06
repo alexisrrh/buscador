@@ -102,9 +102,9 @@ export class PostgresSearchRepository {
       if (!current) throw new SearchNotFoundError();
       if (current.version !== version) throw new SearchVersionConflictError();
       if (!canTransitionSearch(current.status, status)) throw new Error("INVALID_SEARCH_TRANSITION");
-      await tx.query(`UPDATE public.search_profiles SET status=$3,updated_at=now(),
-        next_run_at=CASE WHEN $3='ACTIVE' THEN app.calculate_search_next_run(frequency_type,frequency_value,timezone,now()) ELSE NULL END,
-        deleted_at=CASE WHEN $3='ARCHIVED' THEN now() ELSE NULL END WHERE user_id=$1 AND id=$2`, [actor.userId,id,status]);
+      await tx.query(`UPDATE public.search_profiles SET status=$3::public.search_profile_status,updated_at=now(),
+        next_run_at=CASE WHEN $3::public.search_profile_status='ACTIVE' THEN app.calculate_search_next_run(frequency_type,frequency_value,timezone,now()) ELSE NULL END,
+        deleted_at=CASE WHEN $3::public.search_profile_status='ARCHIVED' THEN now() ELSE NULL END WHERE user_id=$1 AND id=$2`, [actor.userId,id,status]);
     });
   }
 }
