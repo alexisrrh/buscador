@@ -1,5 +1,12 @@
 # Project Changelog
 
+## 2026-11-06 Tarea 06C: catálogo e ingesta PostgreSQL
+
+- Rama desde develop 172dd94 tras PR #3 integrado por el usuario.
+- Cinco tablas neutrales y roles de ingesta/lectura separados; funciones invocadoras y contratos RPC/mapeo público reutilizados sin SDK en el nuevo transporte.
+- Lotes con errores por oferta y rollback de colisiones; columnas públicas acotadas, registro explícito y salud de boards. Identidad entre boards y scheduler permanecen pendientes.
+- Local: 495 pruebas aprobadas y 15 omitidas, lint/tipos/build correctos. Suite PostgreSQL ampliada a 51 casos. Sin datos reales, cambio de runtime ni despliegue.
+
 ## 2026-11-06 Tarea 06B: búsquedas y preferencias
 
 - PR #2 integrado en develop por el usuario; nueva rama desde fd9daa5.

@@ -1,6 +1,6 @@
-# Base PostgreSQL propia — tareas 06A/06B
+# Base PostgreSQL propia — tareas 06A/06B/06C
 
-06A, integrada en develop mediante PR #2, implementa profiles y candidate_profiles, con UUID conservados, RLS, permisos mínimos y repositorio transaccional. 06B añade [búsquedas y preferencias](SEARCH_PREFERENCES.md): cuatro de las 22 tablas inventariadas, 18 pendientes. No sustituye todavía el backend actual.
+06A, integrada en develop mediante PR #2, implementa profiles y candidate_profiles, con UUID conservados, RLS, permisos mínimos y repositorio transaccional. 06B añade [búsquedas y preferencias](SEARCH_PREFERENCES.md): 06C añade [catálogo e ingesta](CATALOG_INGESTION.md): nueve de las 22 tablas inventariadas, 13 pendientes. No sustituye todavía el backend actual.
 
 La aplicación sigue usando Supabase. Ninguna página, acción ni API llama todavía al repositorio nuevo. No se migran datos reales, se cambia proveedor ni se crea infraestructura de pago. La FK de identidad hacia Better Auth se incorporará en la tarea 07 antes de activar el destino; esta base aislada no constituye autenticación implementada.
 
@@ -53,4 +53,4 @@ La suite local suma 409 aprobadas y 15 omitidas, incluidas 32 pruebas nuevas de 
 
 ## Pendientes de la tarea 06
 
-Trasladar catálogo/ingesta, matching, CV/evidencia y candidaturas; conservar FKs compuestas, locks, unicidad y contratos. Añadir funciones/roles específicos según el diseño. Probar importación de UUID/datos y reconciliación completa en una base aislada. No activar TARGET antes de autenticación, almacenamiento y ensayo de migración/corte. El cierre de 06A no marca completada la tarea 06 ni los requisitos de aceptación de producción.
+Trasladar matching, CV/evidencia y candidaturas; conservar FKs compuestas, locks, unicidad y contratos. Añadir funciones/roles específicos según el diseño. Probar importación de UUID/datos y reconciliación completa en una base aislada. No activar TARGET antes de autenticación, almacenamiento y ensayo de migración/corte. El cierre de 06A no marca completada la tarea 06 ni los requisitos de aceptación de producción.

@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-06 Tarea 06C: catálogo e ingesta
+
+PR #3 integrado en develop por el usuario (172dd94); rama feat/catalogo-ingesta-postgresql. Se preparan cinco tablas neutrales, roles de lectura/ingesta separados, RPC SQL invocador y lector público por columnas, registro/salud e ingesta individual/lote compatible. Ver ../../db/CATALOG_INGESTION.md. Nueve tablas de 22 preparadas; Supabase sigue activo y no hay migración real ni scheduler.
+
+Local: 495 pruebas aprobadas y 15 omitidas, lint/tipos/build correctos, cobertura superior al 80 % con 33 módulos. test:db ampliado a 51 casos; validación PostgreSQL real en Actions se registra en el PR. Identidad proveedor/board sigue pendiente en tarea 14: colisiones rechazan la operación sin sobrescribir datos. Tarea 06 abierta para matching, CV/evidencia, candidaturas e importación.
+
 ## 2026-11-06 Tarea 06B: búsquedas y preferencias
 
 PR #2 integrado por el usuario en develop (fd9daa5). Rama nueva: feat/busquedas-preferencias-postgresql. Entrega 06B: search_profiles/job_preferences con FKs de propiedad, snapshots de preferencias append-only, commit completo mediante FK diferida, validación, versiones esperadas, locks y transiciones/planificación. Ver ../../db/SEARCH_PREFERENCES.md. No se cambia el runtime Supabase ni se migran datos reales.

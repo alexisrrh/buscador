@@ -24,6 +24,7 @@ export default defineConfig({
         "lib/geographic-location-selection.ts",
         "lib/job-offers/canonicalization.ts",
         "lib/job-sources/search-profile-access.ts",
+        "lib/job-sources/{rpc-repository,public-catalog}.ts",
         "lib/matching/{engine,service}.ts",
         "lib/onboarding/{state,persistence}.ts",
         "lib/applications/{analysis,evidence-priority,generator,professional-evidence,professional-evidence-bootstrap,requirement-resolution,validation}.ts",
@@ -32,6 +33,7 @@ export default defineConfig({
         "lib/server/context.ts",
         "lib/server/search-input.ts",
         "lib/server/db/{unit-of-work,profile-repository,search-repository}.ts",
+        "lib/server/db/{catalog-unit-of-work,job-offer-repository,catalog-reader,source-registry}.ts",
       ],
       thresholds: {
         statements: 80,
