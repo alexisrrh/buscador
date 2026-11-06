@@ -12,6 +12,8 @@ Usar Node.js `24.15.0`, definido en `.node-version`, e instalar desde `package-l
 
 ## Cobertura de negocio
 
+Actualización 06A: el alcance añade identidad de servidor, unidad de trabajo y repositorio de perfiles (25 módulos en total). La prueba PostgreSQL real se ejecuta con `npm run test:db` como paso obligatorio adicional del mismo Quality gate, con servicio PostgreSQL 17 temporal; ver [base de datos](../db/README.md). La tabla de porcentajes de abajo conserva la evidencia histórica de tarea 05.
+
 Vitest y `@vitest/coverage-v8` usan la misma versión exacta `4.1.11`. Los cuatro umbrales globales son del **80 %**: líneas, sentencias, funciones y ramas. No hay actualización automática del umbral ni exclusiones por comentarios añadidas para superarlo.
 
 El alcance explícito de `coverage.include` en `vitest.config.ts` incluye 22 módulos: validación de entradas e identidad, intención pública, límites y selección geográfica, canonicalización de ofertas, acceso a búsquedas, motor/servicio de matching, estado/persistencia de onboarding, análisis y generación de candidatura, prioridad/confirmación de evidencia, validación factual y contenido/maquetación del CV. Incluye archivos sin ejecutar, evitando medir solo los importados por los tests. [Configuración oficial de Vitest](https://vitest.dev/config/coverage).

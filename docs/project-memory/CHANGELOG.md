@@ -1,5 +1,12 @@
 # Project Changelog
 
+## 2026-11-06 Tarea 06A: primera base PostgreSQL
+
+- Base de rama: develop 5c16ffc tras integración de PR #1 por el usuario.
+- Actor de sesión validada, transacciones con contexto local y rechazo de roles privilegiados, pool acotado y repositorio de perfiles.
+- Roles/SQL portables con RLS, migrador atómico con checksum y pruebas de dos usuarios en PostgreSQL 17 temporal del CI. No se cambia el runtime Supabase ni se leen datos reales.
+- Local: 409 pruebas aprobadas, 15 omitidas, lint/tipos/build correctos. Tarea 06 permanece abierta para resto de tablas/repositorios y migración completa.
+
 ## 2026-11-06 Adaptación a trabajo individual
 
 - Por autorización expresa, develop pasa a cero aprobaciones y no requiere aprobación independiente del último push. PR y CI siguen obligatorios.

@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
@@ -12,6 +12,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    exclude: [...configDefaults.exclude, "tests/postgres/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "html", "lcov"],
@@ -28,6 +29,8 @@ export default defineConfig({
         "lib/applications/{analysis,evidence-priority,generator,professional-evidence,professional-evidence-bootstrap,requirement-resolution,validation}.ts",
         "lib/application-engine/{decision,questions}.ts",
         "lib/derived-resumes/{content,layout-plan}.ts",
+        "lib/server/context.ts",
+        "lib/server/db/{unit-of-work,profile-repository}.ts",
       ],
       thresholds: {
         statements: 80,

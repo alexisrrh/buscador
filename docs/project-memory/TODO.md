@@ -8,8 +8,9 @@ Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted re
 - [x] Task 02: lint has zero errors/warnings with unchanged rules; types/build pass and 377 tests pass, 15 skipped. See `../lint-cleanup-2026-11-06.md`.
 - [x] Task 03: coherent local checkpoints on `chore/checkpoint-base-20261106`, reconstructed-tree validation and asset retention policy. Both stashes and main preserved; see `../checkpoint-baseline-2026-11-06.md`.
 - [x] Task 04: architecture transition design and static dependency map complete. See `../architecture/TRANSITION_PLAN.md`; no runtime migration performed.
-- [x] Task 05: CI local/Ubuntu and four 80% business thresholds verified; develop/main protections active and verified; PR #1 remains open; develop now permits author integration after Self Review and passing CI, per the user’s solo workflow. main retains peer approval. See `../ci-quality-gates.md`.
-- [ ] Task 06 onward: implement the transition in the sequence and acceptance gates of the design.
+- [x] Task 05: CI local/Ubuntu and four 80% business thresholds verified; develop/main protections active and verified; PR #1 merged into develop; author Self Review and CI required in develop. main retains peer approval. See `../ci-quality-gates.md`.
+- [ ] Task 06: foundation 06A implemented on feat/base-postgresql-autorizacion (see ../../db/README.md); verify real PostgreSQL CI, then migrate searches/preferences and remaining entities. Do not mark full task complete for this first slice.
+- [ ] Task 07 onward: continue identity/storage transition only with the corresponding acceptance gates.
 
 ## NOW - Source Coverage / Persistent Ingestion
 
