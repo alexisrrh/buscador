@@ -1,5 +1,10 @@
 # Project Changelog
 
+## 2026-11-06 Adaptación a trabajo individual
+
+- Por autorización expresa, develop pasa a cero aprobaciones y no requiere aprobación independiente del último push. PR y CI siguen obligatorios.
+- Verificadas las demás protecciones y main sin cambios. AGENTS y guía CI distinguen Self Review de revisión por otra persona; PR #1 sigue abierto para decisión del autor.
+
 ## 2026-11-06 Cierre de tarea 05: protecciones de ramas
 
 - Activadas y verificadas en develop/main: PR, una aprobación, revisión del último push, invalidación de aprobaciones, Quality gate de GitHub Actions y rama actualizada; conversaciones resueltas, administradores sujetos a reglas, sin force push ni eliminación.

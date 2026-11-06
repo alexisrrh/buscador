@@ -1,5 +1,9 @@
 # Architectural Decisions
 
+## ADR-041 - Revisión individual en develop
+
+El 6 de noviembre el usuario confirmó que trabaja solo. develop conserva PR, CI de GitHub Actions, rama actualizada, conversaciones resueltas y protecciones de administradores/force push/eliminación. Cero aprobaciones requeridas y sin aprobación independiente del último push permiten al autor revisar y fusionar. No equivale a aprobar un PR propio ni a Code Review de otra persona. main conserva sus reglas, incluida revisión independiente. Verificado por API y comparación antes/después.
+
 ## ADR-040 - Integración continua y flujo Git Flow
 
 Por instrucción del usuario, usar ramas de trabajo y PR con la plantilla hacia develop; main solo recibe una promoción validada por PR. Convención de commits: tipo en inglés, descripción/cuerpo en español. CI ejecuta npm ci y npm run check, sin despliegue ni secretos de producción; cobertura agregada del 80 % en cuatro métricas sobre el núcleo documentado en ../ci-quality-gates.md. Exigir Quality gate y revisión en ambas ramas permanentes; reglas remotas activadas y verificadas el 6 de noviembre mediante la sesión de Git existente; el PR sigue pendiente de revisión humana.

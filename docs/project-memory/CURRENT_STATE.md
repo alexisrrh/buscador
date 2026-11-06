@@ -1,5 +1,9 @@
 # Current State
 
+## 2026-11-06 Flujo individual en develop
+
+El usuario trabaja solo y autoriza adaptar develop: PR y Quality gate obligatorios, sin aprobación de otra cuenta ni del último push. Self Review y decisión de integración por el autor; no simular revisión independiente. Verificación GET confirma que el resto de protecciones y la configuración completa de main se conservan. main aún exige una aprobación externa. Esta decisión sustituye el bloqueo por revisión de develop descrito en el registro anterior. PR #1 continúa abierto, sin integración automática.
+
 ## 2026-11-06 Tarea 05 completa: CI y protecciones verificadas
 
 Ver `../ci-quality-gates.md`. Node 24.15.0, npm ci, lint estricto, next typegen/tsc, suite con V8 y build pasan en copia limpia sin entorno privado: 377 pruebas aprobadas y 15 omitidas. Cobertura de 22 módulos: líneas 95,93 %, sentencias 91,24 %, funciones 94,82 %, ramas 81,20 %; mínimos del 80 %. Fallos de tipos y cobertura comprobados con pruebas negativas.

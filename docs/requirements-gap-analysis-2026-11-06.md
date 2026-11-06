@@ -226,9 +226,9 @@ Fuente: sección 4.7, páginas 24 y 25.
 | RT-08 | Integraciones desde servidor | Parcial | E03/E08. Fuentes y geografía desde servidor; subida privada directa del navegador a Supabase difiere del control de archivos esperado en destino. Verificar todos los canales sensibles. |
 | RT-09 | Adaptadores de fuentes | Implementado | E08. Proveedores desacoplados del modelo común. |
 | RT-10 | Secretos de servidor | Parcial | E16. Separación de entorno y server-only; falta verificación integral de historial, logs y despliegue. |
-| RT-11 | Vitest antes de integrar | Implementado | [Tarea 05](ci-quality-gates.md): CI local/Ubuntu aprobado, Quality gate obligatorio en develop/main y bloqueo del PR sin aprobación verificado. 15 pruebas optativas omitidas. |
-| RT-12 | Git privado y estrategia | Discrepancia | Remoto público verificado. develop creada desde main, flujo PR documentado y protección/revisión obligatorias verificadas. Visibilidad sin cambios; PR #1 abierto. |
-| RT-13 | CI/CD obligatorio | Parcial | [Tarea 05](ci-quality-gates.md): pipeline aprobado en Ubuntu con lint, tipos, cobertura, pruebas y build; checks y revisión obligatorios en develop/main. Despliegue automatizado no configurado. |
+| RT-11 | Vitest antes de integrar | Implementado | [Tarea 05](ci-quality-gates.md): CI local/Ubuntu aprobado, Quality gate obligatorio en develop/main; develop permite Self Review individual y main exige revisión independiente. 15 pruebas optativas omitidas. |
+| RT-12 | Git privado y estrategia | Discrepancia | Remoto público verificado. develop creada desde main, flujo PR documentado y protecciones verificadas, revisión individual en develop e independiente en main. Visibilidad sin cambios; PR #1 abierto. |
+| RT-13 | CI/CD obligatorio | Parcial | [Tarea 05](ci-quality-gates.md): pipeline aprobado en Ubuntu con lint, tipos, cobertura, pruebas y build; checks obligatorios en develop/main, Self Review individual en develop y revisión independiente en main. Despliegue automatizado no configurado. |
 | RT-14 | WebGL con alternativa | Parcial | E15. Fallback y movimiento reducido presentes; comprobar también fallo de contexto y funcionalidad completa de landing/globo. |
 | RT-15 | UTF-8 | Parcial | Igual que RNF-18; verificar fronteras de integración/documentos. |
 | RT-16 | Entornos separados | Sin verificar | E16. Configuración local no acredita separación efectiva de desarrollo, pruebas y producción. |

@@ -10,7 +10,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 - [x] **02. Resolver los errores de lint.** Cerrada el 6 de noviembre de 2026: 0 errores y 0 advertencias, sin supresiones ni cambios de reglas; tipos/build correctos y 377 pruebas aprobadas, 15 omitidas. [Cambios y validación](lint-cleanup-2026-11-06.md).
 - [x] **03. Consolidar una base reproducible.** Cerrada el 6 de noviembre de 2026 en `chore/checkpoint-base-20261106`: checkpoints locales, reconstrucción desde Git validada y política de assets preservados. `main` y ambos stashes conservados; sin push. [Base y evidencias](checkpoint-baseline-2026-11-06.md).
 - [x] **04. Diseñar la transición de Supabase a la arquitectura del PDF.** Cerrada el 6 de noviembre de 2026: backend modular Next.js, PostgreSQL, Better Auth y Tigris; 22 tablas y 34 funciones clasificadas, inventario de 42 módulos, migración, aislamiento y reversión definidos. [Diseño y condiciones de implementación](architecture/TRANSITION_PLAN.md). Sin migración ejecutada ni cambios de producción.
-- [x] **05. Establecer controles automáticos de integración.** Cerrada el 6 de noviembre de 2026: CI local y GitHub Actions correctos, cobertura superior al 80 % en cuatro métricas, protecciones verificadas en develop/main y PR #1 bloqueado hasta revisión. [Controles y evidencia](ci-quality-gates.md). El PR sigue abierto; no se ha integrado en ramas permanentes.
+- [x] **05. Establecer controles automáticos de integración.** Cerrada el 6 de noviembre de 2026: CI local y GitHub Actions correctos, cobertura superior al 80 % en cuatro métricas, protecciones verificadas en develop/main; develop adaptada a Self Review individual con PR y CI obligatorios. [Controles y evidencia](ci-quality-gates.md). El PR sigue abierto; no se ha integrado en ramas permanentes.
 
 ## Prioridad 2 Identidad y datos privados
 
@@ -58,7 +58,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 | 02 | Completada | [Lint limpio y regresión](lint-cleanup-2026-11-06.md). Sin commits ni push. |
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
 | 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
-| 05 | Completada | [CI, cobertura y protecciones verificadas](ci-quality-gates.md). PR #1 pendiente de aprobación humana. |
+| 05 | Completada | [CI, cobertura y protecciones verificadas](ci-quality-gates.md). PR #1 abierto para revisión y decisión del autor; develop en modo individual. |
 | 06 | Próxima | Persistencia y autorización del backend propio, tras integrar la base validada en develop. |
 | 07 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 

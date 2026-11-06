@@ -49,11 +49,22 @@ Usar íntegramente `.github/PULL_REQUEST_TEMPLATE.md`. Marcar solo pruebas, revi
 
 El workflow fallido detiene su job; para impedir merges GitHub debe exigir **Quality gate** en las reglas de `develop` y `main`. La mera existencia del YAML no protege ramas. [Checks obligatorios de GitHub](https://docs.github.com/en/pull-requests/reference/status-checks).
 
-Configurar en ambas ramas: PR obligatorio, al menos una aprobación de otra persona, invalidación de aprobaciones tras cambios nuevos, resolución de conversaciones, check **Quality gate** aprobado y rama actualizada, prohibición de force push/eliminación y aplicación a administradores sin bypass. No sustituir la revisión de otra persona por una aprobación del autor. Si aún no hay revisor, el PR permanece abierto.
+Configuración actual, adaptada por instrucción del usuario el 6 de noviembre para trabajar solo:
+
+| Regla | develop | main |
+| --- | --- | --- |
+| PR obligatorio, Quality gate de GitHub Actions, rama actualizada y conversaciones resueltas | Sí | Sí |
+| Aprobaciones de otra persona | 0 | 1 |
+| Aprobación independiente del último push | No | Sí |
+| Administradores sujetos a reglas; force push y eliminación bloqueados | Sí | Sí |
+
+En develop el autor hace Self Review y decide fusionar cuando CI pasa. GitHub no permite aprobar un PR propio: el flujo individual elimina ese requisito, no crea una aprobación ficticia. La casilla Code Review de otra persona permanece sin marcar si no ocurrió. main conserva su revisión independiente.
 
 `develop` se creó desde el commit remoto de `main` `0913134566e55044b569efa4205dc9e654526228`. La rama `ci/controles-calidad` está publicada y el [PR #1](https://github.com/alexisrrh/buscador/pull/1) apunta a `develop`, usa la plantilla y no tiene conflictos. CI del commit 9943b36 aprobado tanto en push como en [PR](https://github.com/alexisrrh/buscador/actions/runs/42205496389). No se ha integrado el PR ni promovido nada a `main`.
 
 El 6 de noviembre de 2026 se activaron y verificaron por GET de la API las protecciones de ambas ramas usando la sesión existente de Git Credential Manager, sin mostrar ni persistir credenciales. Se exige Quality gate emitido por GitHub Actions (app 15368), rama actualizada, PR, una aprobación, invalidación de aprobaciones tras cambios, aprobación del último push por otra persona y conversaciones resueltas. Administradores sujetos a las reglas; force push y eliminación desactivados. Las dos ramas figuran protected=true y el PR #1 está blocked a falta de revisión, aunque su CI pasa.
+
+Posteriormente, el usuario confirmó que trabaja solo. Se ajustó únicamente la revisión de develop mediante PATCH: cero aprobaciones y require_last_push_approval=false. Se verificó por GET que el PR y las demás protecciones se conservan y que la protección completa de main coincide con su estado anterior. Evidencias en solo-develop-before.json, solo-develop-verified.json y solo-main-verified.json fuera de Git. La configuración inicial de una aprobación en ambas ramas descrita arriba queda como evidencia histórica.
 
 La tarea 05 queda cerrada como configuración y validación de controles; no implica que este PR esté aprobado o integrado. No se intentó fusionar un PR con CI fallido ni se alteró main para probarlo: la evidencia combina los fallos locales de CI, las reglas remotas exigibles y el bloqueo real del PR sin aprobación. Copias de reglas previas/solicitud/verificación en `_local-backups/task05-20261106/`, fuera de Git.
 

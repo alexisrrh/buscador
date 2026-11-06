@@ -2,7 +2,7 @@
 
 ## 2026-11-06 Integración y repositorio
 
-- Protecciones de develop/main activadas y verificadas el 6 de noviembre: Quality gate y revisión obligatorios, sin bypass de administrador. El PR #1 sigue bloqueado hasta revisión humana; no intentar suplirla con autoaprobación. El acceso administrativo se resolvió mediante la sesión de Git existente.
+- Protecciones de develop/main activadas y verificadas el 6 de noviembre: Quality gate y revisión obligatorios, sin bypass de administrador. Tras confirmar trabajo individual, develop no requiere aprobación independiente; el autor hace Self Review y decide integrar con CI aprobado, sin simular Code Review. main conserva revisión independiente. El acceso administrativo se resolvió mediante la sesión de Git existente.
 - Remoto público verificado; contradice Git privado en RT-12. No se cambió visibilidad.
 - npm install informó 18 vulnerabilidades (11 moderadas, 6 altas, 1 crítica); no se atribuyen al nuevo complemento sin análisis ni se aplican actualizaciones indiscriminadas. Revisar en tarea 26 antes de publicación.
 - Cobertura agregada de 22 módulos no equivale a cobertura total; las 15 pruebas omitidas no acreditan servicios reales.
