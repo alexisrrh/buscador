@@ -35,7 +35,7 @@ Se reconstruyó una copia desde Git con los cambios de CI, fuera del repositorio
 | Ramas | 81,20 % (1.279/1.575) |
 | Build | Producción con Turbopack correcto |
 
-Pruebas negativas: un archivo temporal con un error TS2322 hizo fallar `npm run check` antes de pruebas/build; se retiró después. Ejecutar solo el test de identidad con los umbrales normales provocó fallo de las cuatro métricas. Los umbrales no se redujeron. YAML, eventos y comando del workflow también fueron comprobados. Logs privados en `_local-backups/task05-20261106/`, fuera de Git. Esta evidencia es Windows; Ubuntu y GitHub Actions deben validarse en el PR.
+Pruebas negativas: un archivo temporal con un error TS2322 hizo fallar `npm run check` antes de pruebas/build; se retiró después. Ejecutar solo el test de identidad con los umbrales normales provocó fallo de las cuatro métricas. Los umbrales no se redujeron. YAML, eventos y comando del workflow también fueron comprobados. Logs privados en `_local-backups/task05-20261106/`, fuera de Git. La copia limpia se verificó en Windows. La ejecución [CI del push en Ubuntu](https://github.com/alexisrrh/buscador/actions/runs/42203043293) también finalizó correctamente con 377 pruebas aprobadas y 15 omitidas.
 
 La instalación informó avisos de dependencias y auditoría; no se aplicó `npm audit fix` ni se modificaron paquetes ajenos a cobertura. La revisión de vulnerabilidades continúa en la tarea 26.
 
@@ -51,6 +51,6 @@ El workflow fallido detiene su job; para impedir merges GitHub debe exigir **Qua
 
 Configurar en ambas ramas: PR obligatorio, al menos una aprobación de otra persona, invalidación de aprobaciones tras cambios nuevos, resolución de conversaciones, check **Quality gate** aprobado y rama actualizada, prohibición de force push/eliminación y aplicación a administradores sin bypass. No sustituir la revisión de otra persona por una aprobación del autor. Si aún no hay revisor, el PR permanece abierto.
 
-`develop` se creó desde el commit remoto de `main` `0913134566e55044b569efa4205dc9e654526228`. La rama de esta entrega es `ci/controles-calidad`. No se ha promovido nada a `main`.
+`develop` se creó desde el commit remoto de `main` `0913134566e55044b569efa4205dc9e654526228`. La rama `ci/controles-calidad` está publicada y el [PR #1](https://github.com/alexisrrh/buscador/pull/1) apunta a `develop`, usa la plantilla y no tiene conflictos. Su ejecución específica de CI está en curso al registrar esta evidencia. No se ha integrado el PR ni promovido nada a `main`.
 
 La protección requiere acceso administrativo: el conector devolvió 403 y el navegador estaba sin sesión. No se declara activada. La tarea 05 solo se cierra por completo después de una ejecución remota correcta y de verificar que esas reglas impiden integrar con CI fallido. El repositorio remoto figura público; RT-12 exige privado y continúa abierto hasta decidir/aplicar ese cambio de acceso por separado.

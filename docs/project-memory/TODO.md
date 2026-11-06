@@ -8,7 +8,7 @@ Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted re
 - [x] Task 02: lint has zero errors/warnings with unchanged rules; types/build pass and 377 tests pass, 15 skipped. See `../lint-cleanup-2026-11-06.md`.
 - [x] Task 03: coherent local checkpoints on `chore/checkpoint-base-20261106`, reconstructed-tree validation and asset retention policy. Both stashes and main preserved; see `../checkpoint-baseline-2026-11-06.md`.
 - [x] Task 04: architecture transition design and static dependency map complete. See `../architecture/TRANSITION_PLAN.md`; no runtime migration performed.
-- [ ] Task 05: CI and 80% business thresholds implemented and verified from a clean npm ci checkout; publish PR to develop, verify Actions and enforce branch protections. See `../ci-quality-gates.md`.
+- [ ] Task 05: CI and 80% business thresholds implemented and verified from a clean npm ci checkout; PR #1 published to develop; push CI on Ubuntu passes, PR CI and enforced branch protections remain. See `../ci-quality-gates.md`.
 - [ ] Task 06 onward: implement the transition in the sequence and acceptance gates of the design.
 
 ## NOW - Source Coverage / Persistent Ingestion

@@ -10,7 +10,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 - [x] **02. Resolver los errores de lint.** Cerrada el 6 de noviembre de 2026: 0 errores y 0 advertencias, sin supresiones ni cambios de reglas; tipos/build correctos y 377 pruebas aprobadas, 15 omitidas. [Cambios y validación](lint-cleanup-2026-11-06.md).
 - [x] **03. Consolidar una base reproducible.** Cerrada el 6 de noviembre de 2026 en `chore/checkpoint-base-20261106`: checkpoints locales, reconstrucción desde Git validada y política de assets preservados. `main` y ambos stashes conservados; sin push. [Base y evidencias](checkpoint-baseline-2026-11-06.md).
 - [x] **04. Diseñar la transición de Supabase a la arquitectura del PDF.** Cerrada el 6 de noviembre de 2026: backend modular Next.js, PostgreSQL, Better Auth y Tigris; 22 tablas y 34 funciones clasificadas, inventario de 42 módulos, migración, aislamiento y reversión definidos. [Diseño y condiciones de implementación](architecture/TRANSITION_PLAN.md). Sin migración ejecutada ni cambios de producción.
-- [ ] **05. Establecer controles automáticos de integración.** Workflow y comando único implementados; copia limpia con npm ci, lint, tipos, 377 pruebas y build correctos; cobertura de negocio superior al 80 % en las cuatro métricas. Pendientes ejecución remota y protección efectiva de ramas. [Controles y evidencia](ci-quality-gates.md).
+- [ ] **05. Establecer controles automáticos de integración.** Workflow y comando único implementados; copia limpia con npm ci, lint, tipos, 377 pruebas y build correctos; cobertura de negocio superior al 80 % en las cuatro métricas. PR #1 abierto hacia develop y CI del push aprobado en Ubuntu. Pendientes CI del PR y protección efectiva de ramas. [Controles y evidencia](ci-quality-gates.md).
 
 ## Prioridad 2 Identidad y datos privados
 
@@ -58,7 +58,7 @@ Esta lista organiza el trabajo pendiente. Una casilla solo se marca cuando se cu
 | 02 | Completada | [Lint limpio y regresión](lint-cleanup-2026-11-06.md). Sin commits ni push. |
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
 | 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
-| 05 | En curso | [CI y cobertura validados localmente](ci-quality-gates.md); PR y protección remota pendientes de verificación. |
+| 05 | En curso | [CI y cobertura validados localmente](ci-quality-gates.md); PR #1 abierto y CI del push aprobado; falta comprobar CI del PR y protección de ramas. |
 | 06 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 
 Al cerrar una tarea: marcar la casilla, registrar pruebas y checkpoint, actualizar el contraste afectado y seleccionar la siguiente dependencia disponible. Esta checklist no marca como pendiente de reconstrucción aquello que ya existe: cada tarea debe reutilizar su implementación válida y cerrar las brechas identificadas.

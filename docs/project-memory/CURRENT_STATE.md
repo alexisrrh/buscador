@@ -4,7 +4,7 @@
 
 Ver `../ci-quality-gates.md`. Node 24.15.0, npm ci, lint estricto, next typegen/tsc, suite con V8 y build pasan en copia limpia sin entorno privado: 377 pruebas aprobadas y 15 omitidas. Cobertura de 22 módulos: líneas 95,93 %, sentencias 91,24 %, funciones 94,82 %, ramas 81,20 %; mínimos del 80 %. Fallos de tipos y cobertura comprobados con pruebas negativas.
 
-El usuario exige Conventional Commits con descripción en español, ramas de trabajo y PR usando la plantilla hacia develop; promoción posterior por PR a main. develop creada en GitHub desde main 0913134; trabajo actual en ci/controles-calidad. Publicación/Actions y protección efectiva aún deben verificarse. Conector sin acceso administrativo y navegador sin sesión. Remoto público, discrepancia con RT-12. No se ha integrado ni desplegado esta entrega.
+El usuario exige Conventional Commits con descripción en español, ramas de trabajo y PR usando la plantilla hacia develop; promoción posterior por PR a main. develop creada en GitHub desde main 0913134; trabajo actual en ci/controles-calidad. Rama publicada y PR #1 abierto hacia develop con plantilla y sin conflictos. CI del push en Ubuntu aprobado (run 42203043293); CI específico del PR y protección efectiva aún deben verificarse. Conector sin acceso administrativo y navegador sin sesión. Remoto público, discrepancia con RT-12. No se ha integrado ni desplegado esta entrega.
 
 ## 2026-11-06 Task 04 architecture transition design complete
 
