@@ -582,10 +582,23 @@ describe("PostgreSQL matching using the existing deterministic engine",()=>{
     expect((await stored(f.saved.search.id)).find(x=>x.search_profile_version===2)?.status).toBe("NEW");
   });
   it("serializes concurrent upserts into a single identity",async()=>{
-    const f=await matchingFixture();const second=new PostgresMatchingRepository(work,catalogWork,actorA);
-    await second.loadSearchContext(f.saved.search.id,A);
-    const results=await Promise.all([f.repo.upsertMatch(f.input),second.upsertMatch(f.input)]);
-    expect(results.filter(x=>x.created)).toHaveLength(1);expect(await stored(f.saved.search.id)).toHaveLength(1);
+    const f=await matchingFixture();
+    const url=new URL(process.env.TEST_DATABASE_URL!);url.username=runtimeRole;url.password=testPassword;
+    const independentPool=createDatabasePool(url.toString(),1);
+    try {
+      const second=new PostgresMatchingRepository(new UnitOfWork(independentPool),catalogWork,actorA);
+      await second.loadSearchContext(f.saved.search.id,A);
+      const results=await Promise.all([f.repo.upsertMatch(f.input),second.upsertMatch(f.input)]);
+      expect(results.filter(x=>x.created)).toHaveLength(1);expect(await stored(f.saved.search.id)).toHaveLength(1);
+    } finally { await independentPool.end(); }
+  });
+  it("rolls back the first 200 results when a later chunk fails",async()=>{
+    const f=await matchingFixture();
+    const batch=await offers.persistBatch(source(),Array.from({length:200},()=>({offer:neutral(),rawPayload:{}})),new Date());
+    expect(batch.errors).toBe(0);expect(batch.results).toHaveLength(200);
+    const inputs=batch.results.map(row=>({...f.input,jobOfferId:row.jobOfferId}));
+    await expect(f.repo.upsertMatches([...inputs,{...f.input,jobOfferId:randomUUID()}])).rejects.toMatchObject({code:"23503"});
+    expect(await stored(f.saved.search.id)).toHaveLength(0);
   });
   it("denies missing tenant context and validates scores and preference references",async()=>{
     const f=await matchingFixture();await f.repo.upsertMatch(f.input);const row=(await stored(f.saved.search.id))[0];
