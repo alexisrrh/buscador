@@ -8,3 +8,8 @@ coverage/
 .vercel/
 .DS_Store
 *.log
+
+# Local BV-01 authoring sources and review captures are retained separately.
+# See docs/asset-retention-policy.md; production assets in public stay tracked.
+/assets-src/
+/assets/captura.png

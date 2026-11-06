@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { searchIntent } from "@/lib/intent-first";
 import { searchPublicOpportunities } from "@/lib/job-sources/public-opportunities.server";
@@ -66,5 +66,28 @@ describe("public opportunity catalog", () => {
     expect(ranges).toEqual([[0, 999], [1000, 1999]]);
     expect(result.catalogOffersLoaded).toBe(1_001);
     expect(result.opportunities).toEqual([expect.objectContaining({ title: "Frontend Developer" })]);
+  });
+
+  it("logs Supabase diagnostics while preserving the clean catalog error", async () => {
+    const supabaseError = {
+      code: "PGRST204",
+      message: "Could not find the 'id' column of 'job_offers' in the schema cache",
+      details: null,
+      hint: null,
+    };
+    const query = {
+      select: () => query,
+      eq: () => query,
+      gte: () => query,
+      order: () => query,
+      range: async () => ({ data: null, error: supabaseError }),
+    };
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(loadPublicOpportunityCatalog({ client: { from: () => query } as never, now }))
+      .rejects.toThrow("No se pudo consultar el catálogo de oportunidades.");
+    expect(consoleError).toHaveBeenCalledWith("[public-catalog] Supabase query failed", supabaseError);
+
+    consoleError.mockRestore();
   });
 });

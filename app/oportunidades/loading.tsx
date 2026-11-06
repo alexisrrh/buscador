@@ -1,3 +1,18 @@
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { OpportunitiesSearchExperience } from "@/components/opportunities-search-experience";
+
 export default function OpportunitiesLoading() {
-  return <main className="opportunities-page"><section className="opportunities-header"><p className="eyebrow">Búsqueda en curso</p><h1>Buscando oportunidades…</h1><p>Estamos buscando las mejores oportunidades para ti.</p></section><div className="opportunities-loading" aria-live="polite"><span /><span /><span /></div></main>;
+  return <Suspense fallback={null}><LandingAwareLoading /></Suspense>;
+}
+
+function LandingAwareLoading() {
+  const params = useSearchParams();
+  // Landing has already awaited the server action and its cached result. Keep
+  // this boundary for direct/deep-link visits, but never replace the landing
+  // with a second search composition during the prepared handoff.
+  if (params?.get("landing_handoff") === "1") return null;
+  return <OpportunitiesSearchExperience />;
 }

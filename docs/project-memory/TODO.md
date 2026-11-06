@@ -1,5 +1,16 @@
 # TODO
 
+## 2026-11-06 Current prioritized work
+
+Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted requirements PDF. Older lists below are historical context and must be reconciled before reuse.
+
+- [x] Task 01: classify and protect the local worktree; see `../worktree-inventory-2026-11-06.md`.
+- [x] Task 02: lint has zero errors/warnings with unchanged rules; types/build pass and 377 tests pass, 15 skipped. See `../lint-cleanup-2026-11-06.md`.
+- [x] Task 03: coherent local checkpoints on `chore/checkpoint-base-20261106`, reconstructed-tree validation and asset retention policy. Both stashes and main preserved; see `../checkpoint-baseline-2026-11-06.md`.
+- [x] Task 04: architecture transition design and static dependency map complete. See `../architecture/TRANSITION_PLAN.md`; no runtime migration performed.
+- [x] Task 05: CI local/Ubuntu and four 80% business thresholds verified; develop/main protections active and verified; PR #1 remains open; develop now permits author integration after Self Review and passing CI, per the user’s solo workflow. main retains peer approval. See `../ci-quality-gates.md`.
+- [ ] Task 06 onward: implement the transition in the sequence and acceptance gates of the design.
+
 ## NOW - Source Coverage / Persistent Ingestion
 
 - [x] Complete Product Reset Milestone 1A: intent-first public search and personalized-action auth gate.

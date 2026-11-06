@@ -96,7 +96,15 @@ export async function loadPublicOpportunityCatalog(
       .order("last_seen_at", { ascending: false })
       .order("id", { ascending: true })
       .range(from, from + PUBLIC_CATALOG_PAGE_SIZE - 1);
-    if (error) throw new Error("No se pudo consultar el catálogo de oportunidades.");
+    if (error) {
+      console.error("[public-catalog] Supabase query failed", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      throw new Error("No se pudo consultar el catálogo de oportunidades.");
+    }
     const page = (data ?? []) as unknown as CatalogRow[];
     rows.push(...page);
     if (page.length < PUBLIC_CATALOG_PAGE_SIZE) break;

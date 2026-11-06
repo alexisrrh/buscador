@@ -1,6 +1,56 @@
 # Project Changelog
 
+## 2026-11-06 Adaptación a trabajo individual
+
+- Por autorización expresa, develop pasa a cero aprobaciones y no requiere aprobación independiente del último push. PR y CI siguen obligatorios.
+- Verificadas las demás protecciones y main sin cambios. AGENTS y guía CI distinguen Self Review de revisión por otra persona; PR #1 sigue abierto para decisión del autor.
+
+## 2026-11-06 Cierre de tarea 05: protecciones de ramas
+
+- Activadas y verificadas en develop/main: PR, una aprobación, revisión del último push, invalidación de aprobaciones, Quality gate de GitHub Actions y rama actualizada; conversaciones resueltas, administradores sujetos a reglas, sin force push ni eliminación.
+- CI de push y PR 9943b36 aprobado en Ubuntu. PR #1 bloqueado hasta aprobación humana; main y develop permanecen en 0913134.
+- Sesión existente de Git Credential Manager utilizada sin mostrar ni guardar credenciales; evidencia de reglas fuera de Git. Sin integración ni despliegue.
+
+## 2026-11-06 Tarea 05 y flujo de colaboración
+
+- Workflow GitHub Actions y npm run check: lint estricto, tipos de rutas/TypeScript, cobertura y build; lockfile y Node fijado.
+- Cuatro mínimos del 80 % superados en copia limpia; 377 pruebas aprobadas y 15 omitidas. Fallos de tipos y cobertura detienen el control.
+- AGENTS registra commits con descripción en español y flujo rama de trabajo → PR develop → PR main con plantilla.
+- develop creada desde main; ejecución remota y protección pendientes. Sin integración ni despliegue.
+
 This file records verified project-level milestones. It does not replace Git history.
+
+## 2026-11-06 - Task 04 architecture transition design
+
+- Added an actionable migration design for modular Next.js backend, PostgreSQL, Better Auth and Tigris, with source-code mapping and official documentation references.
+- Recorded a static inventory of 22 migrations, 22 public table declarations, 34 function names and 42 coupled modules.
+- Defined UUID preservation, transaction-local authorization, account recovery, verified private object migration, cutover, tests and rollback after new writes.
+- Updated target context, ADR-039 and transition risks while explicitly preserving the current Supabase runtime. No package/config changes, SQL, remote mutation or production migration.
+- Closed task 04; task 05 CI validation is next.
+
+## 2026-11-06 - Task 03 reproducible local checkpoint
+
+- Consolidated contributor guides, requirements, asset retention, catalog diagnostics and the complete public experience/runtime into local checkpoints on `chore/checkpoint-base-20261106`.
+- Preserved main and both stashes. Deferred 1,033 authoring/review files remain in place and match their original hashes; public runtime assets are versioned.
+- Validated a reconstruction exported from Git without private environment configuration, reusing installed dependencies: strict lint, types, build and 377 tests passed; 15 tests remain skipped.
+- Fixed a newline-sensitive migration test for Windows CRLF without changing SQL. No merge, push or deployment.
+- Closed task 03; task 04 architecture transition design is next.
+
+## 2026-11-06 - Task 02 lint cleanup complete
+
+- Fixed all 25 lint errors and 28 warnings without changing ESLint rules or adding suppressions.
+- Replaced effect-driven browser state copies with subscriptions, corrected visual state resets, cloned cached textures before configuration and accessed mutable debug scene objects through refs.
+- Removed unused internal helpers and preserved poster resources with eager unoptimized Next Image rendering.
+- Added four regression tests. Typecheck/build pass; full suite has 377 passed and 15 skipped; final focused regression has 20 passed.
+- Preserved assets, functional business modules, HEAD, index and both stashes. Next is task 03; no commit or push.
+
+## 2026-11-06 - Requirements contrast and task 01 inventory
+
+- Recorded a 126-requirement contrast against the user-adopted specification and a prioritized checklist.
+- Classified 1,101 pre-existing modified/untracked files into 12 groups, including asset authoring and review material deliberately deferred from runtime checkpoints.
+- Created a local recovery archive outside the repository, verified each entry with SHA-256, exported both stash patches and verified a Git bundle.
+- Preserved functional files, HEAD, index and both stashes; added an inventory with dependency constraints and checkpoint proposals. No commits or push were performed.
+- Closed checklist task 01. Task 02, lint corrections, is next; Git consolidation remains task 03.
 
 ## 2026-09-09 - Product Reset Milestone 2C-B complete
 

@@ -1,6 +1,28 @@
 # Architectural Decisions
 
-Decisions here are approved defaults. Reopen one only when new verified evidence or a product requirement makes that necessary.
+## ADR-041 - Revisión individual en develop
+
+El 6 de noviembre el usuario confirmó que trabaja solo. develop conserva PR, CI de GitHub Actions, rama actualizada, conversaciones resueltas y protecciones de administradores/force push/eliminación. Cero aprobaciones requeridas y sin aprobación independiente del último push permiten al autor revisar y fusionar. No equivale a aprobar un PR propio ni a Code Review de otra persona. main conserva sus reglas, incluida revisión independiente. Verificado por API y comparación antes/después.
+
+## ADR-040 - Integración continua y flujo Git Flow
+
+Por instrucción del usuario, usar ramas de trabajo y PR con la plantilla hacia develop; main solo recibe una promoción validada por PR. Convención de commits: tipo en inglés, descripción/cuerpo en español. CI ejecuta npm ci y npm run check, sin despliegue ni secretos de producción; cobertura agregada del 80 % en cuatro métricas sobre el núcleo documentado en ../ci-quality-gates.md. Exigir Quality gate y revisión en ambas ramas permanentes; reglas remotas activadas y verificadas el 6 de noviembre mediante la sesión de Git existente; el PR sigue pendiente de revisión humana.
+
+The user-adopted requirements and ADR-039 govern target architecture planning. Earlier decisions describe the existing Supabase implementation until their components are replaced through the priority checklist; they are not evidence that the transition has run.
+
+## ADR-039 - Requirements-driven infrastructure transition design
+
+Status: target design recorded on 2026-11-06; implementation pending. See `../architecture/TRANSITION_PLAN.md`.
+
+- Keep the backend as modular server-side Next.js code, PostgreSQL as source of truth, and reuse current domain engines and adapters.
+- Replace Supabase identity and storage with Better Auth and Tigris in phased, separately validated implementation. Supersedes the future target of ADR-003/019/024/028 where they prescribe Supabase; does not remove current runtime behavior.
+- Retain UUIDs, tenant composite FKs and RLS; replace auth.uid and service-role assumptions with server-validated identity, least-privilege roles and transaction-local context.
+- Do not import legacy sessions or assume password hash compatibility. Require recovery for imported accounts using a rehearsed identity migration.
+- Use private object staging, backend verification and immutable final objects. Database readiness and storage writes require idempotent reconciliation.
+- A single coherent production authority writes at a time. Rollback after target writes requires a verified delta/identity/object procedure or repair in maintenance, never a blind traffic reversal.
+- Initial scope excludes automatic external application submission. Neither retained AUTO data nor old architecture records authorize activation.
+
+ADR-025's existing CSS and the newly supplied design guidance are preserved during infrastructure work; no Tailwind migration or UI redesign is part of this decision.
 
 ## ADR-035 - Product Reset Milestone 1A
 
