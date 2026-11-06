@@ -1,5 +1,14 @@
 # TODO
 
+## 2026-11-06 Current prioritized work
+
+Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted requirements PDF. Older lists below are historical context and must be reconciled before reuse.
+
+- [x] Task 01: classify and protect the local worktree; see `../worktree-inventory-2026-11-06.md`.
+- [x] Task 02: lint has zero errors/warnings with unchanged rules; types/build pass and 377 tests pass, 15 skipped. See `../lint-cleanup-2026-11-06.md`.
+- [ ] Task 03: review and consolidate coherent checkpoints, preserve both stashes and decide asset retention/versioning.
+- [ ] Task 04 onward: follow the requirements checklist, including the planned architecture transition.
+
 ## NOW - Source Coverage / Persistent Ingestion
 
 - [x] Complete Product Reset Milestone 1A: intent-first public search and personalized-action auth gate.

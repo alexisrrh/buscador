@@ -2,6 +2,22 @@
 
 This file records verified project-level milestones. It does not replace Git history.
 
+## 2026-11-06 - Task 02 lint cleanup complete
+
+- Fixed all 25 lint errors and 28 warnings without changing ESLint rules or adding suppressions.
+- Replaced effect-driven browser state copies with subscriptions, corrected visual state resets, cloned cached textures before configuration and accessed mutable debug scene objects through refs.
+- Removed unused internal helpers and preserved poster resources with eager unoptimized Next Image rendering.
+- Added four regression tests. Typecheck/build pass; full suite has 377 passed and 15 skipped; final focused regression has 20 passed.
+- Preserved assets, functional business modules, HEAD, index and both stashes. Next is task 03; no commit or push.
+
+## 2026-11-06 - Requirements contrast and task 01 inventory
+
+- Recorded a 126-requirement contrast against the user-adopted specification and a prioritized checklist.
+- Classified 1,101 pre-existing modified/untracked files into 12 groups, including asset authoring and review material deliberately deferred from runtime checkpoints.
+- Created a local recovery archive outside the repository, verified each entry with SHA-256, exported both stash patches and verified a Git bundle.
+- Preserved functional files, HEAD, index and both stashes; added an inventory with dependency constraints and checkpoint proposals. No commits or push were performed.
+- Closed checklist task 01. Task 02, lint corrections, is next; Git consolidation remains task 03.
+
 ## 2026-09-09 - Product Reset Milestone 2C-B complete
 
 - Added Jobicy's permitted public remote-tech API through the existing server-side SourceRegistry, global ingestion, neutral persistent catalog, public relevance and `/oportunidades`; visitors never call the API directly.

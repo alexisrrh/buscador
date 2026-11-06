@@ -1,5 +1,21 @@
 # Current State
 
+## 2026-11-06 Task 02 lint cleanup complete
+
+See `../lint-cleanup-2026-11-06.md`. ESLint passes with `--max-warnings 0`: zero errors and zero warnings, without rule overrides or suppressions. Browser state subscriptions, visual resets, owned Three.js textures and imperative scene refs were corrected; unused internal helpers were removed. Asset bytes, CSS and business logic remain unchanged.
+
+Typecheck and production build pass. Full suite: 377 passed, 15 skipped; final focused regression: 20 passed. Real WebGL choreography and full accessibility acceptance were not revalidated. HEAD, index and both stashes remain preserved; no commit or push. Next: task 03 checkpoint consolidation, including deliberate asset retention/versioning.
+
+## 2026-11-06 Requirements baseline and local inventory
+
+The user adopted `BuscaVacante_AUDITORIA_FINAL.pdf` as the functional/technical target. See `../requirements-gap-analysis-2026-11-06.md` and `../PRIORITY_CHECKLIST.md`. Older architectural decisions and the snapshots below describe the existing implementation, not compliance with that target. Better Auth, a project-controlled backend and Tigris are required by the specification; the current implementation still uses Supabase.
+
+Task 01 is complete: 18 modified tracked files and 1,083 untracked files were classified and backed up outside the repository with per-file SHA-256 verification. A Git bundle was verified and both stashes preserved. See `../worktree-inventory-2026-11-06.md` for dependencies, recovery limits and proposed checkpoints. No functional code, staging, commits or stashes were changed. Next task: 02, lint corrections. Consolidation into a clean checkpoint remains task 03.
+
+Validation from the same session before this documentation-only inventory: typecheck and production build passed; 373 tests passed and 15 were skipped; lint reported 25 errors and 28 warnings. Production behavior, coverage and remote SQL isolation were not revalidated.
+
+## Historical snapshots
+
 Last verified: 2026-09-10.
 
 ## PRODUCT RESET MILESTONE 3A-2 COMPLETE - CONTEXTUAL CV ONBOARDING
