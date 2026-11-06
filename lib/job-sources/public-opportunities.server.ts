@@ -1,5 +1,7 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import type { SearchIntent } from "@/lib/intent-first";
 import { loadPublicOpportunityCatalog, type PublicCatalogOffer } from "@/lib/job-sources/public-catalog.server";
 import { evaluatePublicSearchIntent } from "@/lib/matching/engine";
@@ -17,6 +19,9 @@ export type PublicOpportunity = {
   companyName: string | null;
   sourceName: string;
   intentScore: number;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
 };
 
 export type PublicOpportunitiesResult = {
@@ -76,6 +81,9 @@ export async function searchPublicOpportunities(
       companyName: offer.companyName,
       sourceName: offer.sourceName,
       intentScore: evaluation.score,
+      salaryMin: offer.salaryMin,
+      salaryMax: offer.salaryMax,
+      salaryCurrency: offer.salaryCurrency,
     });
   }
   const relevanceMs = performance.now() - relevanceStartedAt;
@@ -110,4 +118,17 @@ export async function searchPublicOpportunities(
     titles: output.opportunities.slice(0, 10).map((opportunity) => opportunity.title),
   }));
   return output;
+}
+
+/**
+ * Keeps the public landing handoff server-side. The action warms this exact
+ * result and the destination route reads the same short-lived value instead
+ * of performing a second catalog/matching pass during navigation.
+ */
+export function searchPublicOpportunitiesForIntent(intent: SearchIntent) {
+  return unstable_cache(
+    () => searchPublicOpportunities(intent),
+    ["public-opportunities", intent.role, intent.location, intent.workMode],
+    { revalidate: 30 },
+  )();
 }

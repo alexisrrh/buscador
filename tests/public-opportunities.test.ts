@@ -31,7 +31,7 @@ describe("public opportunities from the persistent catalog", () => {
 
     expect(loadCatalog).toHaveBeenCalledOnce();
     expect(result).toMatchObject({ catalogOffersLoaded: 1, offersEvaluated: 1, catalogQueryMs: 3 });
-    expect(result.opportunities).toEqual([expect.objectContaining({ title: "Frontend Developer", companyName: "Catalog Company" })]);
+    expect(result.opportunities).toEqual([expect.objectContaining({ title: "Frontend Developer", companyName: "Catalog Company", salaryMin: null, salaryMax: null, salaryCurrency: null })]);
     expect(JSON.stringify(result)).not.toMatch(/compatibility|candidate_profile|search_profile|raw_payload|source_id/i);
   });
 
