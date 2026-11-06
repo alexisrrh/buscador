@@ -1,5 +1,3 @@
-
-
 import type { MatchJobOffer } from "@/lib/matching/types";
 
 export const PUBLIC_CATALOG_FRESHNESS_DAYS = 45;
@@ -66,4 +64,3 @@ export function publicCatalogOffersFromRows(rows: CatalogRow[], seenAfter: strin
     } satisfies PublicCatalogOffer];
   });
 }
-
