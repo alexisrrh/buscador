@@ -30,7 +30,8 @@ export default defineConfig({
         "lib/application-engine/{decision,questions}.ts",
         "lib/derived-resumes/{content,layout-plan}.ts",
         "lib/server/context.ts",
-        "lib/server/db/{unit-of-work,profile-repository}.ts",
+        "lib/server/search-input.ts",
+        "lib/server/db/{unit-of-work,profile-repository,search-repository}.ts",
       ],
       thresholds: {
         statements: 80,
