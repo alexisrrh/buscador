@@ -13,11 +13,25 @@ import { PostgresProfileRepository } from "@/lib/server/db/profile-repository";
 import { PostgresSearchRepository } from "@/lib/server/db/search-repository";
 import { defaultCanonicalPreferences, defaultCanonicalSearch } from "@/lib/onboarding/persistence";
 import type { SaveSearchInput } from "@/lib/server/search-input";
+import { CatalogUnitOfWork } from "@/lib/server/db/catalog-unit-of-work";
+import { PostgresJobOfferRepository } from "@/lib/server/db/job-offer-repository";
+import { PostgresCatalogReader } from "@/lib/server/db/catalog-reader";
+import { PostgresSourceRegistry } from "@/lib/server/db/source-registry";
+import type { NormalizedJobOffer } from "@/lib/job-sources/types";
+import { ingestJobSearchResults } from "@/lib/job-sources/ingestion";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
 const runtimeRole = `bv_test_${randomUUID().replaceAll("-", "")}`;
 const testPassword = "synthetic-runtime-only";
+const ingestRole = runtimeRole + "_ingest";
+const catalogRole = runtimeRole + "_public";
+let ingestPool: Pool, catalogPool: Pool;
+let ingestWork: CatalogUnitOfWork;
+let catalogWork: CatalogUnitOfWork;
+let offers: PostgresJobOfferRepository;
+let reader: PostgresCatalogReader;
+let registry: PostgresSourceRegistry;
 let admin: Pool;
 let runtime: Pool;
 let work: UnitOfWork;
@@ -52,6 +66,18 @@ beforeAll(async () => {
   expect(await applyMigrations(admin)).toEqual([]);
   await admin.query(`CREATE ROLE ${runtimeRole} LOGIN PASSWORD '${testPassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT`);
   await admin.query(`GRANT bv_app TO ${runtimeRole}`);
+  for (const [login, role] of [[ingestRole,"bv_ingest"],[catalogRole,"bv_catalog"]]) {
+    await admin.query(`CREATE ROLE ${login} LOGIN PASSWORD '${testPassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT`);
+    await admin.query(`GRANT ${role} TO ${login}`);
+  }
+  const roleUrl = new URL(raw); roleUrl.password = testPassword; roleUrl.username = ingestRole;
+  ingestPool = createDatabasePool(roleUrl.toString(),2);
+  roleUrl.username = catalogRole; catalogPool = createDatabasePool(roleUrl.toString(),1);
+  ingestWork = new CatalogUnitOfWork(ingestPool,"bv_ingest");
+  catalogWork = new CatalogUnitOfWork(catalogPool,"bv_catalog");
+  offers = new PostgresJobOfferRepository(ingestWork);
+  reader = new PostgresCatalogReader(catalogWork);
+  registry = new PostgresSourceRegistry(ingestWork);
   url.username = runtimeRole;
   url.password = testPassword;
   runtime = createDatabasePool(url.toString(), 1);
@@ -69,15 +95,142 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (ingestPool) await ingestPool.end();
+  if (catalogPool) await catalogPool.end();
   if (runtime) await runtime.end();
   if (admin) {
-    try { await admin.query(`DROP ROLE IF EXISTS ${runtimeRole}`); }
+    try { for(const role of [runtimeRole,ingestRole,catalogRole]) await admin.query(`DROP ROLE IF EXISTS ${role}`); }
     finally { await admin.end(); }
   }
   for (const directory of temporaryDirectories) {
     if (!directory.startsWith(join(tmpdir(), "bv-migrations-"))) throw new Error("Unsafe temporary path");
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+function source() { return { code: "TEST_"+randomUUID().replaceAll("-","").toUpperCase(), name:"Fuente sintética", baseUrl:"https://jobs.example.test" }; }
+function neutral(patch: Partial<NormalizedJobOffer> = {}): NormalizedJobOffer {
+  const url="https://jobs.example.test/"+randomUUID();
+  return {externalJobId:randomUUID(),title:"Frontend Developer",normalizedTitle:"frontend developer",company:{name:"Empresa Ejemplo",normalizedName:"empresa ejemplo",websiteUrl:null},
+    description:"TypeScript and React",locationText:"España",countryCode:"ES",region:null,city:null,workMode:"REMOTE",seniority:"MID",employmentType:"FULL_TIME",
+    salaryMin:35000,salaryMax:45000,salaryCurrency:"EUR",publishedAt:null,canonicalUrl:url,canonicalUrlIsReliable:true,sourceUrl:url,canonicalSourceUrl:url,status:"ACTIVE",...patch};
+}
+describe("PostgreSQL neutral ingestion and public catalogue",()=>{
+  it("persists, looks up and reingests one neutral offer without duplicating it",async()=>{
+    const src=source(),offer=neutral(),now=new Date();
+    const first=await offers.persist(src,offer,{raw_marker_secret:"private diagnostic"},now);
+    expect(first).toMatchObject({offerCreated:true,sourceCreated:true});
+    expect(await offers.findExisting(src.code,offer)).toMatchObject({jobOfferId:first.jobOfferId,matchedBy:"external_job_id"});
+    const second=await offers.persist(src,offer,{raw_marker_secret:"updated diagnostic"},new Date(now.valueOf()+1000));
+    expect(second).toMatchObject({jobOfferId:first.jobOfferId,offerCreated:false,sourceCreated:false});
+    const row=await ingestWork.run(tx=>tx.query("SELECT description_hash,last_seen_at FROM public.job_offers WHERE id=$1",[first.jobOfferId]));
+    expect(row.rows[0].description_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(row.rows[0].last_seen_at.valueOf()).toBe(now.valueOf()+1000);
+    const publicRows=await reader.load({now:new Date(now.valueOf()+1000),limit:1000});
+    expect(publicRows.find(x=>x.id===first.jobOfferId)).toMatchObject({title:offer.title,companyName:"Empresa Ejemplo",sourceUrl:offer.sourceUrl,salaryMin:35000});
+    expect(JSON.stringify(publicRows)).not.toContain("raw_marker_secret");
+  });
+  it("deduplicates a reliable canonical URL across providers but not an unreliable one",async()=>{
+    const firstSource=source(),secondSource=source(),offer=neutral();
+    const first=await offers.persist(firstSource,offer,{},new Date());
+    const second=await offers.persist(secondSource,{...offer,externalJobId:randomUUID()}, {},new Date());
+    expect(second).toMatchObject({jobOfferId:first.jobOfferId,offerCreated:false,sourceCreated:true});
+    const unreliable=neutral({canonicalUrl:offer.canonicalUrl,canonicalUrlIsReliable:false});
+    const third=await offers.persist(source(),unreliable,{},new Date());expect(third.jobOfferId).not.toBe(first.jobOfferId);
+  });
+  it("serializes concurrent retries into one offer/source",async()=>{
+    const src=source(),offer=neutral();
+    const results=await Promise.all([offers.persist(src,offer,{},new Date()),offers.persist(src,offer,{},new Date())]);
+    expect(new Set(results.map(x=>x.jobOfferId)).size).toBe(1);
+    expect(results.filter(x=>x.offerCreated)).toHaveLength(1);
+  });
+  it("uses canonical source URL when an external ID is absent",async()=>{
+    const src=source(),offer=neutral({externalJobId:null,canonicalUrlIsReliable:false});
+    await offers.persist(src,offer,{},new Date());
+    expect(await offers.findExisting(src.code,offer)).toMatchObject({matchedBy:"canonical_source_url"});
+  });
+  it("supports mixed valid/invalid batches and reports unchanged/updated outcomes",async()=>{
+    const src=source(),offer=neutral(),invalid=neutral({salaryMin:-1});
+    const batch=await offers.persistBatch(src,[{offer,rawPayload:{n:1}},{offer:invalid,rawPayload:{n:2}}],new Date());
+    expect(batch.errors).toBe(1);expect(batch.results).toHaveLength(1);expect(batch.results[0]).toMatchObject({inputIndex:0,outcome:"CREATED"});
+    expect(await offers.findExisting(src.code,invalid)).toBeNull();
+    const repeated=await offers.persistBatch(src,[{offer,rawPayload:{n:3}}],new Date());
+    expect(repeated.results[0].outcome).toBe("UNCHANGED");
+    const edited=await offers.persistBatch(src,[{offer:{...offer,description:"Updated requirement: PostgreSQL"},rawPayload:{n:4}}],new Date());
+    expect(edited.results[0].outcome).toBe("UPDATED");
+    expect(await offers.findExistingBatch(src.code,[offer,invalid])).toEqual([expect.objectContaining({jobOfferId:batch.results[0].jobOfferId}),null]);
+  });
+  it("reuses the existing ingestion engine with normalized fixture data and no network",async()=>{
+    const src=source(),offer=neutral();
+    const report=await ingestJobSearchResults({sourceCode:src.code,sourceName:src.name,sourceBaseUrl:src.baseUrl,
+      search:async()=>({offers:[offer],stats:{pagesRequested:1,offersReceived:1}}),normalize:(value:NormalizedJobOffer)=>value},offers,{});
+    expect(report).toMatchObject({offers_created:1,errors:0});expect(report.matching_job_offer_ids).toHaveLength(1);
+  });
+  it("registers all supported boards, records health and never reenables a disabled board",async()=>{
+    const id=await registry.register({companyName:"Empresa Tablero",platform:"LEVER",identifier:"example",careersUrl:"https://jobs.lever.co/example"});
+    expect(await registry.register({companyName:"Empresa Tablero",platform:"LEVER",identifier:"example",careersUrl:"https://jobs.lever.co/example"})).toBe(id);
+    await offers.recordCompanyCareerSourceCheck(id,{success:false,errorCode:"SOURCE_TIMEOUT",checkedAt:new Date()});
+    expect((await registry.list()).find(x=>x.id===id)).toMatchObject({status:"DEGRADED",lastErrorCode:"SOURCE_TIMEOUT"});
+    await offers.recordCompanyCareerSourceCheck(id,{success:true,errorCode:null,checkedAt:new Date()});
+    expect((await registry.list()).find(x=>x.id===id)).toMatchObject({status:"ACTIVE",lastErrorCode:null});
+    await ingestWork.run(tx=>tx.query("UPDATE public.company_career_sources SET enabled=false,status='DISABLED' WHERE id=$1",[id]));
+    await registry.register({companyName:"Empresa Tablero",platform:"LEVER",identifier:"example",careersUrl:"https://jobs.lever.co/example"});
+    expect((await registry.list()).find(x=>x.id===id)).toMatchObject({enabled:false,status:"DISABLED"});
+    await expect(offers.persist({code:"LEVER",name:"Lever",baseUrl:"https://jobs.lever.co",companyCareerSourceId:id},neutral(),{},new Date())).rejects.toThrow("42501");
+    for(const platform of ["ASHBY","GREENHOUSE","SMARTRECRUITERS","JOBGETHER","JOBICY"] as const) {
+      expect(await registry.register({companyName:"Empresa "+platform,platform,identifier:"example",careersUrl:"https://example.test/jobs"})).toBeTruthy();
+    }
+  });
+  it("rejects provider/platform mismatches and rolls back collisions between boards",async()=>{
+    const one=await registry.register({companyName:"Tablero Uno",platform:"ASHBY",identifier:"one",careersUrl:"https://jobs.ashbyhq.com/one"});
+    const two=await registry.register({companyName:"Tablero Dos",platform:"ASHBY",identifier:"two",careersUrl:"https://jobs.ashbyhq.com/two"});
+    const src={code:"ASHBY",name:"Ashby",baseUrl:"https://jobs.ashbyhq.com",companyCareerSourceId:one};
+    const offer=neutral();const saved=await offers.persist(src,offer,{},new Date());
+    await expect(offers.persist({...src,companyCareerSourceId:two},{...offer,title:"must not overwrite"},{},new Date())).rejects.toThrow("23505");
+    expect((await ingestWork.run(tx=>tx.query("SELECT title FROM public.job_offers WHERE id=$1",[saved.jobOfferId]))).rows[0].title).toBe(offer.title);
+    await expect(offers.persist({...src,code:"LEVER"},neutral(),{},new Date())).rejects.toThrow("23514");
+  });
+  it("hides expired, removed, stale and disabled-source offers from public readers",async()=>{
+    const now=new Date(),ids:string[]=[];
+    for(const status of ["EXPIRED","REMOVED"] as const) ids.push((await offers.persist(source(),neutral({status}),{},now)).jobOfferId);
+    ids.push((await offers.persist(source(),neutral(),{},new Date(now.valueOf()-60*86400000))).jobOfferId);
+    const src=source();const disabled=await offers.persist(src,neutral(),{},now);ids.push(disabled.jobOfferId);
+    await ingestWork.run(tx=>tx.query("UPDATE public.job_sources SET enabled=false WHERE code=$1",[src.code]));
+    await expect(offers.persist(src,neutral(),{},now)).rejects.toThrow("42501");
+    const expired=await offers.persist(source(),neutral(),{},now);ids.push(expired.jobOfferId);
+    await ingestWork.run(tx=>tx.query("UPDATE public.job_offers SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.jobOfferId]));
+    expect((await reader.load({now,limit:1000})).some(x=>ids.includes(x.id))).toBe(false);
+  });
+  it("keeps last_seen monotonic and rejects unsafe public URLs",async()=>{
+    const src=source(),offer=neutral(),now=new Date();const saved=await offers.persist(src,offer,{},now);
+    await offers.persist(src,offer,{},new Date(now.valueOf()-1000));
+    expect((await ingestWork.run(tx=>tx.query("SELECT last_seen_at FROM public.job_offers WHERE id=$1",[saved.jobOfferId]))).rows[0].last_seen_at.valueOf()).toBe(now.valueOf());
+    await expect(offers.persist(source(),neutral({sourceUrl:"javascript:alert(1)"}),{},now)).rejects.toThrow("23514");
+  });
+  it.each(["profiles","candidate_profiles","search_profiles","job_preferences"])("both neutral roles cannot read private %s",async table=>{
+    await expect(ingestPool.query(`SELECT id FROM public.${table}`)).rejects.toMatchObject({code:"42501"});
+    await expect(catalogPool.query(`SELECT id FROM public.${table}`)).rejects.toMatchObject({code:"42501"});
+  });
+  it("denies raw payload, source health, writes and ingestion functions to the public role",async()=>{
+    for(const sql of ["SELECT raw_payload FROM public.job_offer_sources","SELECT last_error_code FROM public.company_career_sources",
+      "INSERT INTO public.companies(name) VALUES('forbidden')","SELECT app.ingest_job_offer('{}'::jsonb,now())"]) {
+      await expect(catalogPool.query(sql)).rejects.toMatchObject({code:"42501"});
+    }
+    await expect(runtime.query("SELECT app.ingest_job_offer('{}'::jsonb,now())")).rejects.toMatchObject({code:"42501"});
+    await expect(ingestPool.query("TRUNCATE public.job_offers CASCADE")).rejects.toMatchObject({code:"42501"});
+  });
+  it("rejects privileged, private or mixed credentials in neutral transactions",async()=>{
+    await expect(new CatalogUnitOfWork(admin,"bv_ingest").run(tx=>tx.query("SELECT 1"))).rejects.toThrow("UNSAFE_CATALOG_ROLE");
+    await expect(new CatalogUnitOfWork(runtime,"bv_ingest").run(tx=>tx.query("SELECT 1"))).rejects.toThrow("UNSAFE_CATALOG_ROLE");
+    await expect(new UnitOfWork(ingestPool).withActor(actorA,tx=>tx.query("SELECT 1"))).rejects.toThrow("UNSAFE_DATABASE_ROLE");
+    await admin.query(`GRANT bv_app TO ${ingestRole}`);
+    try { await expect(ingestWork.run(tx=>tx.query("SELECT 1"))).rejects.toThrow("UNSAFE_CATALOG_ROLE"); }
+    finally { await admin.query(`REVOKE bv_app FROM ${ingestRole}`); }
+    await admin.query(`ALTER ROLE ${ingestRole} CREATEROLE`);
+    try { await expect(ingestWork.run(tx=>tx.query("SELECT 1"))).rejects.toThrow("UNSAFE_CATALOG_ROLE"); }
+    finally { await admin.query(`ALTER ROLE ${ingestRole} NOCREATEROLE`); }
+    expect((await catalogPool.query("SELECT current_setting('app.user_id',true) AS id")).rows[0].id??"").toBe("");
+  });
 });
 
 describe("real PostgreSQL tenant isolation", () => {

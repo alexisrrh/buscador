@@ -9,7 +9,7 @@ Use `../PRIORITY_CHECKLIST.md` as the current sequence under the user-adopted re
 - [x] Task 03: coherent local checkpoints on `chore/checkpoint-base-20261106`, reconstructed-tree validation and asset retention policy. Both stashes and main preserved; see `../checkpoint-baseline-2026-11-06.md`.
 - [x] Task 04: architecture transition design and static dependency map complete. See `../architecture/TRANSITION_PLAN.md`; no runtime migration performed.
 - [x] Task 05: CI local/Ubuntu and four 80% business thresholds verified; develop/main protections active and verified; PR #1 merged into develop; author Self Review and CI required in develop. main retains peer approval. See `../ci-quality-gates.md`.
-- [ ] Task 06: 06A merged in develop via PR #2; 06B adds searches/preferences with versions and isolation (../../db/SEARCH_PREFERENCES.md). Verify PostgreSQL CI, then catalogue/ingestion and remaining entities. Full task remains open.
+- [ ] Task 06: 06A/06B merged in develop via PR #2/#3; 06C prepares neutral catalogue/ingestion (../../db/CATALOG_INGESTION.md). Verify PostgreSQL CI, then matching, resumes/evidence, applications and full import. Source identity remains task 14.
 - [ ] Task 07 onward: continue identity/storage transition only with the corresponding acceptance gates.
 
 ## NOW - Source Coverage / Persistent Ingestion
