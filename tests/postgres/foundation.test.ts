@@ -19,6 +19,9 @@ import { PostgresCatalogReader } from "@/lib/server/db/catalog-reader";
 import { PostgresSourceRegistry } from "@/lib/server/db/source-registry";
 import type { NormalizedJobOffer } from "@/lib/job-sources/types";
 import { ingestJobSearchResults } from "@/lib/job-sources/ingestion";
+import { PostgresMatchingRepository } from "@/lib/server/db/matching-repository";
+import { matchJobOfferToSearchProfile } from "@/lib/matching/engine";
+import { generateMatchesForSearchProfile } from "@/lib/matching/service";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -207,7 +210,7 @@ describe("PostgreSQL neutral ingestion and public catalogue",()=>{
     expect((await ingestWork.run(tx=>tx.query("SELECT last_seen_at FROM public.job_offers WHERE id=$1",[saved.jobOfferId]))).rows[0].last_seen_at.valueOf()).toBe(now.valueOf());
     await expect(offers.persist(source(),neutral({sourceUrl:"javascript:alert(1)"}),{},now)).rejects.toThrow("23514");
   });
-  it.each(["profiles","candidate_profiles","search_profiles","job_preferences"])("both neutral roles cannot read private %s",async table=>{
+  it.each(["profiles","candidate_profiles","search_profiles","job_preferences","job_matches"])("both neutral roles cannot read private %s",async table=>{
     await expect(ingestPool.query(`SELECT id FROM public.${table}`)).rejects.toMatchObject({code:"42501"});
     await expect(catalogPool.query(`SELECT id FROM public.${table}`)).rejects.toMatchObject({code:"42501"});
   });
@@ -509,5 +512,86 @@ describe("PostgreSQL searches and versioned preferences", () => {
       app.calculate_search_next_run('DAILY','{"time":"09:00"}','Europe/Madrid','2026-11-06T09:00:00Z') AS daily`));
     expect(result.rows[0].weekday.toISOString()).toBe("2026-11-09T09:00:00.000Z");
     expect(result.rows[0].daily.toISOString()).toBe("2026-11-07T08:00:00.000Z");
+  });
+});
+
+describe("PostgreSQL matching using the existing deterministic engine",()=>{
+  async function matchingFixture() {
+    const saved=await searches.save(actorA,draft());
+    await searches.transition(actorA,saved.search.id,1,"ACTIVE");
+    const repo=new PostgresMatchingRepository(work,catalogWork,actorA);
+    const context=await repo.loadSearchContext(saved.search.id,A);
+    const persisted=await offers.persist(source(),neutral(),{},new Date());
+    const offer=(await repo.loadRecentActiveOffers({limit:5000,seenAfter:new Date(Date.now()-86400000).toISOString()})).find(o=>o.id===persisted.jobOfferId)!;
+    expect(offer).toBeDefined();
+    const result=matchJobOfferToSearchProfile({...context,offer});
+    return {repo,context,saved,input:{searchProfileId:saved.search.id,jobOfferId:offer.id,result}};
+  }
+  async function stored(searchId:string) {
+    return (await work.withActor(actorA,tx=>tx.query("SELECT * FROM public.job_matches WHERE search_profile_id=$1 ORDER BY created_at,id",[searchId]))).rows;
+  }
+  it("persists the unchanged engine output and upserts without duplicating the result",async()=>{
+    const f=await matchingFixture();expect(await f.repo.upsertMatch(f.input)).toEqual({created:true});
+    expect(await f.repo.upsertMatch(f.input)).toEqual({created:false});
+    const rows=await stored(f.saved.search.id);expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({user_id:A,candidate_profile_id:candidateA,search_profile_version:1,scoring_version:"deterministic-v2",
+      score:f.input.result.score,eligibility_status:f.input.result.eligibility,score_components:f.input.result.components,
+      hard_gates:f.input.result.hardGates,reasons:f.input.result.reasons,status:"NEW"});
+    expect(await f.repo.loadExistingMatchOfferIds({searchProfileId:f.saved.search.id,searchProfileVersion:1,scoringVersion:"deterministic-v2"})).toEqual(new Set([f.input.jobOfferId]));
+  });
+  it("runs the existing matching service against the new repository and skips unchanged offers",async()=>{
+    const f=await matchingFixture();
+    const first=await generateMatchesForSearchProfile(f.repo,A,f.saved.search.id,{limit:5000});
+    expect(first.offersProcessed).toBeGreaterThan(0);expect(first.matchesCreated).toBe(first.offersProcessed);
+    const second=await generateMatchesForSearchProfile(f.repo,A,f.saved.search.id,{limit:5000,changedJobOfferIds:[]});
+    expect(second.offersProcessed).toBe(0);expect(second.matchesSkipped).toBe(first.offersProcessed);
+  });
+  it("isolates two users even for direct SQL without a user filter",async()=>{
+    const f=await matchingFixture();await f.repo.upsertMatch(f.input);
+    const row=(await stored(f.saved.search.id))[0];
+    const other=new PostgresMatchingRepository(work,catalogWork,actorB);
+    await expect(other.loadSearchContext(f.saved.search.id,B)).rejects.toThrow("MATCH_SEARCH_NOT_FOUND");
+    await expect(other.loadSearchContext(f.saved.search.id,A)).rejects.toThrow("MATCH_SEARCH_NOT_FOUND");
+    expect((await work.withActor(actorB,tx=>tx.query("SELECT id FROM public.job_matches WHERE id=$1",[row.id]))).rows).toEqual([]);
+    await expect(other.setStatus(row.id,"DISMISSED")).rejects.toThrow("MATCH_NOT_FOUND");
+    await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET user_id=$1 WHERE id=$2",[B,row.id]))).rejects.toMatchObject({code:"42501"});
+  });
+  it("rejects stale calculations after a preference edit and keeps both snapshots",async()=>{
+    const f=await matchingFixture();await f.repo.upsertMatch(f.input);
+    await searches.save(actorA,{...draft(),searchId:f.saved.search.id,expectedVersion:1});
+    await expect(f.repo.upsertMatch(f.input)).rejects.toThrow("MATCH_SEARCH_VERSION_CONFLICT");
+    const context=await f.repo.loadSearchContext(f.saved.search.id,A);expect(context.search.version).toBe(2);
+    await f.repo.upsertMatch(f.input);expect((await stored(f.saved.search.id)).map(x=>x.search_profile_version)).toEqual([1,2]);
+  });
+  it("rejects paused searches and rolls back a batch containing a nonexistent offer",async()=>{
+    const f=await matchingFixture();
+    await expect(f.repo.upsertMatches([f.input,{...f.input,jobOfferId:randomUUID()}])).rejects.toMatchObject({code:"23503"});
+    expect(await stored(f.saved.search.id)).toHaveLength(0);
+    await searches.transition(actorA,f.saved.search.id,1,"PAUSED");
+    await expect(f.repo.upsertMatch(f.input)).rejects.toThrow("MATCH_SEARCH_NOT_FOUND");
+  });
+  it.each(["SAVED","DISMISSED","APPLIED"] as const)("preserves %s during rescoring and inherits only within a preference snapshot",async status=>{
+    const f=await matchingFixture();await f.repo.upsertMatch(f.input);
+    const row=(await stored(f.saved.search.id))[0];await f.repo.setStatus(row.id,status);
+    await f.repo.upsertMatch(f.input);expect((await stored(f.saved.search.id))[0].status).toBe(status);
+    // Legacy import fixture: v1 decisions carry to v2 scoring within the same search version.
+    await work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET scoring_version='deterministic-v1' WHERE id=$1",[row.id]));
+    await f.repo.upsertMatch(f.input);expect((await stored(f.saved.search.id)).map(x=>x.status)).toEqual([status,status]);
+    await searches.save(actorA,{...draft(),searchId:f.saved.search.id,expectedVersion:1});
+    await f.repo.loadSearchContext(f.saved.search.id,A);await f.repo.upsertMatch(f.input);
+    expect((await stored(f.saved.search.id)).find(x=>x.search_profile_version===2)?.status).toBe("NEW");
+  });
+  it("serializes concurrent upserts into a single identity",async()=>{
+    const f=await matchingFixture();const second=new PostgresMatchingRepository(work,catalogWork,actorA);
+    await second.loadSearchContext(f.saved.search.id,A);
+    const results=await Promise.all([f.repo.upsertMatch(f.input),second.upsertMatch(f.input)]);
+    expect(results.filter(x=>x.created)).toHaveLength(1);expect(await stored(f.saved.search.id)).toHaveLength(1);
+  });
+  it("denies missing tenant context and validates scores and preference references",async()=>{
+    const f=await matchingFixture();await f.repo.upsertMatch(f.input);const row=(await stored(f.saved.search.id))[0];
+    expect((await runtime.query("SELECT id FROM public.job_matches")).rows).toEqual([]);
+    await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET score=101 WHERE id=$1",[row.id]))).rejects.toMatchObject({code:"23514"});
+    await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET search_profile_version=99 WHERE id=$1",[row.id]))).rejects.toMatchObject({code:"23503"});
+    await expect(work.withActor(actorA,tx=>tx.query("SELECT * FROM public.job_offers"))).rejects.toMatchObject({code:"42501"});
   });
 });
