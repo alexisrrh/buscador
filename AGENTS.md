@@ -112,6 +112,14 @@ Esta estructura es una referencia. Antes de crear carpetas o archivos, revisar l
 
 ## Flujo de trabajo
 
+### Mensajes de commit
+
+- Seguir [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
+- Mantener el tipo en inglés: `feat`, `fix`, `docs`, `ci`, `test`, `refactor`, `perf`, `build`, `chore`, `style` o `revert`.
+- Escribir la descripción y el cuerpo en español. Si se usa un alcance, escribirlo en español salvo nombres técnicos del proyecto.
+- Formato: `tipo(alcance opcional): descripción en español`. Ejemplos: `feat: permitir guardar una búsqueda`, `fix: corregir el acceso a documentos`, `ci: añadir controles de calidad`.
+- Indicar cambios incompatibles con `!` antes de los dos puntos; conservar identificadores de archivos, APIs y otros nombres técnicos cuando corresponda.
+
 ### Antes de modificar código
 
 1. Comprender la funcionalidad solicitada.
