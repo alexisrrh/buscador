@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-06 Tarea 06A: base PostgreSQL y autorización
+
+PR #1 integrado por el usuario en develop (5c16ffc). Rama nueva desde develop: feat/base-postgresql-autorizacion. Primera entrega de tarea 06: actor de servidor validado, pool, transacciones con contexto local, roles mínimos/RLS, perfiles y migrador portable con ledger/checksum. Ver ../../db/README.md. No está conectado a las rutas actuales ni a Better Auth; Supabase sigue activo.
+
+Control local: 409 pruebas aprobadas, 15 omitidas; lint/tipos/build correctos; cobertura por encima del 80 % en cuatro métricas. 18 pruebas reales PostgreSQL añadidas al Quality gate con servicio temporal de PG17; resultados remotos se registran en el PR. Docker local no respondió. La tarea 06 permanece en curso: faltan 20 tablas y repositorios, contratos, importación y aceptación integral.
+
 ## 2026-11-06 Flujo individual en develop
 
 El usuario trabaja solo y autoriza adaptar develop: PR y Quality gate obligatorios, sin aprobación de otra cuenta ni del último push. Self Review y decisión de integración por el autor; no simular revisión independiente. Verificación GET confirma que el resto de protecciones y la configuración completa de main se conservan. main aún exige una aprobación externa. Esta decisión sustituye el bloqueo por revisión de develop descrito en el registro anterior. PR #1 continúa abierto, sin integración automática.

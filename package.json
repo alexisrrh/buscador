@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "next typegen && tsc --noEmit",
     "test:coverage": "vitest run --coverage",
+    "test:db": "vitest run --config vitest.database.config.ts",
+    "db:migrate": "node scripts/migrate-database.mjs",
     "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
     "next": "16.3.3",
     "pdf-parse": "^2.4.5",
     "pdfmake": "^0.2.20",
+    "pg": "8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "three": "^0.186.0"
@@ -31,6 +34,7 @@
     "@testing-library/user-event": "latest",
     "@types/node": "latest",
     "@types/pdfmake": "^0.2.12",
+    "@types/pg": "8.23.1",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@types/three": "^0.186.0",
