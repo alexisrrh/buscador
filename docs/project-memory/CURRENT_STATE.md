@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 Tarea 07A: núcleo Better Auth
+
+PR #12 integrado por el usuario en develop (1feb30e). Base integrada: 527 pruebas generales aprobadas, 15 omitidas y 101 PostgreSQL. Rama feat/better-auth-base desde ese merge; Better Auth 1.7.18, esquema identity con cinco tablas y rol bv_auth separado, sesiones/recuperación/verificación y puente de actor sin caché. Ver ../../db/AUTHENTICATION.md; resultados finales del nuevo commit en el PR.
+
+07A prepara el núcleo sin montar rutas ni cambiar formularios. 07B debe completar FK de identidad/importación, UI/acciones, correo durable y recorrido completo. Tareas 07 y 06 abiertas; Supabase continúa activo, después 08/06H. Next.js/eslint-config-next 16.4.5 y Vitest/coverage 4.1.12 para mitigar avisos de dependencias: producción sin avisos; ocho moderados de herramientas de desarrollo pendientes de tarea 26. Sin datos ni correos reales.
+
 ## 2026-11-09 Tarea 06G: contratos y laboratorio sintético
 
 PR #10 fusionado por el usuario en main (76f6d33); PR #11 integrado antes en develop (98841ad). Rama feat/contratos-importacion-sintetica desde develop, sincronizada por fast-forward con el merge de main tras comprobar árboles idénticos. Mapa de 22 tablas/34 funciones, checksums SQL, auditoría acotada de metadatos y cargador de 52 filas sintéticas con roles/RLS, replay/digest, rollback y detección de drift. Ver ../../db/TRANSITION_LAB.md.

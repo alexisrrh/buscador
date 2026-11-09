@@ -14,11 +14,20 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bv_catalog') THEN
     CREATE ROLE bv_catalog NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bv_auth') THEN
+    CREATE ROLE bv_auth NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+  END IF;
   IF EXISTS (
-    SELECT 1 FROM pg_roles WHERE rolname IN ('bv_owner', 'bv_app', 'bv_ingest', 'bv_catalog')
+    SELECT 1 FROM pg_roles WHERE rolname IN ('bv_owner', 'bv_app', 'bv_ingest', 'bv_catalog', 'bv_auth')
     AND (rolcanlogin OR rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls)
   ) OR pg_has_role('bv_app', 'bv_owner', 'MEMBER') THEN
     RAISE EXCEPTION 'Unsafe existing BuscaVacante roles';
+  END IF;
+  IF pg_has_role('bv_auth','bv_owner','MEMBER') OR pg_has_role('bv_auth','bv_app','MEMBER')
+     OR pg_has_role('bv_auth','bv_ingest','MEMBER') OR pg_has_role('bv_auth','bv_catalog','MEMBER')
+     OR pg_has_role('bv_owner','bv_auth','MEMBER') OR pg_has_role('bv_app','bv_auth','MEMBER')
+     OR pg_has_role('bv_ingest','bv_auth','MEMBER') OR pg_has_role('bv_catalog','bv_auth','MEMBER') THEN
+    RAISE EXCEPTION 'Authentication role must remain separate';
   END IF;
   IF pg_has_role('bv_ingest','bv_owner','MEMBER') OR pg_has_role('bv_ingest','bv_app','MEMBER')
      OR pg_has_role('bv_catalog','bv_owner','MEMBER') OR pg_has_role('bv_catalog','bv_app','MEMBER')
@@ -29,6 +38,9 @@ END $$;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 GRANT USAGE, CREATE ON SCHEMA public TO bv_owner;
 CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION bv_owner;
+CREATE SCHEMA IF NOT EXISTS identity AUTHORIZATION bv_owner;
+REVOKE ALL ON SCHEMA identity FROM PUBLIC;
+GRANT USAGE ON SCHEMA identity TO bv_auth;
 REVOKE ALL ON SCHEMA app FROM PUBLIC;
 GRANT USAGE ON SCHEMA app, public TO bv_app;
 GRANT USAGE ON SCHEMA app, public TO bv_ingest, bv_catalog;

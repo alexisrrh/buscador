@@ -24,7 +24,8 @@ export class UnitOfWork {
       await client.query("SET LOCAL lock_timeout = '2s'");
       const role = await client.query<{ unsafe: boolean }>(`
         SELECT rolsuper OR rolbypassrls OR rolcreatedb OR rolcreaterole OR rolreplication OR pg_has_role(current_user, 'bv_owner', 'MEMBER')
-          OR pg_has_role(current_user,'bv_ingest','MEMBER') OR pg_has_role(current_user,'bv_catalog','MEMBER') AS unsafe
+          OR pg_has_role(current_user,'bv_ingest','MEMBER') OR pg_has_role(current_user,'bv_catalog','MEMBER')
+          OR pg_has_role(current_user,'bv_auth','MEMBER') AS unsafe
         FROM pg_roles WHERE rolname = current_user
       `);
       if (role.rows.length !== 1 || role.rows[0].unsafe) {
