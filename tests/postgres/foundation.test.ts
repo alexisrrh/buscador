@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, writeFile, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -22,6 +22,8 @@ import { ingestJobSearchResults } from "@/lib/job-sources/ingestion";
 import { PostgresMatchingRepository } from "@/lib/server/db/matching-repository";
 import { matchJobOfferToSearchProfile } from "@/lib/matching/engine";
 import { generateMatchesForSearchProfile } from "@/lib/matching/service";
+import { PostgresResumeRepository } from "@/lib/server/db/resume-repository";
+import { PostgresEvidenceRepository } from "@/lib/server/db/evidence-repository";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -606,5 +608,97 @@ describe("PostgreSQL matching using the existing deterministic engine",()=>{
     await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET score=101 WHERE id=$1",[row.id]))).rejects.toMatchObject({code:"23514"});
     await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.job_matches SET search_profile_version=99 WHERE id=$1",[row.id]))).rejects.toMatchObject({code:"23503"});
     await expect(work.withActor(actorA,tx=>tx.query("SELECT * FROM public.job_offers"))).rejects.toMatchObject({code:"42501"});
+  });
+});
+
+
+describe('PostgreSQL CV and evidence persistence',()=>{
+  function pdf() { const bytes=new Uint8Array(Buffer.from('%PDF-1.7 synthetic '+randomUUID()));return {bytes,metadata:{filename:'cv.pdf',mimeType:'application/pdf',size:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')}}; }
+  function repositories() { return {cv:new PostgresResumeRepository(work),bank:new PostgresEvidenceRepository(work)}; }
+  async function ready() {
+    const {cv,bank}=repositories(), file=pdf();
+    const row=await cv.register(actorA,candidateA,file.metadata);
+    await cv.finalizeUpload(actorA,row.id,{read:async()=>file.bytes});
+    return {cv,bank,file,row};
+  }
+  it('allocates versions and returns the same live metadata for a repeated hash',async()=>{
+    const f=await ready();const again=await f.cv.register(actorA,candidateA,f.file.metadata);
+    expect(again.id).toBe(f.row.id);expect(again.file_size_bytes).toBe(f.file.bytes.length);
+    const next=await f.cv.register(actorA,candidateA,pdf().metadata);expect(next.version).toBe(f.row.version+1);
+    expect(next.storage_path).toContain('/v'+next.version+'/resume.pdf');
+    expect(next.status).toBe('DRAFT');
+  });
+  it('cannot approve staged metadata or extract before upload verification',async()=>{
+    const {cv}=repositories();const file=pdf(), row=await cv.register(actorA,candidateA,file.metadata);
+    await expect(cv.approve(actorA,row.id)).rejects.toThrow('RESUME_NOT_READY');
+    await expect(cv.saveExtraction(actorA,row.id,{extractorVersion:'test',text:'hello',structured:{lines:['hello']}})).rejects.toThrow('RESUME_NOT_READY');
+    expect((await cv.find(actorA,row.id))?.status).toBe('DRAFT');
+  });
+  it('retains the approved file after an invalid replacement and swaps approval atomically',async()=>{
+    const f=await ready();await f.cv.approve(actorA,f.row.id);
+    const nextFile=pdf(), next=await f.cv.register(actorA,candidateA,nextFile.metadata);
+    await expect(f.cv.finalizeUpload(actorA,next.id,{read:async()=>f.file.bytes})).rejects.toThrow('RESUME_INTEGRITY_FAILED');
+    await expect(f.cv.approve(actorA,next.id)).rejects.toThrow('RESUME_NOT_READY');
+    expect((await f.cv.find(actorA,f.row.id))?.status).toBe('APPROVED');
+    await f.cv.finalizeUpload(actorA,next.id,{read:async()=>nextFile.bytes});await f.cv.approve(actorA,next.id);
+    expect((await f.cv.find(actorA,f.row.id))?.status).toBe('ARCHIVED');expect((await f.cv.find(actorA,next.id))?.status).toBe('APPROVED');
+  });
+  it('rejects a matching hash with an invalid signature and preserves staged status',async()=>{
+    const {cv}=repositories(), bytes=new Uint8Array(Buffer.from('This is not a PDF'));
+    const row=await cv.register(actorA,candidateA,{filename:'cv.pdf',mimeType:'application/pdf',size:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
+    await expect(cv.finalizeUpload(actorA,row.id,{read:async()=>bytes})).rejects.toThrow('RESUME_SIGNATURE_INVALID');
+    expect((await cv.find(actorA,row.id))?.status).toBe('DRAFT');
+  });
+  it('keeps immutable extraction snapshots and never bootstraps evidence from file approval',async()=>{
+    const f=await ready();await f.cv.approve(actorA,f.row.id);
+    const input={extractorVersion:'test-v1',text:'Experience',structured:{lines:['Experience']}};
+    const id=await f.cv.saveExtraction(actorA,f.row.id,input);expect(await f.cv.saveExtraction(actorA,f.row.id,input)).toBe(id);
+    await expect(f.cv.saveExtraction(actorA,f.row.id,{...input,text:'Changed'})).rejects.toThrow('EXTRACTION_VERSION_CONFLICT');
+    const second=await f.cv.saveExtraction(actorA,f.row.id,{...input,extractorVersion:'test-v2'});expect(second).not.toBe(id);
+    await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.resume_extractions SET extracted_text=$1 WHERE id=$2',['Changed',id]))).rejects.toMatchObject({code:'23514'});
+    expect((await work.withActor(actorA,tx=>tx.query("SELECT count(*)::int AS count FROM public.professional_evidence_items WHERE source_reference LIKE $1",['%'+f.row.id+'%']))).rows[0].count).toBe(0);
+  });
+  it('isolates CV, extracted text and evidence between users and denies missing context',async()=>{
+    const f=await ready();await f.cv.saveExtraction(actorA,f.row.id,{extractorVersion:'test',text:'private',structured:{lines:['private']}});
+    expect(await f.cv.find(actorB,f.row.id)).toBeNull();
+    await expect(f.cv.register(actorB,candidateA,pdf().metadata)).rejects.toThrow('RESUME_CANDIDATE_NOT_FOUND');
+    for(const table of ['resumes','resume_extractions','professional_evidence_profiles','professional_evidence_items','professional_evidence_urls']) {
+      expect((await runtime.query('SELECT id FROM public.'+table)).rows).toEqual([]);
+      expect((await work.withActor(actorB,tx=>tx.query('SELECT id FROM public.'+table+' WHERE user_id=$1',[A]))).rows).toEqual([]);
+      for(const neutral of [catalogWork,ingestWork]) await expect(neutral.run(tx=>tx.query('SELECT id FROM public.'+table))).rejects.toMatchObject({code:'42501'});
+    }
+  });
+  it('returns the existing evidence bank contract after explicit confirmation',async()=>{
+    const {bank}=repositories();const candidate=await repository.createCandidate(actorA,'Evidencia aislada');
+    const subject=await bank.createSubject(actorA,candidate.id,{subjectType:'PROJECT',displayName:'Proyecto real'});
+    const item=await bank.addConfirmedClaim(actorA,subject,{category:'TECHNOLOGY',exactClaim:'Usé TypeScript',sourceReference:'Declaración explícita',relevanceTags:['typescript'],confirmed:true});
+    await bank.addConfirmedUrl(actorA,subject,{url:'https://example.test/demo',urlType:'DEMO',sourceReference:'Declaración explícita',confirmed:true});
+    const loaded=await bank.loadBank(actorA,candidate.id);expect(loaded.items).toHaveLength(1);
+    expect(loaded.items[0]).toMatchObject({id:item,profile_id:subject,subject_type:'PROJECT',display_name:'Proyecto real',source_type:'USER_CONFIRMED',verification_status:'VERIFIED',exact_claim:'Usé TypeScript'});
+    expect(loaded.items[0].confirmed_at).toBeTruthy();
+    await expect(bank.archiveSubject(actorB,subject)).rejects.toThrow('EVIDENCE_SUBJECT_NOT_FOUND');
+    await bank.archiveSubject(actorA,subject);expect((await bank.loadBank(actorA,candidate.id)).items).toEqual([]);
+    expect((await work.withActor(actorA,tx=>tx.query('SELECT deleted_at FROM public.professional_evidence_items WHERE id=$1',[item]))).rows[0].deleted_at).toBeTruthy();
+  });
+  it('enforces compound evidence ownership even for direct SQL',async()=>{
+    const {bank}=repositories();const foreign=await bank.createSubject(actorB,candidateB,{subjectType:'PROJECT',displayName:'Otro usuario'});
+    await expect(work.withActor(actorA,tx=>tx.query("INSERT INTO public.professional_evidence_items(user_id,candidate_profile_id,profile_id,category,exact_claim,source_type,source_reference) VALUES($1,$2,$3,'TECHNOLOGY','Claim','APPROVED_RESUME','legacy-reference')",[A,candidateA,foreign]))).rejects.toMatchObject({code:'23503'});
+  });
+  it('soft deletes a CV without deleting snapshots or resurrecting the hash',async()=>{
+    const f=await ready();const snapshot=await f.cv.saveExtraction(actorA,f.row.id,{extractorVersion:'test',text:'retained',structured:{lines:['retained']}});
+    await f.cv.archive(actorA,f.row.id);expect(await f.cv.find(actorA,f.row.id)).toBeNull();
+    await expect(f.cv.register(actorA,candidateA,f.file.metadata)).rejects.toThrow('RESUME_DELETED');
+    expect((await work.withActor(actorA,tx=>tx.query('SELECT id FROM public.resume_extractions WHERE id=$1',[snapshot]))).rowCount).toBe(1);
+    await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.resumes SET deleted_at=NULL WHERE id=$1',[f.row.id]))).rejects.toMatchObject({code:'23514'});
+    await expect(work.withActor(actorA,tx=>tx.query('DELETE FROM public.resumes WHERE id=$1',[f.row.id]))).rejects.toMatchObject({code:'42501'});
+  });
+  it('serializes version allocation across independent connections',async()=>{
+    const url=new URL(process.env.TEST_DATABASE_URL!);url.username=runtimeRole;url.password=testPassword;
+    const pool=createDatabasePool(url.toString(),1);
+    try {
+      const {cv}=repositories(), second=new PostgresResumeRepository(new UnitOfWork(pool));
+      const rows=await Promise.all([cv.register(actorA,candidateA,pdf().metadata),second.register(actorA,candidateA,pdf().metadata)]);
+      expect(Math.abs(rows[0].version-rows[1].version)).toBe(1);
+    } finally {await pool.end();}
   });
 });

@@ -1,6 +1,6 @@
 # Proceso de trabajo de BuscaVacante
 
-Estado verificado el 6 de noviembre de 2026. La [checklist de 28 tareas](PRIORITY_CHECKLIST.md) conserva el alcance del documento de requisitos. Este archivo organiza las entregas y sus dependencias; no sustituye los requisitos ni marca como terminado lo que solo está diseñado.
+Estado verificado el 9 de noviembre de 2026. La [checklist de 28 tareas](PRIORITY_CHECKLIST.md) conserva el alcance del documento de requisitos. Este archivo organiza las entregas y sus dependencias; no sustituye los requisitos ni marca como terminado lo que solo está diseñado.
 
 ## Punto actual
 
@@ -8,24 +8,26 @@ Estado verificado el 6 de noviembre de 2026. La [checklist de 28 tareas](PRIORIT
 - 06A: perfiles, conexión y transacciones, integrada en develop mediante PR #2.
 - 06B: búsquedas/preferencias con versiones, integrada mediante PR #3.
 - 06C: catálogo/ingesta con roles separados, integrada mediante PR #4, commit de merge a589a0f.
-- 06D prepara matching en feat/matching-postgresql; pendiente de revisión e integración. Ver [contrato y validación](../db/MATCHING.md).
-- Diez tablas preparadas de las 22 inventariadas. Este recuento no es un porcentaje de avance del producto.
-- Última evidencia de 06C: 495 pruebas generales aprobadas, 15 omitidas y 51 pruebas PostgreSQL aprobadas; lint/tipos/build y CI correctos. Las omisiones no acreditan integraciones externas.
+- 06D matching integrada mediante PR #6 (2e401df). Ver [contrato y validación](../db/MATCHING.md).
+- 06E1 prepara CV base y evidencia en feat/cv-evidencia-postgresql; revisión e integración en el PR. Ver [alcance y dependencia](../db/RESUME_EVIDENCE.md).
+- Quince tablas preparadas de las 22 inventariadas. Este recuento no es un porcentaje de avance del producto.
+- Última evidencia integrada (06D): 502 pruebas generales aprobadas, 15 omitidas y 63 pruebas PostgreSQL aprobadas; lint/tipos/build y CI correctos. Las omisiones no acreditan integraciones externas.
 - La aplicación sigue usando Supabase. No se ha activado el backend destino ni promovido develop a main.
 
 ## Siguiente trabajo y entregas de la tarea 06
 
 | Orden | Entrega | Alcance | Criterio de salida | Estado |
 | --- | --- | --- | --- | --- |
-| 1 | 06D — Matching | job_matches y repositorio compatible con MatchingRepository; lectura de catálogo y escritura privada separadas. | Dos usuarios aislados; FKs de usuario/candidato/búsqueda/versión; resultados y scoring_version preservados; upsert concurrente sin duplicados y estados guardado/descarte conservados. Mantener engine.ts sin recalibrar puntuaciones. | Implementada; CI registrado en el PR; revisión/fusión pendientes |
-| 2 | 06E — CV y evidencia | resumes, resume_extractions, derived_resumes, professional_evidence_profiles, professional_evidence_items, professional_evidence_urls. | UUID/versiones y relación CV base/derivado conservados; propiedad cruzada denegada; snapshots y borrado lógico íntegros; un fallo no sustituye la versión válida anterior. Interfaces de almacenamiento, sin presentar Tigris como implementado. | Pendiente de 06D |
-| 3 | 06F — Candidaturas | application_drafts, applications, application_answers, application_events, application_user_settings, user_application_answers. | Integridad de propietario y referencias; borradores/respuestas/eventos conservados, transacciones y duplicados probados. El traslado no activa envío externo ni declara completado el seguimiento funcional de tarea 20. | Pendiente de 06E |
-| 4 | 06G — Preparación de importación y contratos | Mapeo de las 22 tablas y funciones/dependencias del inventario; herramientas repetibles y fixtures sintéticos. | Contratos legado/destino comparados; restricciones/roles revisados; UUID y versiones preservados en fixtures; informe de discrepancias y reglas de conversión. Ningún dato real exportado por defecto. | Pendiente de 06F |
+| 1 | 06D — Matching | job_matches y repositorio compatible con MatchingRepository; lectura de catálogo y escritura privada separadas. | Dos usuarios aislados; FKs de usuario/candidato/búsqueda/versión; resultados y scoring_version preservados; upsert concurrente sin duplicados y estados guardado/descarte conservados. Mantener engine.ts sin recalibrar puntuaciones. | Integrada (PR #6) |
+| 2 | 06E1 — CV base y evidencia | resumes, resume_extractions, professional_evidence_profiles, professional_evidence_items, professional_evidence_urls. | UUID/versiones y relación CV base/derivado conservados; propiedad cruzada denegada; snapshots y borrado lógico íntegros; un fallo no sustituye la versión válida anterior. Interfaces de almacenamiento, sin presentar Tigris como implementado. | Implementada; validación y revisión/fusión en el PR |
+| 3 | 06F — Candidaturas | application_drafts, applications, application_answers, application_events, application_user_settings, user_application_answers. | Integridad de propietario y referencias; borradores/respuestas/eventos conservados, transacciones y duplicados probados. El traslado no activa envío externo ni declara completado el seguimiento funcional de tarea 20. | Pendiente de 06E1 |
+| 3b | 06E2 — CV derivados | derived_resumes y relaciones con borradores/candidaturas. | Conservar FK compuesta y guard de borrador/CV aprobados, snapshots, ciclo de render y propiedad; no crear derivados sin borrador válido. | Requiere borradores de 06F |
+| 4 | 06G — Preparación de importación y contratos | Mapeo de las 22 tablas y funciones/dependencias del inventario; herramientas repetibles y fixtures sintéticos. | Contratos legado/destino comparados; restricciones/roles revisados; UUID y versiones preservados en fixtures; informe de discrepancias y reglas de conversión. Ningún dato real exportado por defecto. | Pendiente de 06F y 06E2 |
 | 5 | 07 — Better Auth | Identidad, cuenta, recuperación y sesiones; enlace de identidad con profiles. | Alta/login/recuperación/cierre de sesiones probados, cuenta importada sintética conserva UUID y recupera acceso. Los JWT/sesiones del legado no sirven como sesiones destino. | Tras base de dominio y 06G |
 | 6 | 08 — Tigris | Objetos privados, staging, validación, finalización, descarga y reconciliación. | Propiedad, tamaño/MIME/firma/hash; repetición de PUT/finalización y fallos DB/objeto probados; copia de archivos sintéticos verificada. | Tras 07; usa contratos de 06E |
 | 7 | 06H — Ensayo completo de datos y archivos | Reconciliación integral de identidad, dominio y objetos en entorno aislado. | Conteos, digest de filas, hashes de archivos y FKs coinciden; repetir no duplica ni resucita eliminados; reversión antes/después de escrituras ensayada. Cierra la parte integral de 06, sin cambiar producción. | Requiere 06G, 07 y 08 |
 
-06D añade una tabla (total 10), 06E seis (total 16) y 06F seis (total 22). El inventario es la referencia para comprobar que no falta ninguna. Si una entrega resulta demasiado grande, dividirla en PR más pequeños con su propio resultado verificable, sin crear otro sistema de numeración de requisitos.
+06D añade una tabla (total 10), 06E1 cinco (total 15), 06F seis (total 21) y 06E2 una (total 22). derived_resumes exige application_drafts, por lo que su preparación completa se realiza después de 06F, conservando las restricciones del legado. El inventario es la referencia para comprobar que no falta ninguna. Si una entrega resulta demasiado grande, dividirla en PR más pequeños con su propio resultado verificable, sin crear otro sistema de numeración de requisitos.
 
 La preparación del esquema de 06E no equivale a confirmar datos extraídos: distinguir lo heredado de lo confirmado continúa en la tarea 10. La importación completa de 06H tampoco acredita esa funcionalidad. No usar datos heredados autoaprobados como evidencia nueva sin el tratamiento de procedencia/reconfirmación del diseño.
 

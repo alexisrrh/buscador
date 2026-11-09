@@ -35,6 +35,7 @@ export default defineConfig({
         "lib/server/db/{unit-of-work,profile-repository,search-repository}.ts",
         "lib/server/db/{catalog-unit-of-work,job-offer-repository,catalog-reader,source-registry}.ts",
         "lib/server/db/matching-repository.ts",
+        "lib/server/db/{resume-repository,evidence-repository}.ts",
       ],
       thresholds: {
         statements: 80,
