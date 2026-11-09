@@ -26,6 +26,10 @@ import { PostgresResumeRepository } from "@/lib/server/db/resume-repository";
 import { PostgresEvidenceRepository } from "@/lib/server/db/evidence-repository";
 import { PostgresApplicationRepository } from "@/lib/server/db/application-repository";
 import { applicationDraftInput } from "../application-persistence-fixture";
+import { PostgresDerivedResumeRepository } from "@/lib/server/db/derived-resume-repository";
+import { buildResumeContent,GENERATION_VERSION } from "@/lib/derived-resumes/content";
+import { renderResumePdf } from "@/lib/derived-resumes/renderer.server";
+import { structureResumeText } from "@/lib/applications/analysis";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -793,6 +797,107 @@ describe('PostgreSQL application persistence',()=>{
    const second=new PostgresApplicationRepository(new UnitOfWork(pool));const input={draftId:f.saved.id,targetUrl:'https://example.test',questions:[question]};
    const results=await Promise.all([f.repo.prepare(actorA,input),second.prepare(actorA,input)]);
    expect(results[0].id).toBe(results[1].id);expect(results.filter(x=>x.created)).toHaveLength(1);expect(await f.repo.history(actorA,results[0].id)).toHaveLength(2);
+  } finally {await pool.end();}
+ });
+});
+
+
+describe('PostgreSQL derived CV persistence',()=>{
+ const content={name:'Synthetic Candidate',title:'Frontend Developer',target:'Frontend Developer',contact:[],sections:[{heading:'Experience',lines:['Built React interfaces with TypeScript.']}]};
+ const bytes=new Uint8Array(Buffer.from('%PDF-1.7\n'+'synthetic'.repeat(70)));
+ const metadata={sha256:createHash('sha256').update(bytes).digest('hex'),sizeBytes:bytes.length,pages:1,content};
+ async function derivedFixture(approve=true) {
+  const candidate=await repository.createCandidate(actorA,'CV derivado sintético'),search=await searches.save(actorA,draft(candidate.id));
+  await searches.transition(actorA,search.search.id,1,'ACTIVE');
+  const cv=new PostgresResumeRepository(work),sourceBytes=new Uint8Array(Buffer.from('%PDF-1.7 '+randomUUID()));
+  const resume=await cv.register(actorA,candidate.id,{filename:'cv.pdf',mimeType:'application/pdf',size:sourceBytes.length,sha256:createHash('sha256').update(sourceBytes).digest('hex')});
+  await cv.finalizeUpload(actorA,resume.id,{read:async()=>sourceBytes});await cv.approve(actorA,resume.id);
+  const offer=await offers.persist(source(),neutral(),{},new Date());
+  const input=await applicationDraftInput({candidateProfileId:candidate.id,searchProfileId:search.search.id,jobOfferId:offer.jobOfferId,resumeId:resume.id});
+  const applications=new PostgresApplicationRepository(work),saved=await applications.saveDraft(actorA,input);
+  if(approve) await applications.approveDraft(actorA,saved.id,1);
+  return {repo:new PostgresDerivedResumeRepository(work),applications,saved,cv,resume,input};
+ }
+ async function completed() {
+  const f=await derivedFixture(),artifact=await f.repo.create(actorA,f.saved.id);
+  await f.repo.complete(actorA,artifact.id,metadata,{read:async()=>bytes});return {...f,artifact};
+ }
+ it('persists actual output from the existing content builder and PDF renderer',async()=>{
+  const f=await derivedFixture();
+  const snapshot=buildResumeContent(f.input.generated.resume_adaptation,f.input.evidence,structureResumeText(f.input.evidence.source_text),f.input.job,{first_name:'Synthetic',last_name:'Candidate'});
+  const rendered=await renderResumePdf(snapshot);const artifact=await f.repo.create(actorA,f.saved.id);
+  expect(artifact).toMatchObject({status:'GENERATING',generation_version:GENERATION_VERSION,format:'PDF',source_resume_id:f.resume.id});
+  expect(artifact.storage_path).toContain('/'+f.saved.id+'/'+artifact.id+'/resume.pdf');
+  await f.repo.complete(actorA,artifact.id,{sha256:rendered.sha256,sizeBytes:rendered.size_bytes,pages:rendered.pages,content:snapshot},{read:async()=>rendered.bytes});
+  const stored=await f.repo.find(actorA,artifact.id);expect(stored).toMatchObject({status:'READY',sha256:rendered.sha256,size_bytes:rendered.size_bytes,content_snapshot:snapshot});
+  expect(typeof stored?.created_at).toBe('string');
+ });
+ it('requires an approved draft and rechecks source approval after generation',async()=>{
+  const f=await derivedFixture(false);await expect(f.repo.create(actorA,f.saved.id)).rejects.toThrow('DERIVED_CONTEXT_UNAVAILABLE');
+  await f.applications.approveDraft(actorA,f.saved.id,1);const artifact=await f.repo.create(actorA,f.saved.id);
+  await f.cv.archive(actorA,f.resume.id);
+  await expect(f.repo.complete(actorA,artifact.id,metadata,{read:async()=>bytes})).rejects.toThrow('DERIVED_CONTEXT_UNAVAILABLE');
+  expect((await f.repo.find(actorA,artifact.id))?.status).toBe('GENERATING');await f.repo.fail(actorA,artifact.id,'SOURCE_RESUME_NOT_APPROVED');
+  expect((await f.repo.find(actorA,artifact.id))?.status).toBe('FAILED');
+ });
+ it('keeps an earlier ready artifact after a corrupt replacement and terminal failure',async()=>{
+  const f=await completed(),replacement=await f.repo.create(actorA,f.saved.id);
+  await expect(f.repo.complete(actorA,replacement.id,metadata,{read:async()=>bytes.subarray(1)})).rejects.toThrow('DERIVED_INTEGRITY_FAILED');
+  await f.repo.fail(actorA,replacement.id,'STORAGE_FAILED');expect((await f.repo.find(actorA,f.artifact.id))?.status).toBe('READY');
+  await expect(f.repo.complete(actorA,replacement.id,metadata,{read:async()=>bytes})).rejects.toThrow('DERIVED_NOT_GENERATING');
+  await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.derived_resumes SET status='GENERATING' WHERE id=$1",[replacement.id]))).rejects.toMatchObject({code:'23514'});
+ });
+ it('freezes READY bytes, snapshot and identity, even for direct SQL',async()=>{
+  const f=await completed();
+  for(const change of ["sha256=repeat('a',64)","content_snapshot='{}'::jsonb","generation_version='changed'","status='FAILED',failure_code='FAILED'"]) {
+   await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.derived_resumes SET '+change+' WHERE id=$1',[f.artifact.id]))).rejects.toMatchObject({code:'23514'});
+  }
+  expect((await f.repo.find(actorA,f.artifact.id))?.content_snapshot).toEqual(content);
+ });
+ it('isolates artifacts and denies neutral roles, missing context and foreign drafts',async()=>{
+  const f=await completed();expect(await f.repo.find(actorB,f.artifact.id)).toBeNull();
+  await expect(f.repo.create(actorB,f.saved.id)).rejects.toThrow('DERIVED_CONTEXT_UNAVAILABLE');
+  await expect(f.repo.fail(actorB,f.artifact.id,'FAILED')).rejects.toThrow('DERIVED_NOT_FOUND');
+  expect((await runtime.query('SELECT id FROM public.derived_resumes')).rows).toEqual([]);
+  for(const neutral of [catalogWork,ingestWork]) await expect(neutral.run(tx=>tx.query('SELECT id FROM public.derived_resumes'))).rejects.toMatchObject({code:'42501'});
+ });
+ it('attaches READY artifacts only to the same approved application context',async()=>{
+  const f=await derivedFixture(),artifact=await f.repo.create(actorA,f.saved.id);
+  const app=await f.applications.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test',questions:[]});
+  await expect(f.repo.attach(actorA,app.id,artifact.id)).rejects.toThrow('DERIVED_NOT_READY');
+  await f.repo.complete(actorA,artifact.id,metadata,{read:async()=>bytes});await f.repo.attach(actorA,app.id,artifact.id);
+  expect((await f.applications.findApplication(actorA,app.id))?.derived_resume_id).toBe(artifact.id);
+  await expect(f.repo.attach(actorB,app.id,artifact.id)).rejects.toThrow('DERIVED_NOT_FOUND');
+ });
+ it('enforces the compound application/artifact FK for different approved drafts',async()=>{
+  const first=await completed(),second=await completed();
+  const app=await first.applications.prepare(actorA,{draftId:first.saved.id,targetUrl:'https://example.test',questions:[]});
+  await expect(first.repo.attach(actorA,app.id,second.artifact.id)).rejects.toThrow('PREPARED_APPLICATION_REQUIRED');
+  await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.applications SET derived_resume_id=$1 WHERE id=$2',[second.artifact.id,app.id]))).rejects.toMatchObject({code:'23503'});
+ });
+ it('freezes the application artifact after an attempt, including removal',async()=>{
+  const f=await completed(),other=await f.repo.create(actorA,f.saved.id);await f.repo.complete(actorA,other.id,metadata,{read:async()=>bytes});
+  const app=await f.applications.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test',questions:[]});
+  await f.repo.attach(actorA,app.id,f.artifact.id);await work.withActor(actorA,tx=>tx.query('UPDATE public.applications SET attempt_count=1 WHERE id=$1',[app.id]));
+  await expect(f.repo.attach(actorA,app.id,other.id)).rejects.toThrow('PREPARED_APPLICATION_REQUIRED');
+  await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.applications SET derived_resume_id=NULL WHERE id=$1',[app.id]))).rejects.toMatchObject({code:'23514'});
+  expect((await f.applications.findApplication(actorA,app.id))?.derived_resume_id).toBe(f.artifact.id);
+ });
+ it('archives without rewriting metadata and cannot delete or resurrect the artifact',async()=>{
+  const f=await completed(),before=await f.repo.find(actorA,f.artifact.id);await f.repo.archive(actorA,f.artifact.id);
+  expect(await f.repo.find(actorA,f.artifact.id)).toMatchObject({status:'ARCHIVED',sha256:before?.sha256,content_snapshot:before?.content_snapshot});
+  await expect(f.repo.archive(actorA,f.artifact.id)).rejects.toThrow('DERIVED_NOT_READY');
+  await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.derived_resumes SET status='READY' WHERE id=$1",[f.artifact.id]))).rejects.toMatchObject({code:'23514'});
+  await expect(work.withActor(actorA,tx=>tx.query('DELETE FROM public.derived_resumes WHERE id=$1',[f.artifact.id]))).rejects.toMatchObject({code:'42501'});
+ });
+ it('allows only one finalization from independent concurrent connections',async()=>{
+  const f=await derivedFixture(),artifact=await f.repo.create(actorA,f.saved.id);
+  const url=new URL(process.env.TEST_DATABASE_URL!);url.username=runtimeRole;url.password=testPassword;const pool=createDatabasePool(url.toString(),1);
+  try {
+   const other=new PostgresDerivedResumeRepository(new UnitOfWork(pool));
+   const results=await Promise.allSettled([f.repo.complete(actorA,artifact.id,metadata,{read:async()=>bytes}),other.complete(actorA,artifact.id,metadata,{read:async()=>bytes})]);
+   expect(results.filter(x=>x.status==='fulfilled')).toHaveLength(1);expect(results.filter(x=>x.status==='rejected')).toHaveLength(1);
+   expect((await f.repo.find(actorA,artifact.id))?.status).toBe('READY');
   } finally {await pool.end();}
  });
 });

@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 Tarea 06E2: CV derivados
+
+PR #8 fusionado por el usuario en develop (72f66d0). Rama feat/cv-derivados-postgresql: tabla derived_resumes, FK completa hacia candidaturas, guards de ciclo/aprobación y repositorio privado con verificación de objetos. Reutiliza tipos, versión de generación, constructor de contenido y renderer actuales. 22 tablas preparadas de 22; esto no constituye migración completada ni porcentaje del producto. Ver ../../db/DERIVED_RESUMES.md.
+
+Resultados de validación y revisión/fusión en el PR. Siguiente 06G contratos/importación de fixtures, después 07/08 y 06H. La tarea 06 continúa abierta; sin cambios de rutas, objetos reales, proveedor o envíos externos. El backend activo sigue siendo Supabase.
+
 ## 2026-11-09 Tarea 06F: candidaturas
 
 PR #7 fusionado por el usuario en develop (8cb018e). Rama feat/candidaturas-postgresql: seis tablas privadas, repositorio de borradores/candidaturas/respuestas/configuración e historial append-only. 21 tablas preparadas de 22; siguiente 06E2 derivados. Ver ../../db/APPLICATIONS.md.

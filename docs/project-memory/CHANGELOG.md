@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-09 Persistencia de CV derivados (06E2)
+
+- PR #8 integrado; nueva rama feat/cv-derivados-postgresql.
+- Tabla 22 del inventario, FK de artefacto/candidatura y guards portados sin SECURITY DEFINER. Repositorio actor/objeto, snapshot inmutable y selección congelada tras intentos; renderer existente conservado.
+- Pruebas de frontera y PostgreSQL real para renderer, propiedad, fallos, contextos y concurrencia. Evidencia remota en el PR; siguiente 06G, sin activar destino ni cerrar la tarea 06.
+
 ## 2026-11-09 Persistencia PostgreSQL de candidaturas (06F)
 
 - PR #7 integrado en develop; nueva rama feat/candidaturas-postgresql.

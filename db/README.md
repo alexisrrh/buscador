@@ -1,6 +1,6 @@
-# Base PostgreSQL propia — tareas 06A/06B/06C/06D/06E1/06F
+# Base PostgreSQL propia — tareas 06A–06F y 06E2
 
-06A, integrada en develop mediante PR #2, implementa profiles y candidate_profiles, con UUID conservados, RLS, permisos mínimos y repositorio transaccional. 06B añade [búsquedas y preferencias](SEARCH_PREFERENCES.md), 06C añade [catálogo e ingesta](CATALOG_INGESTION.md) y 06D incorpora [matching](MATCHING.md). 06E1 prepara [CV base y evidencia](RESUME_EVIDENCE.md): 06F añade [candidaturas](APPLICATIONS.md). Se preparan 21 de las 22 tablas inventariadas; queda una pendiente. derived_resumes se completa tras borradores en 06F (06E2). No sustituye todavía el backend actual.
+06A, integrada en develop mediante PR #2, implementa profiles y candidate_profiles, con UUID conservados, RLS, permisos mínimos y repositorio transaccional. 06B añade [búsquedas y preferencias](SEARCH_PREFERENCES.md), 06C añade [catálogo e ingesta](CATALOG_INGESTION.md) y 06D incorpora [matching](MATCHING.md). 06E1 añade [CV base y evidencia](RESUME_EVIDENCE.md), 06F [candidaturas](APPLICATIONS.md) y 06E2 prepara [CV derivados](DERIVED_RESUMES.md). Se preparan las 22 tablas del inventario; contratos/importación, identidad, objetos y ensayo integral siguen pendientes. No sustituye todavía el backend actual.
 
 La aplicación sigue usando Supabase. Ninguna página, acción ni API llama todavía al repositorio nuevo. No se migran datos reales, se cambia proveedor ni se crea infraestructura de pago. La FK de identidad hacia Better Auth se incorporará en la tarea 07 antes de activar el destino; esta base aislada no constituye autenticación implementada.
 
