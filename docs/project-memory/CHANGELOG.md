@@ -1,5 +1,12 @@
 # Project Changelog
 
+## 2026-11-09 Núcleo de autenticación destino (07A)
+
+- PR #12 integrado en develop (1feb30e); nueva rama feat/better-auth-base desde la base integrada.
+- Better Auth 1.7.18 con UUID, verificación, límites del PDF, sesiones en DB, reset de 15 minutos de un uso, revocación y actor/perfil; rol de identidad aislado y migración 0008 sin alterar las anteriores.
+- Pruebas contra handler real/PostgreSQL, incluyendo reset concurrente y cuenta importada sintética; evidencia final en el PR. Próxima 07B: FK/importación, rutas/UI y correo durable. Tareas 07/06 abiertas, sin activar el destino.
+- Next.js/eslint-config-next 16.4.5, Vitest/coverage 4.1.12 y lockfile actualizado sin force: auditoría de producción sin avisos; ocho moderados de desarrollo registrados para tarea 26.
+
 ## 2026-11-09 Contratos y ensayo de importación sintética (06G)
 
 - PR #10 integrado en main por el usuario; rama nueva desde develop con ascendencia de la promoción sincronizada sin cambios de árbol.

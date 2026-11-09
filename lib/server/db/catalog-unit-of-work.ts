@@ -25,7 +25,8 @@ export class CatalogUnitOfWork {
       const result = await client.query<{ allowed: boolean; unsafe: boolean }>(`SELECT
         pg_has_role(current_user,$1,'MEMBER') AS allowed,
         rolsuper OR rolbypassrls OR rolcreatedb OR rolcreaterole OR rolreplication OR pg_has_role(current_user,'bv_owner','MEMBER')
-        OR pg_has_role(current_user,'bv_app','MEMBER') OR pg_has_role(current_user,$2,'MEMBER') AS unsafe
+        OR pg_has_role(current_user,'bv_app','MEMBER') OR pg_has_role(current_user,$2,'MEMBER')
+        OR pg_has_role(current_user,'bv_auth','MEMBER') AS unsafe
         FROM pg_roles WHERE rolname=current_user`, [this.role, this.role === "bv_ingest" ? "bv_catalog" : "bv_ingest"]);
       if (result.rows.length !== 1 || !result.rows[0].allowed || result.rows[0].unsafe) throw new Error("UNSAFE_CATALOG_ROLE");
       await client.query("SELECT set_config('app.user_id','',true)");

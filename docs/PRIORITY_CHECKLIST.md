@@ -14,8 +14,8 @@ Esta lista organiza el trabajo pendiente. La secuencia de entregas, dependencias
 
 ## Prioridad 2 Identidad y datos privados
 
-- [ ] **06. Preparar persistencia y autorización del backend propio.** En curso: 06A–06F integradas (incluida 06E1). 06E2 derivados integrada mediante PR #9: 22 tablas de 22 preparadas. 06G contratos/importación sintética preparada para revisión; después 07 Better Auth, 08 Tigris y 06H ensayo integral, con discrepancias de timestamps/padres históricos todavía abiertas. Completar tablas no equivale a migrar datos ni cierra esta tarea. [Entregas y criterios de cierre](WORK_PROCESS.md). Sin activar el destino.
-- [ ] **07. Implementar Better Auth y completar la cuenta.** Registro con email de hasta 254 caracteres y contraseña de 12 a 128; login, recuperación de un uso con máximo de 15 minutos y cierre de sesión actual/todas. Cierre: flujos principales y fallidos probados, sin enumeración pública de cuentas.
+- [ ] **06. Preparar persistencia y autorización del backend propio.** En curso: 06A–06F integradas (incluida 06E1). 06E2 derivados integrada mediante PR #9: 22 tablas de 22 preparadas. 06G contratos/importación sintética integrada mediante PR #12 (1feb30e); en curso 07 Better Auth, 08 Tigris y 06H ensayo integral, con discrepancias de timestamps/padres históricos todavía abiertas. Completar tablas no equivale a migrar datos ni cierra esta tarea. [Entregas y criterios de cierre](WORK_PROCESS.md). Sin activar el destino.
+- [ ] **07. Implementar Better Auth y completar la cuenta.** En curso: 07A prepara núcleo aislado, rol/esquema de identidad y pruebas nativas; validación/revisión en el PR. [Contrato y pendientes](../db/AUTHENTICATION.md). 07B debe completar FK/importación, rutas/UI y correo durable. Registro con email de hasta 254 caracteres y contraseña de 12 a 128; login, recuperación de un uso con máximo de 15 minutos y cierre de sesión actual/todas. Cierre: flujos principales y fallidos probados, sin enumeración pública de cuentas.
 - [ ] **08. Implementar almacenamiento privado en Tigris.** Subida, acceso temporal, descarga, versiones y eliminación autorizados desde backend. Validar PDF/DOCX, extensión, MIME, tamaño y pertenencia. Cierre: acceso cruzado denegado y conservación de versión previa ante fallos; acordar MB/MiB del límite.
 - [ ] **09. Completar perfil profesional e historial.** Permitir consultar y actualizar datos, gestionar trayectorias y conservar el contexto usado por evaluaciones anteriores. Cierre: nombre entre 2 y 80 caracteres y cambios relevantes trazables sin modificar resultados históricos.
 - [ ] **10. Separar extracción de confirmación de datos del CV.** Mostrar información extraída para revisar/corregir y confirmar explícitamente antes de usarla como evidencia. Cierre: ningún dato sin confirmar participa en generación o evaluación; un fallo conserva archivo y datos confirmados anteriores.
@@ -59,7 +59,8 @@ Esta lista organiza el trabajo pendiente. La secuencia de entregas, dependencias
 | 03 | Completada | [Checkpoints y reconstrucción](checkpoint-baseline-2026-11-06.md). |
 | 04 | Completada | [Diseño de transición](architecture/TRANSITION_PLAN.md) e inventario estático. |
 | 05 | Completada | [CI, cobertura y protecciones verificadas](ci-quality-gates.md). PR #1 integrado en develop por el usuario; develop en modo individual. |
-| 06 | En curso | PR #9 integrado y PR #10 promovido a main. 06G laboratorio de contratos/importación sintética preparado; evidencia/revisión en el PR. Después 07/08 y 06H. |
-| 07 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
+| 06 | En curso | 06G integrada mediante PR #12 (1feb30e), con 527 pruebas generales y 101 PostgreSQL aprobadas; 15 omitidas. Después 07/08 y 06H. |
+| 07 | En curso | 07A núcleo aislado preparado para PR; 07B FK/importación, UI y correo pendientes. |
+| 08 a 28 | Pendiente | Se actualizará al resolver cada tarea. |
 
 Al cerrar una tarea: marcar la casilla, registrar pruebas y checkpoint, actualizar el contraste afectado y seleccionar la siguiente dependencia disponible. Esta checklist no marca como pendiente de reconstrucción aquello que ya existe: cada tarea debe reutilizar su implementación válida y cerrar las brechas identificadas.

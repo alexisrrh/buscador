@@ -31,6 +31,7 @@ export default defineConfig({
         "lib/application-engine/{decision,questions}.ts",
         "lib/derived-resumes/{content,layout-plan}.ts",
         "lib/server/context.ts",
+        "lib/auth/policy.ts",
         "lib/server/search-input.ts",
         "lib/server/db/{unit-of-work,profile-repository,search-repository}.ts",
         "lib/server/db/{catalog-unit-of-work,job-offer-repository,catalog-reader,source-registry}.ts",

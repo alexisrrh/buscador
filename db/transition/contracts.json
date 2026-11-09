@@ -515,6 +515,10 @@
     {
       "path": "db/migrations/0007_derived_resumes.sql",
       "sha256": "094259ca23d92acdba7bbe10eccca08087af64aa9193985c42e1456426c68efb"
+    },
+    {
+      "path": "db/migrations/0008_better_auth.sql",
+      "sha256": "618bc5540b4071505be054a059d6c5d5f0af391016cab8396ae688ac7605fafa"
     }
   ]
 }

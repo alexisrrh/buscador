@@ -1,5 +1,9 @@
 # Architectural Decisions
 
+## 2026-11-09 — Se conserva Next.js
+
+El usuario descartó expresamente la propuesta de migrar a NestJS: «no migremos dejemoslo asi». No se implementó ni instaló NestJS/Prisma; se conserva el backend modular Next.js del diseño ADR-039 y la transición PostgreSQL/Better Auth/Tigris. La propuesta de una base NestJS con PostgreSQL prueba no cambia los requisitos ni autoriza activarla. Se retoma la entrega 07A del PR #13 sobre la arquitectura existente.
+
 ## ADR-041 - Revisión individual en develop
 
 El 6 de noviembre el usuario confirmó que trabaja solo. develop conserva PR, CI de GitHub Actions, rama actualizada, conversaciones resueltas y protecciones de administradores/force push/eliminación. Cero aprobaciones requeridas y sin aprobación independiente del último push permiten al autor revisar y fusionar. No equivale a aprobar un PR propio ni a Code Review de otra persona. main conserva sus reglas, incluida revisión independiente. Verificado por API y comparación antes/después.
