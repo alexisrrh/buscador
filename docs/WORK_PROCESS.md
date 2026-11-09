@@ -9,9 +9,10 @@ Estado verificado el 9 de noviembre de 2026. La [checklist de 28 tareas](PRIORIT
 - 06B: búsquedas/preferencias con versiones, integrada mediante PR #3.
 - 06C: catálogo/ingesta con roles separados, integrada mediante PR #4, commit de merge a589a0f.
 - 06D matching integrada mediante PR #6 (2e401df). Ver [contrato y validación](../db/MATCHING.md).
-- 06E1 prepara CV base y evidencia en feat/cv-evidencia-postgresql; revisión e integración en el PR. Ver [alcance y dependencia](../db/RESUME_EVIDENCE.md).
-- Quince tablas preparadas de las 22 inventariadas. Este recuento no es un porcentaje de avance del producto.
-- Última evidencia integrada (06D): 502 pruebas generales aprobadas, 15 omitidas y 63 pruebas PostgreSQL aprobadas; lint/tipos/build y CI correctos. Las omisiones no acreditan integraciones externas.
+- 06E1 CV base y evidencia integrada mediante PR #7 (8cb018e). Ver [alcance y dependencia](../db/RESUME_EVIDENCE.md).
+- 06F prepara candidaturas en feat/candidaturas-postgresql; revisión e integración en el PR. Ver [contrato de persistencia](../db/APPLICATIONS.md).
+- Veintiuna tablas preparadas de las 22 inventariadas. Este recuento no es un porcentaje de avance del producto.
+- Última evidencia integrada (06E1): 509 pruebas generales aprobadas, 15 omitidas y 73 pruebas PostgreSQL aprobadas; lint/tipos/build y CI correctos. Las omisiones no acreditan integraciones externas.
 - La aplicación sigue usando Supabase. No se ha activado el backend destino ni promovido develop a main.
 
 ## Siguiente trabajo y entregas de la tarea 06
@@ -19,8 +20,8 @@ Estado verificado el 9 de noviembre de 2026. La [checklist de 28 tareas](PRIORIT
 | Orden | Entrega | Alcance | Criterio de salida | Estado |
 | --- | --- | --- | --- | --- |
 | 1 | 06D — Matching | job_matches y repositorio compatible con MatchingRepository; lectura de catálogo y escritura privada separadas. | Dos usuarios aislados; FKs de usuario/candidato/búsqueda/versión; resultados y scoring_version preservados; upsert concurrente sin duplicados y estados guardado/descarte conservados. Mantener engine.ts sin recalibrar puntuaciones. | Integrada (PR #6) |
-| 2 | 06E1 — CV base y evidencia | resumes, resume_extractions, professional_evidence_profiles, professional_evidence_items, professional_evidence_urls. | UUID/versiones y metadatos del CV base conservados; propiedad cruzada denegada; snapshots y borrado lógico íntegros; un fallo no sustituye la versión válida anterior. Interfaces de almacenamiento, sin presentar Tigris como implementado. | Implementada; validación y revisión/fusión en el PR |
-| 3 | 06F — Candidaturas | application_drafts, applications, application_answers, application_events, application_user_settings, user_application_answers. | Integridad de propietario y referencias; borradores/respuestas/eventos conservados, transacciones y duplicados probados. El traslado no activa envío externo ni declara completado el seguimiento funcional de tarea 20. | Pendiente de 06E1 |
+| 2 | 06E1 — CV base y evidencia | resumes, resume_extractions, professional_evidence_profiles, professional_evidence_items, professional_evidence_urls. | UUID/versiones y metadatos del CV base conservados; propiedad cruzada denegada; snapshots y borrado lógico íntegros; un fallo no sustituye la versión válida anterior. Interfaces de almacenamiento, sin presentar Tigris como implementado. | Integrada (PR #7) |
+| 3 | 06F — Candidaturas | application_drafts, applications, application_answers, application_events, application_user_settings, user_application_answers. | Integridad de propietario y referencias; borradores/respuestas/eventos conservados, transacciones y duplicados probados. El traslado no activa envío externo ni declara completado el seguimiento funcional de tarea 20. | Implementada; validación/revisión/fusión en el PR |
 | 3b | 06E2 — CV derivados | derived_resumes y relaciones con borradores/candidaturas. | Conservar FK compuesta y guard de borrador/CV aprobados, snapshots, ciclo de render y propiedad; no crear derivados sin borrador válido. | Requiere borradores de 06F |
 | 4 | 06G — Preparación de importación y contratos | Mapeo de las 22 tablas y funciones/dependencias del inventario; herramientas repetibles y fixtures sintéticos. | Contratos legado/destino comparados; restricciones/roles revisados; UUID y versiones preservados en fixtures; informe de discrepancias y reglas de conversión. Ningún dato real exportado por defecto. | Pendiente de 06F y 06E2 |
 | 5 | 07 — Better Auth | Identidad, cuenta, recuperación y sesiones; enlace de identidad con profiles. | Alta/login/recuperación/cierre de sesiones probados, cuenta importada sintética conserva UUID y recupera acceso. Los JWT/sesiones del legado no sirven como sesiones destino. | Tras base de dominio y 06G |
