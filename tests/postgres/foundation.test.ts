@@ -30,6 +30,10 @@ import { PostgresDerivedResumeRepository } from "@/lib/server/db/derived-resume-
 import { buildResumeContent,GENERATION_VERSION } from "@/lib/derived-resumes/content";
 import { renderResumePdf } from "@/lib/derived-resumes/renderer.server";
 import { structureResumeText } from "@/lib/applications/analysis";
+import { auditTransition } from "../../db/transition/sql-contracts";
+import { canonical,importSyntheticFixture,syntheticFixture,syntheticId } from "../../db/transition/synthetic-import";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -899,5 +903,78 @@ describe('PostgreSQL derived CV persistence',()=>{
    expect(results.filter(x=>x.status==='fulfilled')).toHaveLength(1);expect(results.filter(x=>x.status==='rejected')).toHaveLength(1);
    expect((await f.repo.find(actorA,artifact.id))?.status).toBe('READY');
   } finally {await pool.end();}
+ });
+});
+
+
+describe('Transition contracts and synthetic-only import laboratory',()=>{
+ it('audits all legacy table columns against the real target and classifies every function',async()=>{
+  const client=await admin.connect();try {const report=await auditTransition(client);
+   expect(report.errors).toEqual([]);expect(report.compatible).toBe(true);expect(report.tables).toHaveLength(22);expect(report.functions).toHaveLength(34);
+   expect(report.productionReady).toBe(false);expect(report.discrepancies.map(d=>d.id)).toContain('HISTORICAL_TIMESTAMPS');
+  }finally{client.release();}
+ });
+ it('detects a live schema/RLS discrepancy without accepting matching table counts as proof',async()=>{
+  const client=await admin.connect();try {
+   await client.query('BEGIN');await client.query('ALTER TABLE public.profiles ADD COLUMN transition_probe text');
+   await client.query('ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY');
+   const report=await auditTransition(client);expect(report.compatible).toBe(false);
+   expect(report.errors).toContain('profiles.transition_probe:unexpected_live_column');expect(report.errors).toContain('profiles:rls_not_forced');
+  }finally{await client.query('ROLLBACK');client.release();}
+ });
+ it('imports all 22 tables and replays without changing IDs, snapshots or full-row digests',async()=>{
+  const seed=randomUUID(),fixture=syntheticFixture(seed),first=await importSyntheticFixture(admin,seed),again=await importSyntheticFixture(admin,seed);
+  expect(Object.keys(first.counts)).toHaveLength(22);expect(Object.values(first.counts).every(n=>n>0)).toBe(true);
+  expect(first.inserted).toBe(first.rows);expect(again.inserted).toBe(0);expect(again.existing).toBe(first.rows);expect(again.digest).toBe(first.digest);
+  expect(first.objectsCopied).toBe(0);expect(first.productionReady).toBe(false);
+  const user=fixture.userIds[0];
+  const profile=(await admin.query('SELECT id,created_at FROM public.profiles WHERE id=$1',[user])).rows[0];
+  expect(profile.id).toBe(user);expect(profile.created_at.toISOString()).toBe('2000-01-01T00:00:00.000Z');
+  const matches=(await admin.query('SELECT score,scoring_version,status,search_profile_version,reasons FROM public.job_matches WHERE user_id=$1 ORDER BY search_profile_version',[user])).rows;
+  expect(matches.map(r=>[r.score,r.scoring_version,r.status,r.search_profile_version])).toEqual([[78,'deterministic-v2','SAVED',1],[78,'deterministic-v2','NEW',2]]);
+  expect(canonical(matches[0].reasons)).toBe(canonical(fixture.rows.job_matches[0].reasons));
+  const derived=(await admin.query('SELECT status FROM public.derived_resumes WHERE user_id=$1 ORDER BY status',[user])).rows.map(r=>r.status);
+  expect(derived.sort()).toEqual(['ARCHIVED','FAILED','GENERATING','READY']);
+  const app=(await admin.query('SELECT status,attempt_count,derived_resume_id FROM public.applications WHERE user_id=$1',[user])).rows[0];
+  expect(app).toMatchObject({status:'SUBMITTED',attempt_count:1,derived_resume_id:syntheticId(seed,'a-derived-ready')});
+ });
+ it('preserves tombstones, reports drift and never resurrects a newly deleted candidate',async()=>{
+  const seed=randomUUID();await importSyntheticFixture(admin,seed);
+  const old=(await admin.query('SELECT deleted_at FROM public.resumes WHERE id=$1',[syntheticId(seed,'a-old-resume')])).rows[0];
+  expect(old.deleted_at.toISOString()).toBe('2000-01-02T00:00:00.000Z');
+  await admin.query('UPDATE public.candidate_profiles SET deleted_at=now() WHERE id=$1',[syntheticId(seed,'a-candidate')]);
+  await expect(importSyntheticFixture(admin,seed)).rejects.toThrow('SYNTHETIC_FIXTURE_DRIFT:candidate_profiles');
+  expect((await admin.query('SELECT deleted_at FROM public.candidate_profiles WHERE id=$1',[syntheticId(seed,'a-candidate')])).rows[0].deleted_at).toBeTruthy();
+ });
+ it('preserves SQL NULL separately from a JSON null literal in nullable JSONB columns',async()=>{
+  const seed=randomUUID();await importSyntheticFixture(admin,seed);
+  const id=syntheticId(seed,'b-answer');
+  expect((await admin.query('SELECT answer_value IS NULL AS sql_null FROM public.application_answers WHERE id=$1',[id])).rows[0].sql_null).toBe(true);
+  await admin.query("UPDATE public.application_answers SET answer_value='null'::jsonb WHERE id=$1",[id]);
+  await expect(importSyntheticFixture(admin,seed)).rejects.toThrow('SYNTHETIC_FIXTURE_DRIFT:application_answers');
+ });
+ it('rolls back earlier rows when a later identity conflicts without disabling constraints',async()=>{
+  const seed=randomUUID(),fixture=syntheticFixture(seed);
+  await ingestWork.run(tx=>tx.query('INSERT INTO public.job_sources(id,code,name) VALUES($1,$2,$3)',[randomUUID(),fixture.rows.job_sources[0].code,'Synthetic conflicting source']));
+  await expect(importSyntheticFixture(admin,seed)).rejects.toMatchObject({code:'23505'});
+  expect((await admin.query('SELECT id FROM public.companies WHERE id=$1',[syntheticId(seed,'company')])).rows).toEqual([]);
+  expect((await admin.query('SELECT id FROM public.profiles WHERE id=$1',[fixture.userIds[0]])).rows).toEqual([]);
+ });
+ it('keeps imported users isolated under the same runtime roles and does not confirm inherited evidence',async()=>{
+  const seed=randomUUID(),fixture=syntheticFixture(seed);await importSyntheticFixture(admin,seed);
+  const actor=await requireActor(async()=>({user:{id:fixture.userIds[0],disabled:false},session:{id:'synthetic-lab',expiresAt:new Date(Date.now()+60000)}}));
+  expect((await work.withActor(actor,tx=>tx.query('SELECT id FROM public.candidate_profiles WHERE user_id=$1',[fixture.userIds[1]]))).rows).toEqual([]);
+  expect((await work.withActor(actor,tx=>tx.query('SELECT id FROM public.derived_resumes WHERE user_id=$1',[fixture.userIds[1]]))).rows).toEqual([]);
+  const evidence=(await work.withActor(actor,tx=>tx.query('SELECT verification_status,confirmed_at FROM public.professional_evidence_items'))).rows;
+  expect(evidence).toEqual([{verification_status:'UNKNOWN',confirmed_at:null}]);
+  const settings=await new PostgresApplicationRepository(work).settings(actor);expect(settings.auto_apply_enabled).toBe(false);
+ });
+ it('serializes simultaneous imports while preserving the same reconciliation digest',async()=>{
+  const seed=randomUUID(),results=await Promise.all([importSyntheticFixture(admin,seed),importSyntheticFixture(admin,seed)]);
+  expect(results[0].digest).toBe(results[1].digest);expect(results.filter(r=>r.inserted===r.rows)).toHaveLength(1);expect(results.filter(r=>r.inserted===0)).toHaveLength(1);
+ });
+ it('runs the actual Node CLI in read-only audit mode with no object or identity migration',async()=>{
+  const {stdout}=await promisify(execFile)(process.execPath,['scripts/transition-lab.mjs','--audit'],{cwd:process.cwd(),env:process.env,maxBuffer:1000000});
+  const report=JSON.parse(stdout);expect(report.compatible).toBe(true);expect(report.productionReady).toBe(false);expect(report.tables).toHaveLength(22);
  });
 });

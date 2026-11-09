@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:db": "vitest run --config vitest.database.config.ts",
     "db:migrate": "node scripts/migrate-database.mjs",
+    "db:transition": "node scripts/transition-lab.mjs",
     "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   },
   "dependencies": {
