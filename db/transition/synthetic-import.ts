@@ -90,7 +90,8 @@ export async function importSyntheticFixture(pool:Pick<Pool,'connect'>,seed='tra
     async function write(table:string,row:Row,update=false) {
       const entry=await role(table,row),columns=Object.keys(row);
       for(const key of columns){const column=schema.rows.find(c=>c.table_name===table && c.column_name===key);if(!column || column.generated)throw new Error('FIXTURE_SCHEMA_MISMATCH');}
-      const values=columns.map(key=>schema.rows.find(c=>c.table_name===table && c.column_name===key)!.json?JSON.stringify(row[key]):row[key]);
+      // A nullable JSONB column needs SQL NULL, not the non-null jsonb literal 'null'.
+      const values=columns.map(key=>row[key]!==null && schema.rows.find(c=>c.table_name===table && c.column_name===key)!.json?JSON.stringify(row[key]):row[key]);
       const sql=update?`UPDATE public.${identifier(table)} SET ${columns.filter(c=>c!==entry.identity).map(c=>identifier(c)+'=$'+(columns.indexOf(c)+1)).join(',')} WHERE ${identifier(entry.identity)}=$${columns.indexOf(entry.identity)+1}`
         :`INSERT INTO public.${identifier(table)}(${columns.map(identifier).join(',')}) VALUES(${columns.map((_,i)=>'$'+(i+1)).join(',')})`;
       await client.query(sql,values);
