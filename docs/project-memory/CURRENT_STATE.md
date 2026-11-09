@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 main adaptada al trabajo individual
+
+El usuario autorizó quitar la aprobación externa de main, igual que develop. PATCH verificado por GET: main mantiene PR, Quality gate estricto, conversaciones resueltas, administradores sujetos a reglas y force push/eliminación bloqueados; solo cambian required_approving_review_count=0 y require_last_push_approval=false. Comparación completa conserva las demás propiedades de main y todo develop. Evidencias fuera de Git en _local-backups/task-main-20261109/.
+
+PR #9 integrado en develop (c0b21c6); 06E2 queda integrada y siguiente es 06G. PR #10 develop→main abierto por el usuario, sin fusión automática por el agente. La promoción a main no activa el backend destino: Supabase continúa como runtime; tarea 06 abierta. AGENTS.md y guía de CI actualizadas para ambas ramas en modo individual.
+
 ## 2026-11-09 Tarea 06E2: CV derivados
 
 PR #8 fusionado por el usuario en develop (72f66d0). Rama feat/cv-derivados-postgresql: tabla derived_resumes, FK completa hacia candidaturas, guards de ciclo/aprobación y repositorio privado con verificación de objetos. Reutiliza tipos, versión de generación, constructor de contenido y renderer actuales. 22 tablas preparadas de 22; esto no constituye migración completada ni porcentaje del producto. Ver ../../db/DERIVED_RESUMES.md.

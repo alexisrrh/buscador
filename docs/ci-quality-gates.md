@@ -51,16 +51,18 @@ Usar íntegramente `.github/PULL_REQUEST_TEMPLATE.md`. Marcar solo pruebas, revi
 
 El workflow fallido detiene su job; para impedir merges GitHub debe exigir **Quality gate** en las reglas de `develop` y `main`. La mera existencia del YAML no protege ramas. [Checks obligatorios de GitHub](https://docs.github.com/en/pull-requests/reference/status-checks).
 
-Configuración actual, adaptada por instrucción del usuario el 6 de noviembre para trabajar solo:
+Configuración actual: develop adaptada al trabajo individual el 6 de noviembre y main el 9 de noviembre de 2026, ambas por instrucción expresa del usuario:
 
 | Regla | develop | main |
 | --- | --- | --- |
 | PR obligatorio, Quality gate de GitHub Actions, rama actualizada y conversaciones resueltas | Sí | Sí |
-| Aprobaciones de otra persona | 0 | 1 |
-| Aprobación independiente del último push | No | Sí |
+| Aprobaciones de otra persona | 0 | 0 |
+| Aprobación independiente del último push | No | No |
 | Administradores sujetos a reglas; force push y eliminación bloqueados | Sí | Sí |
 
-En develop el autor hace Self Review y decide fusionar cuando CI pasa. GitHub no permite aprobar un PR propio: el flujo individual elimina ese requisito, no crea una aprobación ficticia. La casilla Code Review de otra persona permanece sin marcar si no ocurrió. main conserva su revisión independiente.
+En ambas ramas el autor hace Self Review y decide fusionar cuando CI pasa. GitHub no permite aprobar un PR propio: el flujo individual elimina ese requisito, no crea una aprobación ficticia. La casilla Code Review de otra persona permanece sin marcar si no ocurrió. No hacer push directo ni fusionar automáticamente.
+
+El 9 de noviembre el usuario autorizó adaptar también main. Se cambió únicamente required_approving_review_count a 0 y require_last_push_approval a false mediante PATCH; GET posterior y comparación completa confirman que todas las otras propiedades de main y la configuración completa de develop se conservan. PR obligatorio, Quality gate estricto de Actions, administradores sujetos a reglas, conversaciones resueltas y bloqueo de force push/eliminación siguen activos. Evidencias sin credenciales en `_local-backups/task-main-20261109/`, fuera de Git. El registro anterior que describe revisión independiente en main es histórico y queda sustituido por esta decisión. No se fusionó el PR #10 ni se activó un proveedor por este ajuste.
 
 `develop` se creó desde el commit remoto de `main` `0913134566e55044b569efa4205dc9e654526228`. La rama `ci/controles-calidad` está publicada y el [PR #1](https://github.com/alexisrrh/buscador/pull/1) apunta a `develop`, usa la plantilla y no tiene conflictos. CI del commit 9943b36 aprobado tanto en push como en [PR](https://github.com/alexisrrh/buscador/actions/runs/42205496389). No se ha integrado el PR ni promovido nada a `main`.
 
