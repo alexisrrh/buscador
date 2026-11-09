@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-06 Persistencia PostgreSQL de matching (06D)
+
+- PR #5 integrado; nueva rama feat/matching-postgresql desde develop.
+- Migración 0004: job_matches con RLS, FKs e identidad versionada; repositorio compatible con motor/servicio actuales y decisiones del legado.
+- Pruebas de frontera y PostgreSQL para autorización, resultados, estados y rollback. Control local completo: 502 aprobadas, 15 omitidas. CI y revisión registrados en el PR; sin activación del destino.
+
 ## 2026-11-06 Organización del proceso pendiente
 
 - PR #4 integrado en develop; las tres primeras entregas de tarea 06 están incorporadas.
