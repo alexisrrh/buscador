@@ -55,7 +55,7 @@ export function syntheticFixture(seed='transition-06g-v1'):Fixture {
     rows.application_user_settings.push({user_id:user,auto_apply_enabled:false,created_at:epoch});
     add('user_application_answers',actor+'-user-answer',{user_id:user,question_key:'synthetic-city',question_text:'Synthetic city?',answer_type:'TEXT',answer_value:'Synthetic city',classification:'USER_CONFIRMATION',approved_at:approved});
     add('applications',actor+'-application',{...ownership,search_profile_id:search,job_offer_id:id('offer'),job_offer_source_id:id('offer-source'),application_draft_id:draft,resume_id:resume,apply_mode:'MANUAL',target_url:'https://example.test/apply',status:actor==='a'?'SUBMITTED':'PREPARED',attempt_count:actor==='a'?1:0,submitted_at:actor==='a'?approved:null,derived_resume_id:id(actor+'-derived-ready'),deleted_at:null});
-    add('application_answers',actor+'-answer',{user_id:user,application_id:id(actor+'-application'),question_key:'synthetic-city',question_text:'Synthetic city?',answer_type:'TEXT',answer_value:'Synthetic city',source:'USER_APPROVED',confidence:1,requires_confirmation:false,classification:'USER_CONFIRMATION'});
+    add('application_answers',actor+'-answer',{user_id:user,application_id:id(actor+'-application'),question_key:'synthetic-city',question_text:'Synthetic city?',answer_type:'TEXT',answer_value:actor==='a'?'Synthetic city':null,source:actor==='a'?'USER_APPROVED':'PORTAL_DISCOVERY',confidence:actor==='a'?1:0,requires_confirmation:actor!=='a',classification:'USER_CONFIRMATION'});
     add('application_events',actor+'-event',{user_id:user,application_id:id(actor+'-application'),event_type:'CREATED',metadata:{synthetic:true}});
     if(actor==='a')add('application_events',actor+'-event-submitted',{user_id:user,application_id:id(actor+'-application'),event_type:'SUBMISSION_SUCCEEDED',metadata:{synthetic:true,historicalOnly:true},created_at:approved});
     for(const state of ['READY','ARCHIVED','FAILED','GENERATING']){
@@ -96,10 +96,15 @@ export async function importSyntheticFixture(pool:Pick<Pool,'connect'>,seed='tra
         :`INSERT INTO public.${identifier(table)}(${columns.map(identifier).join(',')}) VALUES(${columns.map((_,i)=>'$'+(i+1)).join(',')})`;
       await client.query(sql,values);
     }
-    async function read(table:string,row:Row):Promise<Row|null> {
-      const entry=await role(table,row);return (await client.query<{row:Row}>(`SELECT to_jsonb(t) AS row FROM public.${identifier(table)} t WHERE ${identifier(entry.identity)}=$1`,[row[entry.identity]])).rows[0]?.row??null;
+    async function read(table:string,row:Row):Promise<{row:Row;sql_nulls:string[]}|null> {
+      const entry=await role(table,row);
+      const nulls=schema.rows.filter(c=>c.table_name===table).map(c=>`CASE WHEN t.${identifier(c.column_name)} IS NULL THEN '${c.column_name}' END`).join(',');
+      return (await client.query<{row:Row;sql_nulls:string[]}>(`SELECT to_jsonb(t) AS row,array_remove(ARRAY[${nulls}]::text[],NULL) AS sql_nulls
+        FROM public.${identifier(table)} t WHERE ${identifier(entry.identity)}=$1`,[row[entry.identity]])).rows[0]??null;
     }
-    function matches(row:Row,actual:Row) {return Object.entries(row).every(([key,value])=>canonical(actual[key])===canonical(value));}
+    function matches(row:Row,actual:{row:Row;sql_nulls:string[]}) {
+      return Object.entries(row).every(([key,value])=>canonical(actual.row[key])===canonical(value) && (value!==null || actual.sql_nulls.includes(key)));
+    }
     for(const table of contracts.tables){counts[table.name]=fixture.rows[table.name].length;
       for(const row of fixture.rows[table.name]){
         const actual=await read(table.name,row);

@@ -390,6 +390,11 @@
       "id": "SALARY_NULL",
       "gate": "06H",
       "rule": "SPECIFIED salary requires non-null amount/currency in target; reject legacy nulls instead of inventing values."
+    },
+    {
+      "id": "SQL_JSON_NULL",
+      "gate": "06H",
+      "rule": "Preserve SQL NULL separately from a JSON null literal. Fixture null means SQL NULL; full-row digests carry SQL-null column flags. A real export needs the same sideband metadata."
     }
   ],
   "source_files": [

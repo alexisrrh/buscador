@@ -946,6 +946,13 @@ describe('Transition contracts and synthetic-only import laboratory',()=>{
   await expect(importSyntheticFixture(admin,seed)).rejects.toThrow('SYNTHETIC_FIXTURE_DRIFT:candidate_profiles');
   expect((await admin.query('SELECT deleted_at FROM public.candidate_profiles WHERE id=$1',[syntheticId(seed,'a-candidate')])).rows[0].deleted_at).toBeTruthy();
  });
+ it('preserves SQL NULL separately from a JSON null literal in nullable JSONB columns',async()=>{
+  const seed=randomUUID();await importSyntheticFixture(admin,seed);
+  const id=syntheticId(seed,'b-answer');
+  expect((await admin.query('SELECT answer_value IS NULL AS sql_null FROM public.application_answers WHERE id=$1',[id])).rows[0].sql_null).toBe(true);
+  await admin.query("UPDATE public.application_answers SET answer_value='null'::jsonb WHERE id=$1",[id]);
+  await expect(importSyntheticFixture(admin,seed)).rejects.toThrow('SYNTHETIC_FIXTURE_DRIFT:application_answers');
+ });
  it('rolls back earlier rows when a later identity conflicts without disabling constraints',async()=>{
   const seed=randomUUID(),fixture=syntheticFixture(seed);
   await ingestWork.run(tx=>tx.query('INSERT INTO public.job_sources(id,code,name) VALUES($1,$2,$3)',[randomUUID(),fixture.rows.job_sources[0].code,'Synthetic conflicting source']));

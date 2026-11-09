@@ -63,5 +63,6 @@ describe('synthetic import boundaries',()=>{
  it('canonicalizes key order and timestamps while preserving ordered JSON arrays and content',()=>{
   expect(canonical({b:1,a:'2000-01-01T00:00:00+00:00'})).toBe(canonical({a:new Date('2000-01-01T00:00:00Z'),b:1}));
   expect(canonical([1,2])).not.toBe(canonical([2,1]));expect(canonical({a:'claim'})).not.toBe(canonical({a:'other'}));
+  expect(canonical({row:{answer:null},sql_nulls:['answer']})).not.toBe(canonical({row:{answer:null},sql_nulls:[]}));
  });
 });
