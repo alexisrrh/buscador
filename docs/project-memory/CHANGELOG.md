@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-09 Contratos y ensayo de importación sintética (06G)
+
+- PR #10 integrado en main por el usuario; rama nueva desde develop con ascendencia de la promoción sincronizada sin cambios de árbol.
+- Manifiesto de 22 tablas/34 funciones y checksums de ambas cadenas SQL; auditoría estática/pg_catalog con discrepancias explícitas.
+- CLI solo para loopback/buscavacante_test, 52 filas sintéticas, RLS/roles vigentes, reconciliación, replay y rollback; sin importación real, identidad ni objetos. Pruebas y revisión en el PR; siguiente 07, con 06H todavía pendiente.
+
 ## 2026-11-09 Flujo individual también en main
 
 - Decisión expresa del usuario: main no requiere otra cuenta ni aprobación independiente del último push; PR, CI y Self Review se conservan.

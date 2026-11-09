@@ -14,7 +14,8 @@ Estado verificado el 9 de noviembre de 2026. La [checklist de 28 tareas](PRIORIT
 - 06E2 CV derivados integrada mediante PR #9 (c0b21c6). Ver [contrato](../db/DERIVED_RESUMES.md).
 - Veintidós tablas preparadas de las 22 inventariadas. Este recuento no es un porcentaje de avance del producto.
 - Última evidencia integrada (06E2): 519 pruebas generales aprobadas, 15 omitidas y 92 pruebas PostgreSQL aprobadas; lint/tipos/build y CI correctos. Las omisiones no acreditan integraciones externas.
-- La aplicación sigue usando Supabase. No se ha activado el backend destino ni promovido develop a main.
+- PR #10 promovido a main por el usuario (76f6d33). El runtime sigue usando Supabase; esta promoción no activa el backend destino.
+- 06G prepara contratos/laboratorio sintético; revisión y evidencia en el PR. Ver [alcance y límites](../db/TRANSITION_LAB.md).
 
 ## Siguiente trabajo y entregas de la tarea 06
 
@@ -24,8 +25,8 @@ Estado verificado el 9 de noviembre de 2026. La [checklist de 28 tareas](PRIORIT
 | 2 | 06E1 — CV base y evidencia | resumes, resume_extractions, professional_evidence_profiles, professional_evidence_items, professional_evidence_urls. | UUID/versiones y metadatos del CV base conservados; propiedad cruzada denegada; snapshots y borrado lógico íntegros; un fallo no sustituye la versión válida anterior. Interfaces de almacenamiento, sin presentar Tigris como implementado. | Integrada (PR #7) |
 | 3 | 06F — Candidaturas | application_drafts, applications, application_answers, application_events, application_user_settings, user_application_answers. | Integridad de propietario y referencias; borradores/respuestas/eventos conservados, transacciones y duplicados probados. El traslado no activa envío externo ni declara completado el seguimiento funcional de tarea 20. | Integrada (PR #8) |
 | 3b | 06E2 — CV derivados | derived_resumes y relaciones con borradores/candidaturas. | Conservar FK compuesta y guard de borrador/CV aprobados, snapshots, ciclo de render y propiedad; no crear derivados sin borrador válido. | Integrada (PR #9) |
-| 4 | 06G — Preparación de importación y contratos | Mapeo de las 22 tablas y funciones/dependencias del inventario; herramientas repetibles y fixtures sintéticos. | Contratos legado/destino comparados; restricciones/roles revisados; UUID y versiones preservados en fixtures; informe de discrepancias y reglas de conversión. Ningún dato real exportado por defecto. | Siguiente |
-| 5 | 07 — Better Auth | Identidad, cuenta, recuperación y sesiones; enlace de identidad con profiles. | Alta/login/recuperación/cierre de sesiones probados, cuenta importada sintética conserva UUID y recupera acceso. Los JWT/sesiones del legado no sirven como sesiones destino. | Tras base de dominio y 06G |
+| 4 | 06G — Preparación de importación y contratos | Mapeo de las 22 tablas y funciones/dependencias del inventario; herramientas repetibles y fixtures sintéticos. | Contratos legado/destino comparados; restricciones/roles revisados; UUID y versiones preservados en fixtures; informe de discrepancias y reglas de conversión. Ningún dato real exportado por defecto. | Implementada como preparación; validación/revisión/fusión en el PR |
+| 5 | 07 — Better Auth | Identidad, cuenta, recuperación y sesiones; enlace de identidad con profiles. | Alta/login/recuperación/cierre de sesiones probados, cuenta importada sintética conserva UUID y recupera acceso. Los JWT/sesiones del legado no sirven como sesiones destino. | Siguiente tras revisar/fusionar 06G |
 | 6 | 08 — Tigris | Objetos privados, staging, validación, finalización, descarga y reconciliación. | Propiedad, tamaño/MIME/firma/hash; repetición de PUT/finalización y fallos DB/objeto probados; copia de archivos sintéticos verificada. | Tras 07; usa contratos de 06E |
 | 7 | 06H — Ensayo completo de datos y archivos | Reconciliación integral de identidad, dominio y objetos en entorno aislado. | Conteos, digest de filas, hashes de archivos y FKs coinciden; repetir no duplica ni resucita eliminados; reversión antes/después de escrituras ensayada. Cierra la parte integral de 06, sin cambiar producción. | Requiere 06G, 07 y 08 |
 

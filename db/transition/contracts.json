@@ -1,0 +1,515 @@
+{
+  "version": 1,
+  "inventory": "docs/architecture/current-dependencies.json",
+  "tables": [
+    {
+      "name": "companies",
+      "role": "bv_ingest",
+      "identity": "id"
+    },
+    {
+      "name": "job_sources",
+      "role": "bv_ingest",
+      "identity": "id"
+    },
+    {
+      "name": "company_career_sources",
+      "role": "bv_ingest",
+      "identity": "id"
+    },
+    {
+      "name": "job_offers",
+      "role": "bv_ingest",
+      "identity": "id"
+    },
+    {
+      "name": "job_offer_sources",
+      "role": "bv_ingest",
+      "identity": "id"
+    },
+    {
+      "name": "profiles",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "candidate_profiles",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "search_profiles",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "job_preferences",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "resumes",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "resume_extractions",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "job_matches",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "professional_evidence_profiles",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "professional_evidence_items",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "professional_evidence_urls",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "application_drafts",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "application_user_settings",
+      "role": "bv_app",
+      "identity": "user_id"
+    },
+    {
+      "name": "user_application_answers",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "applications",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "application_answers",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "application_events",
+      "role": "bv_app",
+      "identity": "id"
+    },
+    {
+      "name": "derived_resumes",
+      "role": "bv_app",
+      "identity": "id"
+    }
+  ],
+  "functions": [
+    {
+      "legacy": "approve_resume",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "approve"
+    },
+    {
+      "legacy": "archive_resume",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "archive"
+    },
+    {
+      "legacy": "calculate_search_next_run",
+      "status": "PORTED",
+      "target": "app.calculate_search_next_run",
+      "note": "schedule"
+    },
+    {
+      "legacy": "complete_resume_upload",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "finalizeUpload"
+    },
+    {
+      "legacy": "confirm_application_answer",
+      "status": "REPLACED",
+      "target": "lib/server/db/application-repository.ts",
+      "note": "confirmAnswer"
+    },
+    {
+      "legacy": "create_prepared_application",
+      "status": "REPLACED",
+      "target": "lib/server/db/application-repository.ts",
+      "note": "prepare MANUAL only"
+    },
+    {
+      "legacy": "create_profile_for_auth_user",
+      "status": "PENDING",
+      "target": "07",
+      "note": "Better Auth identity bridge; profiles repository alone is not authentication"
+    },
+    {
+      "legacy": "create_resume_upload",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "register"
+    },
+    {
+      "legacy": "ensure_contextual_candidate_profile",
+      "status": "PENDING",
+      "target": "18",
+      "note": "Contextual handoff/ambiguity resolution before wiring target UI"
+    },
+    {
+      "legacy": "find_existing_job_offer",
+      "status": "PORTED",
+      "target": "app.find_existing_job_offer",
+      "note": "neutral"
+    },
+    {
+      "legacy": "find_existing_job_offers_batch",
+      "status": "PORTED",
+      "target": "app.find_existing_job_offers_batch",
+      "note": "neutral"
+    },
+    {
+      "legacy": "guard_application_derived_resume",
+      "status": "PORTED",
+      "target": "app.guard_application_derived_resume",
+      "note": "trigger"
+    },
+    {
+      "legacy": "guard_derived_resume",
+      "status": "PORTED",
+      "target": "app.guard_derived_resume",
+      "note": "trigger"
+    },
+    {
+      "legacy": "guard_derived_storage",
+      "status": "PENDING",
+      "target": "08",
+      "note": "Object-store immutable keys, staging and reconciliation"
+    },
+    {
+      "legacy": "ingest_company_career_job_offer",
+      "status": "PORTED",
+      "target": "app.ingest_company_career_job_offer",
+      "note": "neutral"
+    },
+    {
+      "legacy": "ingest_company_career_job_offers_batch",
+      "status": "PORTED",
+      "target": "app.ingest_company_career_job_offers_batch",
+      "note": "neutral"
+    },
+    {
+      "legacy": "ingest_job_offer",
+      "status": "PORTED",
+      "target": "app.ingest_job_offer",
+      "note": "neutral"
+    },
+    {
+      "legacy": "inherit_job_match_user_status",
+      "status": "PORTED",
+      "target": "app.inherit_job_match_user_status",
+      "note": "trigger"
+    },
+    {
+      "legacy": "job_offer_matching_fingerprint",
+      "status": "PORTED",
+      "target": "app.job_offer_matching_fingerprint",
+      "note": "neutral"
+    },
+    {
+      "legacy": "jsonb_text_array",
+      "status": "REPLACED",
+      "target": "db/migrations/0003_neutral_catalog.sql",
+      "note": "Inline JSONB conversion; no target RPC of that name"
+    },
+    {
+      "legacy": "record_company_career_source_check",
+      "status": "PORTED",
+      "target": "app.record_company_career_source_check",
+      "note": "neutral"
+    },
+    {
+      "legacy": "reject_resume_upload",
+      "status": "PENDING",
+      "target": "08",
+      "note": "Upload rejection/reconciliation and object policy"
+    },
+    {
+      "legacy": "reserve_application_attempt",
+      "status": "DISABLED",
+      "target": "20",
+      "note": "No external submission or automatic attempt reservation in target"
+    },
+    {
+      "legacy": "save_search_profile",
+      "status": "REPLACED",
+      "target": "lib/server/db/search-repository.ts",
+      "note": "save with expectedVersion"
+    },
+    {
+      "legacy": "set_application_draft_status",
+      "status": "REPLACED",
+      "target": "lib/server/db/application-repository.ts",
+      "note": "approveDraft/archiveDraft"
+    },
+    {
+      "legacy": "set_job_match_status",
+      "status": "REPLACED",
+      "target": "lib/server/db/matching-repository.ts",
+      "note": "setStatus"
+    },
+    {
+      "legacy": "set_resume_lifecycle_timestamps",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "approve/archive"
+    },
+    {
+      "legacy": "set_updated_at",
+      "status": "PORTED",
+      "target": "app.set_catalog_updated_at",
+      "note": "server now(); historical updated_at is a migration discrepancy"
+    },
+    {
+      "legacy": "soft_delete_resume",
+      "status": "REPLACED",
+      "target": "lib/server/db/resume-repository.ts",
+      "note": "archive"
+    },
+    {
+      "legacy": "transition_search_profile_status",
+      "status": "REPLACED",
+      "target": "lib/server/db/search-repository.ts",
+      "note": "transition"
+    },
+    {
+      "legacy": "update_application_draft_text",
+      "status": "PENDING",
+      "target": "19",
+      "note": "Visible material editing/revalidation; saveDraft handles only unapproved validated material"
+    },
+    {
+      "legacy": "upsert_job_match",
+      "status": "REPLACED",
+      "target": "lib/server/db/matching-repository.ts",
+      "note": "upsertMatch"
+    },
+    {
+      "legacy": "upsert_job_matches_batch",
+      "status": "REPLACED",
+      "target": "lib/server/db/matching-repository.ts",
+      "note": "upsertMatches atomic per run"
+    },
+    {
+      "legacy": "validate_job_preferences_version",
+      "status": "PORTED",
+      "target": "app.validate_job_preferences_version",
+      "note": "trigger"
+    }
+  ],
+  "target_additions": {
+    "application_drafts": [
+      "deleted_at",
+      "revision"
+    ],
+    "applications": [
+      "deleted_at"
+    ],
+    "resume_extractions": [
+      "deleted_at"
+    ],
+    "professional_evidence_profiles": [
+      "deleted_at"
+    ],
+    "professional_evidence_items": [
+      "deleted_at"
+    ],
+    "professional_evidence_urls": [
+      "deleted_at"
+    ]
+  },
+  "discrepancies": [
+    {
+      "id": "AUTH_IDENTITY",
+      "gate": "07",
+      "rule": "Preserve UUID; auth.users FK and sessions are not portable. Better Auth bridge/reset required."
+    },
+    {
+      "id": "OBJECT_BYTES",
+      "gate": "08",
+      "rule": "Preserve locator/version; verify actual copied bytes/hash. Metadata-only fixtures do not prove object migration."
+    },
+    {
+      "id": "HISTORICAL_TIMESTAMPS",
+      "gate": "06H",
+      "rule": "Lifecycle triggers overwrite updated_at with server now(); do not claim historical timestamp equivalence until an audited import path is implemented."
+    },
+    {
+      "id": "EXPLICIT_CONFIRMATION",
+      "gate": "10/06G",
+      "rule": "Legacy APPROVED_RESUME/VERIFIED is not user confirmation; preserve historical snapshots and require reconfirmation for new usage."
+    },
+    {
+      "id": "STRICT_OWNERSHIP",
+      "gate": "06H",
+      "rule": "Reject cross-owner or cross-candidate legacy rows; strengthened composite FKs are mandatory, never silently reassign."
+    },
+    {
+      "id": "IMMUTABLE_SNAPSHOTS",
+      "gate": "06H",
+      "rule": "Resume/extraction/evidence snapshots and deleted rows cannot be overwritten or resurrected. Report conflicts."
+    },
+    {
+      "id": "ARCHIVED_RENDER",
+      "gate": "06H",
+      "rule": "Import through GENERATING then READY/ARCHIVED; approved source preconditions may fail for historical archived/deleted parents. Do not bypass guards."
+    },
+    {
+      "id": "SOURCE_BOARD_IDENTITY",
+      "gate": "14",
+      "rule": "Provider-scoped external IDs still collide across boards; reconcile before target activation."
+    },
+    {
+      "id": "AUTOMATION",
+      "gate": "20",
+      "rule": "Keep historical status/mode values but do not reserve attempts, submit forms or enable automation."
+    },
+    {
+      "id": "SALARY_NULL",
+      "gate": "06H",
+      "rule": "SPECIFIED salary requires non-null amount/currency in target; reject legacy nulls instead of inventing values."
+    }
+  ],
+  "source_files": [
+    {
+      "path": "supabase/migrations/20260829000100_phase1_core_identity_search.sql",
+      "sha256": "011759cb9940cebd775d3798ec15b868c2fc97b51e007da2bd6a8fe7ea71f495"
+    },
+    {
+      "path": "supabase/migrations/20260829000200_phase2_private_resumes.sql",
+      "sha256": "65ad109056fb82147ee622446ba2fb6cedc3b627b11e9b8d0d2847ef5833e409"
+    },
+    {
+      "path": "supabase/migrations/20260829000300_phase3_minimal_web.sql",
+      "sha256": "44eee7af5a01ef468bef7726a2849906bb9eeb1d3b5275c30df268d74433246b"
+    },
+    {
+      "path": "supabase/migrations/20260830000100_phase35_resume_storage_hardening.sql",
+      "sha256": "bca7b11a113ded43091a1bc576f9d3a1bda4d83cb2b35449499e1599cd56bd22"
+    },
+    {
+      "path": "supabase/migrations/20260830000150_pgcrypto_extension.sql",
+      "sha256": "b6eab21baeb2a930df0bb6b2bdc34b0efb78cfb053fbce75f586221e0e214e2a"
+    },
+    {
+      "path": "supabase/migrations/20260830000200_phase4_neutral_job_offers.sql",
+      "sha256": "018eb98bf7252c513d1b10ba36c62530a0f96e7b83d1c8359c015b633487d7e5"
+    },
+    {
+      "path": "supabase/migrations/20260830000300_phase5a_infojobs_ingestion.sql",
+      "sha256": "daa4f7decb0c4d418f7d5365e832dc697bb76962b88b0c43f554acdb9ce72161"
+    },
+    {
+      "path": "supabase/migrations/20260830000400_phase5b_company_careers.sql",
+      "sha256": "dc233d5d44bbcaa416bbef53ea285a780c70a787cd97196d2c55bca3efa0e6be"
+    },
+    {
+      "path": "supabase/migrations/20260830000500_phase6_deterministic_matching.sql",
+      "sha256": "b452d9c91a6ed62a56046a96943ba9b070bdc1281dbdf8367c25567fa4c6a3d8"
+    },
+    {
+      "path": "supabase/migrations/20260830000600_search_profile_state_transitions.sql",
+      "sha256": "1c97eb8150a3d164c54229359dd342541cc546f2d1dda022534e4cba4b88716b"
+    },
+    {
+      "path": "supabase/migrations/20260831000100_phase66_matching_quality.sql",
+      "sha256": "0a678865996988671e46854fb20438677fa43894d17d200744a849cf88b68511"
+    },
+    {
+      "path": "supabase/migrations/20260831000200_phase67_add_public_ats_platforms.sql",
+      "sha256": "e8731204c56aa12b215b887741389698a80611c13d387198f462dc9a9a1e7641"
+    },
+    {
+      "path": "supabase/migrations/20260831000300_phase69_batch_ingestion_matching.sql",
+      "sha256": "13ecb009dc61455a76c88adfd9454964b8a0a2bb8aeca8e5e233cd55d3b88cb1"
+    },
+    {
+      "path": "supabase/migrations/20260902000100_phase7_application_drafts.sql",
+      "sha256": "b089d00b9f5d35c190dbc08b515c2a96878638dc87717cd26fc14b0925115d2d"
+    },
+    {
+      "path": "supabase/migrations/20260902000200_phase8_application_engine.sql",
+      "sha256": "874d855764cb141fb63bfd4631af970d3a85f34af9d608d8b31229379ca5188f"
+    },
+    {
+      "path": "supabase/migrations/20260908000100_phase9a_derived_resumes.sql",
+      "sha256": "ddaca509d4c5160ca4138e42398d0112f814a6dbfdaa14bbdef4975b4963cbe2"
+    },
+    {
+      "path": "supabase/migrations/20260908000200_phase9a3_user_identity.sql",
+      "sha256": "becec77d19d583d7ba085a8e51a7c21ebcdd738a83713c9f1fdde12f1e6e70b9"
+    },
+    {
+      "path": "supabase/migrations/20260909000100_phase9a9_professional_evidence.sql",
+      "sha256": "5edbcfb2d60ff3e56d1455a34d28240b7452ece12648368fd493fc4c7740f09b"
+    },
+    {
+      "path": "supabase/migrations/20260909000200_phase10_jobgether_source.sql",
+      "sha256": "777be2eff0236b8bb24ed63522144b01b2fe0efbbaed875441933cbe5662aca6"
+    },
+    {
+      "path": "supabase/migrations/20260909000300_phase11_jobicy_source.sql",
+      "sha256": "773d883389547ac1bb2ce26fb65534f129a76da44c741f5b227100664eb605d5"
+    },
+    {
+      "path": "supabase/migrations/20260910000100_phase12_contextual_cv_onboarding.sql",
+      "sha256": "dd291e35c9efdc265ea8d539280c6ab52de4ea660ba483d18ae2796f206edbcd"
+    },
+    {
+      "path": "supabase/migrations/20260914000100_onboarding_preference_states.sql",
+      "sha256": "225f9cd41de13f3df03b361cff9a70d6ff3c6b05f4de20eff6f0298a400d875f"
+    }
+  ],
+  "target_files": [
+    {
+      "path": "db/migrations/0001_identity_profiles.sql",
+      "sha256": "20f8df75c35506d4dfdb313d6e8d2e13adee9e1328212bf3d576d824aeb3a11a"
+    },
+    {
+      "path": "db/migrations/0002_search_preferences.sql",
+      "sha256": "418167cc1be7a68a4aedfbeeda028bec818cb918e56b0c32fb3cf4db9f885568"
+    },
+    {
+      "path": "db/migrations/0003_neutral_catalog.sql",
+      "sha256": "094a4e2dfe7f82812f664f73e50a31e094c89c6890b2c57afe953ef24b804bce"
+    },
+    {
+      "path": "db/migrations/0004_matching.sql",
+      "sha256": "02ae733bb180ed377c3217d6dbbe679256cc71c4f2b934ad6bc89d5aa24e2e30"
+    },
+    {
+      "path": "db/migrations/0005_resume_evidence.sql",
+      "sha256": "54912365e5415a0abca7ab2c3413ff24ad59be8b740e4b1d131311d65a445e25"
+    },
+    {
+      "path": "db/migrations/0006_applications.sql",
+      "sha256": "261893827208286dfbd2d8af114db37b01ed92bac5f242142c8ed3115d8bfd73"
+    },
+    {
+      "path": "db/migrations/0007_derived_resumes.sql",
+      "sha256": "094259ca23d92acdba7bbe10eccca08087af64aa9193985c42e1456426c68efb"
+    }
+  ]
+}

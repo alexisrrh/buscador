@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 Tarea 06G: contratos y laboratorio sintético
+
+PR #10 fusionado por el usuario en main (76f6d33); PR #11 integrado antes en develop (98841ad). Rama feat/contratos-importacion-sintetica desde develop, sincronizada por fast-forward con el merge de main tras comprobar árboles idénticos. Mapa de 22 tablas/34 funciones, checksums SQL, auditoría acotada de metadatos y cargador de 52 filas sintéticas con roles/RLS, replay/digest, rollback y detección de drift. Ver ../../db/TRANSITION_LAB.md.
+
+El laboratorio no admite datos reales ni URLs remotas y no copia usuarios auth/objetos; productionReady=false. Discrepancias explícitas: timestamps históricos de ciclo, derivados con padres archivados, procedencia/reconfirmación y gates 07/08/14/18/19/20/06H. Evidencia de validación y revisión/fusión en el PR. Siguiente 07 tras integrar la preparación 06G; tarea 06 y aceptación integral permanecen abiertas, runtime Supabase conservado.
+
 ## 2026-11-09 main adaptada al trabajo individual
 
 El usuario autorizó quitar la aprobación externa de main, igual que develop. PATCH verificado por GET: main mantiene PR, Quality gate estricto, conversaciones resueltas, administradores sujetos a reglas y force push/eliminación bloqueados; solo cambian required_approving_review_count=0 y require_last_push_approval=false. Comparación completa conserva las demás propiedades de main y todo develop. Evidencias fuera de Git en _local-backups/task-main-20261109/.
