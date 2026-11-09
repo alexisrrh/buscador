@@ -37,6 +37,7 @@ export default defineConfig({
         "lib/server/db/matching-repository.ts",
         "lib/server/db/{resume-repository,evidence-repository}.ts",
         "lib/server/db/application-repository.ts",
+        "lib/server/db/derived-resume-repository.ts",
       ],
       thresholds: {
         statements: 80,
