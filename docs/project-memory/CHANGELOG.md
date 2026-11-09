@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-09 CV base y evidencia PostgreSQL (06E1)
+
+- PR #6 integrado; rama feat/cv-evidencia-postgresql desde develop.
+- Cinco tablas con RLS, propiedad compuesta, metadatos/snapshots inmutables y borrado lógico; CV versionado, integridad, aprobación atómica y banco compatible con generadores existentes. Interfaz de objetos sin implementar Tigris ni activar rutas.
+- 06E2 derivados se completa tras borradores en 06F para conservar FK/guard existentes. Quince tablas preparadas, siete pendientes; tarea 06 abierta. Resultados de validación y revisión registrados en el PR.
+
 ## 2026-11-06 Persistencia PostgreSQL de matching (06D)
 
 - PR #5 integrado; nueva rama feat/matching-postgresql desde develop.

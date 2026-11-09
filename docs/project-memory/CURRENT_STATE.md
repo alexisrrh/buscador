@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 Tarea 06E1: CV base y evidencia
+
+PR #6 fusionado por el usuario en develop (2e401df). Rama feat/cv-evidencia-postgresql: cinco tablas, repositorios privados de CV/evidencia, interfaz de lectura de objetos y pruebas. Ver ../../db/RESUME_EVIDENCE.md. Quince tablas preparadas de 22; runtime Supabase conservado, sin datos/archivos reales importados.
+
+Dependencia detectada en el esquema legado: derived_resumes exige application_drafts aprobado mediante FK/guard. 06E se divide: 06E1 cinco tablas, luego 06F seis de candidaturas, después 06E2 derivados y su relación completa (22 tablas); después 06G. No se relajan claves para anticipar derivados. CI sobre af198f3: 509 pruebas generales aprobadas, 15 omitidas y 73 PostgreSQL aprobadas (run 42612418351). Último estado remoto y revisión/fusión en PR #7. 06/tareas funcionales 10/19 siguen abiertas; no se genera evidencia al aprobar un archivo.
+
 ## 2026-11-06 Tarea 06D: matching
 
 PR #5 de proceso integrado en develop (ee78586). Rama feat/matching-postgresql: migración 0004, repositorio MatchingRepository con actor y snapshot, catálogo separado, upsert transaccional y estados heredados según legado. Motor y servicio existentes intactos; diez tablas de 22 preparadas, runtime Supabase conservado. Ver ../../db/MATCHING.md.
