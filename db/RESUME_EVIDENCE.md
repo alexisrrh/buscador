@@ -24,6 +24,6 @@ addConfirmedClaim/addConfirmedUrl requieren confirmación explícita del llamado
 
 ## Verificación y aceptación
 
-npm run check cubre lint, tipos, pruebas generales, cobertura y compilación. npm run test:db ejecuta PostgreSQL 17 temporal en CI: duplicados, versiones desde conexiones independientes, propiedad cruzada, metadatos/snapshots, sustitución segura de aprobación, integridad/firma, borrado lógico sin resurrección, confirmación y formato del banco. El último resultado remoto se registra en el PR. Docker local no respondió en entregas previas; no se presenta la base como probada localmente.
+npm run check cubre lint, tipos, pruebas generales, cobertura y compilación. npm run test:db ejecuta PostgreSQL 17 temporal en CI: duplicados, versiones desde conexiones independientes, propiedad cruzada, metadatos/snapshots, sustitución segura de aprobación, integridad/firma, borrado lógico sin resurrección, confirmación y formato del banco. Sobre af198f3: 509 pruebas generales aprobadas, 15 omitidas y 73 PostgreSQL aprobadas; [ejecución del PR](https://github.com/alexisrrh/buscador/actions/runs/42612418351). El último estado remoto se registra en PR #7. Docker local no respondió en entregas previas; no se presenta la base como probada localmente.
 
 Pendiente revisión/fusión por el usuario; después 06F y 06E2, manteniendo una sola entrega activa. Better Auth, Tigris, migración real, edición/confirmación visible y descargas siguen con sus tareas correspondientes.
