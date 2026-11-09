@@ -1,0 +1,609 @@
+{
+  "verified_on": "2026-11-06",
+  "source_commit": "8c1bfe44ef39e1d3f9b89531bd6a07b9fef82428",
+  "scope": "Local static inventory; declarations and literal calls, not live schema inspection. Dynamic RPC names require the design mapping.",
+  "migrations": [
+    "supabase/migrations/20260829000100_phase1_core_identity_search.sql",
+    "supabase/migrations/20260829000200_phase2_private_resumes.sql",
+    "supabase/migrations/20260829000300_phase3_minimal_web.sql",
+    "supabase/migrations/20260830000100_phase35_resume_storage_hardening.sql",
+    "supabase/migrations/20260830000150_pgcrypto_extension.sql",
+    "supabase/migrations/20260830000200_phase4_neutral_job_offers.sql",
+    "supabase/migrations/20260830000300_phase5a_infojobs_ingestion.sql",
+    "supabase/migrations/20260830000400_phase5b_company_careers.sql",
+    "supabase/migrations/20260830000500_phase6_deterministic_matching.sql",
+    "supabase/migrations/20260830000600_search_profile_state_transitions.sql",
+    "supabase/migrations/20260831000100_phase66_matching_quality.sql",
+    "supabase/migrations/20260831000200_phase67_add_public_ats_platforms.sql",
+    "supabase/migrations/20260831000300_phase69_batch_ingestion_matching.sql",
+    "supabase/migrations/20260902000100_phase7_application_drafts.sql",
+    "supabase/migrations/20260902000200_phase8_application_engine.sql",
+    "supabase/migrations/20260908000100_phase9a_derived_resumes.sql",
+    "supabase/migrations/20260908000200_phase9a3_user_identity.sql",
+    "supabase/migrations/20260909000100_phase9a9_professional_evidence.sql",
+    "supabase/migrations/20260909000200_phase10_jobgether_source.sql",
+    "supabase/migrations/20260909000300_phase11_jobicy_source.sql",
+    "supabase/migrations/20260910000100_phase12_contextual_cv_onboarding.sql",
+    "supabase/migrations/20260914000100_onboarding_preference_states.sql"
+  ],
+  "declared_public_tables": [
+    "application_answers",
+    "application_drafts",
+    "application_events",
+    "application_user_settings",
+    "applications",
+    "candidate_profiles",
+    "companies",
+    "company_career_sources",
+    "derived_resumes",
+    "job_matches",
+    "job_offer_sources",
+    "job_offers",
+    "job_preferences",
+    "job_sources",
+    "professional_evidence_items",
+    "professional_evidence_profiles",
+    "professional_evidence_urls",
+    "profiles",
+    "resume_extractions",
+    "resumes",
+    "search_profiles",
+    "user_application_answers"
+  ],
+  "declared_public_functions": [
+    "approve_resume",
+    "archive_resume",
+    "calculate_search_next_run",
+    "complete_resume_upload",
+    "confirm_application_answer",
+    "create_prepared_application",
+    "create_profile_for_auth_user",
+    "create_resume_upload",
+    "ensure_contextual_candidate_profile",
+    "find_existing_job_offer",
+    "find_existing_job_offers_batch",
+    "guard_application_derived_resume",
+    "guard_derived_resume",
+    "guard_derived_storage",
+    "ingest_company_career_job_offer",
+    "ingest_company_career_job_offers_batch",
+    "ingest_job_offer",
+    "inherit_job_match_user_status",
+    "job_offer_matching_fingerprint",
+    "jsonb_text_array",
+    "record_company_career_source_check",
+    "reject_resume_upload",
+    "reserve_application_attempt",
+    "save_search_profile",
+    "set_application_draft_status",
+    "set_job_match_status",
+    "set_resume_lifecycle_timestamps",
+    "set_updated_at",
+    "soft_delete_resume",
+    "transition_search_profile_status",
+    "update_application_draft_text",
+    "upsert_job_match",
+    "upsert_job_matches_batch",
+    "validate_job_preferences_version"
+  ],
+  "coupled_modules": [
+    {
+      "path": "app/(private)/applications/[id]/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_answers",
+        "application_drafts",
+        "application_events",
+        "applications",
+        "job_offers"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/applications/drafts/[id]/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_drafts",
+        "job_offer_sources",
+        "job_offers",
+        "professional_evidence_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/jobs/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "company_career_sources",
+        "job_matches",
+        "job_offers",
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/layout.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/resumes/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/searches/[id]/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "candidate_profiles",
+        "job_preferences",
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/searches/new/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "candidate_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/(private)/searches/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/application-engine.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [
+        "confirm_application_answer"
+      ],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/applications.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [
+        "set_application_draft_status",
+        "update_application_draft_text"
+      ],
+      "literal_from_names": [
+        "application_drafts"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/auth.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/derived-resumes.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/jobs.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [
+        "set_job_match_status"
+      ],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/onboarding.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/requirement-confirmations.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_drafts",
+        "professional_evidence_items",
+        "professional_evidence_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/resumes.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [
+        "approve_resume",
+        "complete_resume_upload",
+        "create_resume_upload",
+        "ensure_contextual_candidate_profile",
+        "reject_resume_upload"
+      ],
+      "literal_from_names": [
+        "resumes"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "app/actions/searches.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [
+        "save_search_profile",
+        "transition_search_profile_status"
+      ],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/api/derived-resumes/[id]/route.ts",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "derived_resumes"
+      ],
+      "storage_calls": true
+    },
+    {
+      "path": "app/onboarding/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "app/oportunidades/page.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "components/derived-resume-panel.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/server"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "applications",
+        "derived_resumes",
+        "resumes"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "components/resume-uploader.tsx",
+      "supabase_imports": [
+        "@/lib/supabase/browser"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": true
+    },
+    {
+      "path": "lib/application-engine/service.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [
+        "create_prepared_application"
+      ],
+      "literal_from_names": [
+        "application_drafts",
+        "application_user_settings",
+        "applications",
+        "job_offer_sources",
+        "job_offers",
+        "resumes",
+        "search_profiles",
+        "user_application_answers"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/applications/professional-evidence-bootstrap.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_drafts",
+        "professional_evidence_items",
+        "professional_evidence_profiles",
+        "professional_evidence_urls",
+        "resume_extractions",
+        "resumes"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/applications/professional-evidence.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "professional_evidence_items"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/applications/repository.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_drafts",
+        "resume_extractions"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/applications/service.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "candidate_profiles",
+        "job_matches",
+        "job_offers",
+        "profiles",
+        "resumes"
+      ],
+      "storage_calls": true
+    },
+    {
+      "path": "lib/derived-resumes/service.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "application_drafts",
+        "applications",
+        "derived_resumes",
+        "profiles",
+        "resumes"
+      ],
+      "storage_calls": true
+    },
+    {
+      "path": "lib/job-sources/development-career-sources.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "companies",
+        "company_career_sources"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/global-ingestion.server.ts",
+      "supabase_imports": [
+        "@/lib/job-sources/supabase-repository",
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/live-search.server.ts",
+      "supabase_imports": [
+        "@/lib/job-sources/supabase-repository",
+        "@/lib/matching/supabase-repository.server",
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/public-catalog.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "job_offers"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/source-registry.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [
+        "record_company_career_source_check"
+      ],
+      "literal_from_names": [
+        "company_career_sources"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/supabase-repository.server.ts",
+      "supabase_imports": [
+        "@/lib/job-sources/supabase-repository",
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/job-sources/supabase-repository.ts",
+      "supabase_imports": [],
+      "literal_rpc_calls": [
+        "find_existing_job_offer",
+        "find_existing_job_offers_batch",
+        "ingest_company_career_job_offers_batch",
+        "record_company_career_source_check"
+      ],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/matching/supabase-repository.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [
+        "upsert_job_match",
+        "upsert_job_matches_batch"
+      ],
+      "literal_from_names": [
+        "candidate_profiles",
+        "job_matches",
+        "job_offers",
+        "job_preferences",
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/onboarding/persistence.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [
+        "ensure_contextual_candidate_profile",
+        "save_search_profile",
+        "transition_search_profile_status"
+      ],
+      "literal_from_names": [
+        "candidate_profiles",
+        "job_preferences",
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/onboarding/state.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "candidate_profiles",
+        "job_preferences",
+        "resumes",
+        "search_profiles"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/resumes/contextual-onboarding.server.ts",
+      "supabase_imports": [
+        "@supabase/supabase-js"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [
+        "candidate_profiles",
+        "resumes"
+      ],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/supabase/browser.ts",
+      "supabase_imports": [
+        "@supabase/ssr"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "lib/supabase/server.ts",
+      "supabase_imports": [
+        "@supabase/ssr"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    },
+    {
+      "path": "proxy.ts",
+      "supabase_imports": [
+        "@supabase/ssr"
+      ],
+      "literal_rpc_calls": [],
+      "literal_from_names": [],
+      "storage_calls": false
+    }
+  ],
+  "dynamic_rpc_names": [
+    "archive_resume",
+    "soft_delete_resume",
+    "ingest_company_career_job_offer",
+    "ingest_job_offer"
+  ],
+  "legacy_buckets": [
+    "private-resumes",
+    "derived-resumes"
+  ]
+}

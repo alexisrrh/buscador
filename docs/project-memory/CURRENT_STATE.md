@@ -1,5 +1,101 @@
 # Current State
 
+## 2026-11-09 main adaptada al trabajo individual
+
+El usuario autorizó quitar la aprobación externa de main, igual que develop. PATCH verificado por GET: main mantiene PR, Quality gate estricto, conversaciones resueltas, administradores sujetos a reglas y force push/eliminación bloqueados; solo cambian required_approving_review_count=0 y require_last_push_approval=false. Comparación completa conserva las demás propiedades de main y todo develop. Evidencias fuera de Git en _local-backups/task-main-20261109/.
+
+PR #9 integrado en develop (c0b21c6); 06E2 queda integrada y siguiente es 06G. PR #10 develop→main abierto por el usuario, sin fusión automática por el agente. La promoción a main no activa el backend destino: Supabase continúa como runtime; tarea 06 abierta. AGENTS.md y guía de CI actualizadas para ambas ramas en modo individual.
+
+## 2026-11-09 Tarea 06E2: CV derivados
+
+PR #8 fusionado por el usuario en develop (72f66d0). Rama feat/cv-derivados-postgresql: tabla derived_resumes, FK completa hacia candidaturas, guards de ciclo/aprobación y repositorio privado con verificación de objetos. Reutiliza tipos, versión de generación, constructor de contenido y renderer actuales. 22 tablas preparadas de 22; esto no constituye migración completada ni porcentaje del producto. Ver ../../db/DERIVED_RESUMES.md.
+
+Resultados de validación y revisión/fusión en el PR. Siguiente 06G contratos/importación de fixtures, después 07/08 y 06H. La tarea 06 continúa abierta; sin cambios de rutas, objetos reales, proveedor o envíos externos. El backend activo sigue siendo Supabase.
+
+## 2026-11-09 Tarea 06F: candidaturas
+
+PR #7 fusionado por el usuario en develop (8cb018e). Rama feat/candidaturas-postgresql: seis tablas privadas, repositorio de borradores/candidaturas/respuestas/configuración e historial append-only. 21 tablas preparadas de 22; siguiente 06E2 derivados. Ver ../../db/APPLICATIONS.md.
+
+Generación/validación actuales conservadas, revisión optimista del borrador y FKs compuestas; preparación transaccional MANUAL sin invocar conectores. Sin rutas nuevas ni migración real; runtime Supabase conservado. Evidencia local/remota y revisión/fusión en el PR. Tarea 06 y tareas funcionales 18/19/20 siguen abiertas.
+
+## 2026-11-09 Tarea 06E1: CV base y evidencia
+
+PR #6 fusionado por el usuario en develop (2e401df). Rama feat/cv-evidencia-postgresql: cinco tablas, repositorios privados de CV/evidencia, interfaz de lectura de objetos y pruebas. Ver ../../db/RESUME_EVIDENCE.md. Quince tablas preparadas de 22; runtime Supabase conservado, sin datos/archivos reales importados.
+
+Dependencia detectada en el esquema legado: derived_resumes exige application_drafts aprobado mediante FK/guard. 06E se divide: 06E1 cinco tablas, luego 06F seis de candidaturas, después 06E2 derivados y su relación completa (22 tablas); después 06G. No se relajan claves para anticipar derivados. CI sobre af198f3: 509 pruebas generales aprobadas, 15 omitidas y 73 PostgreSQL aprobadas (run 42612418351). Último estado remoto y revisión/fusión en PR #7. 06/tareas funcionales 10/19 siguen abiertas; no se genera evidencia al aprobar un archivo.
+
+## 2026-11-06 Tarea 06D: matching
+
+PR #5 de proceso integrado en develop (ee78586). Rama feat/matching-postgresql: migración 0004, repositorio MatchingRepository con actor y snapshot, catálogo separado, upsert transaccional y estados heredados según legado. Motor y servicio existentes intactos; diez tablas de 22 preparadas, runtime Supabase conservado. Ver ../../db/MATCHING.md.
+
+Local y CI sobre 8187ffb: 502 pruebas aprobadas, 15 omitidas; lint, tipos, build y cuatro umbrales de cobertura al 80 % correctos. PostgreSQL 17 real: 63 pruebas aprobadas en Actions (42224164954 y 42224117932). Último estado remoto y revisión en PR #6. Sin importación de datos ni activación de infraestructura. Tras revisar/fusionar, próxima 06E CV/evidencia; tarea 06 abierta.
+
+## 2026-11-06 Organización del proceso y cierre de 06C
+
+PR #4 integrado por el usuario en develop (a589a0f). 06A/06B/06C integradas; nueve tablas de 22 preparadas. Última evidencia de código: 495 pruebas generales aprobadas, 15 omitidas y 51 PostgreSQL aprobadas, CI correcto. Supabase sigue como runtime, main sin promoción.
+
+Ver ../WORK_PROCESS.md: próxima 06D matching; 06E seis tablas de CV/evidencia; 06F seis de candidaturas; 06G preparación de importación/contratos. Después 07 Better Auth y 08 Tigris permiten 06H, ensayo integral. La tarea 06 no tiene que estar cerrada para iniciar 07/08 tras 06G. Este cambio solo organiza documentación; no implementa matching ni mueve datos.
+
+## 2026-11-06 Tarea 06C: catálogo e ingesta
+
+PR #3 integrado en develop por el usuario (172dd94); rama feat/catalogo-ingesta-postgresql. Se preparan cinco tablas neutrales, roles de lectura/ingesta separados, RPC SQL invocador y lector público por columnas, registro/salud e ingesta individual/lote compatible. Ver ../../db/CATALOG_INGESTION.md. Nueve tablas de 22 preparadas; Supabase sigue activo y no hay migración real ni scheduler.
+
+Local: 495 pruebas aprobadas y 15 omitidas, lint/tipos/build correctos, cobertura superior al 80 % con 33 módulos. test:db ampliado a 51 casos; validación PostgreSQL real en Actions se registra en el PR. Identidad proveedor/board sigue pendiente en tarea 14: colisiones rechazan la operación sin sobrescribir datos. Tarea 06 abierta para matching, CV/evidencia, candidaturas e importación.
+
+## 2026-11-06 Tarea 06B: búsquedas y preferencias
+
+PR #2 integrado por el usuario en develop (fd9daa5). Rama nueva: feat/busquedas-preferencias-postgresql. Entrega 06B: search_profiles/job_preferences con FKs de propiedad, snapshots de preferencias append-only, commit completo mediante FK diferida, validación, versiones esperadas, locks y transiciones/planificación. Ver ../../db/SEARCH_PREFERENCES.md. No se cambia el runtime Supabase ni se migran datos reales.
+
+Control local completo: 480 pruebas aprobadas y 15 omitidas, lint/tipos/build correctos; cobertura superior al 80 % en cuatro métricas. Se amplía test:db a 35 casos PostgreSQL reales en CI; resultados de Actions en el PR. Tarea 06 en curso: cuatro tablas preparadas de 22, faltan las demás entidades e importación.
+
+## 2026-11-06 Tarea 06A: base PostgreSQL y autorización
+
+PR #1 integrado por el usuario en develop (5c16ffc). Rama nueva desde develop: feat/base-postgresql-autorizacion. Primera entrega de tarea 06: actor de servidor validado, pool, transacciones con contexto local, roles mínimos/RLS, perfiles y migrador portable con ledger/checksum. Ver ../../db/README.md. No está conectado a las rutas actuales ni a Better Auth; Supabase sigue activo.
+
+Control local: 409 pruebas aprobadas, 15 omitidas; lint/tipos/build correctos; cobertura por encima del 80 % en cuatro métricas. 18 pruebas reales PostgreSQL añadidas al Quality gate con servicio temporal de PG17; resultados remotos se registran en el PR. Docker local no respondió. La tarea 06 permanece en curso: faltan 20 tablas y repositorios, contratos, importación y aceptación integral.
+
+## 2026-11-06 Flujo individual en develop
+
+El usuario trabaja solo y autoriza adaptar develop: PR y Quality gate obligatorios, sin aprobación de otra cuenta ni del último push. Self Review y decisión de integración por el autor; no simular revisión independiente. Verificación GET confirma que el resto de protecciones y la configuración completa de main se conservan. main aún exige una aprobación externa. Esta decisión sustituye el bloqueo por revisión de develop descrito en el registro anterior. PR #1 continúa abierto, sin integración automática.
+
+## 2026-11-06 Tarea 05 completa: CI y protecciones verificadas
+
+Ver `../ci-quality-gates.md`. Node 24.15.0, npm ci, lint estricto, next typegen/tsc, suite con V8 y build pasan en copia limpia sin entorno privado: 377 pruebas aprobadas y 15 omitidas. Cobertura de 22 módulos: líneas 95,93 %, sentencias 91,24 %, funciones 94,82 %, ramas 81,20 %; mínimos del 80 %. Fallos de tipos y cobertura comprobados con pruebas negativas.
+
+El usuario exige Conventional Commits con descripción en español, ramas de trabajo y PR usando la plantilla hacia develop; promoción posterior por PR a main. develop creada en GitHub desde main 0913134; trabajo actual en ci/controles-calidad. Rama publicada y PR #1 abierto hacia develop con plantilla y sin conflictos. CI del commit 9943b36 aprobado para push (42205489586) y PR (42205496389). Protecciones de develop/main activadas y verificadas con la sesión existente de Git Credential Manager: Quality gate de GitHub Actions, PR, revisión, rama actualizada y conversaciones resueltas obligatorios, administradores incluidos, sin force push ni eliminación. PR bloqueado hasta aprobación humana. Remoto público, discrepancia con RT-12. No se ha integrado ni desplegado esta entrega.
+
+## 2026-11-06 Task 04 architecture transition design complete
+
+See `../architecture/TRANSITION_PLAN.md` and `../architecture/current-dependencies.json`. The local inventory covers 22 migrations, 22 declared public tables, 34 public function names and 42 Supabase/RPC-coupled modules. This is not a live schema or user-data audit.
+
+The target is a modular Next.js server backend, PostgreSQL 17, Better Auth and private Tigris storage. The design retains UUIDs, composite ownership constraints and RLS, isolates connection context per transaction, requires session recovery rather than importing Supabase sessions, and uses staging/verification/finalization for objects. It defines cutover and rollback both before and after target writes.
+
+No runtime implementation, package/config changes, SQL execution, credentials, remote resources or production data were involved. Supabase remains the existing runtime. Task 05 CI validation is next; target implementation starts through tasks 06 onward. The historical 377 passed/15 skipped, strict lint, types and build baseline remains task 03 evidence; functional tests were not rerun for this design-only change.
+
+## 2026-11-06 Task 03 checkpoint consolidation complete
+
+Current baseline branch: `chore/checkpoint-base-20261106`. Main remains at `0913134`; both original stash OIDs are preserved. See `../checkpoint-baseline-2026-11-06.md` for the local checkpoint sequence, asset policy and reconstruction evidence. No merge, push or deployment was performed.
+
+The staged application tree was reconstructed using Git archive without private environment files or authoring assets. Installed dependency bytes were reused locally; a fresh registry install was not tested. Lint has zero errors/warnings; types and production build pass; full suite: 377 passed, 15 skipped. A CRLF-sensitive migration assertion was made newline-independent; SQL was unchanged.
+
+All 1,033 deferred authoring/review files remain on disk and match the task 01 hashes; they are explicitly ignored while eight public runtime assets are committed. The closing documentation checkpoint leaves the worktree clean. Next: task 04 architecture transition design. Earlier snapshots below are historical.
+
+## 2026-11-06 Task 02 lint cleanup complete
+
+See `../lint-cleanup-2026-11-06.md`. ESLint passes with `--max-warnings 0`: zero errors and zero warnings, without rule overrides or suppressions. Browser state subscriptions, visual resets, owned Three.js textures and imperative scene refs were corrected; unused internal helpers were removed. Asset bytes, CSS and business logic remain unchanged.
+
+Typecheck and production build pass. Full suite: 377 passed, 15 skipped; final focused regression: 20 passed. Real WebGL choreography and full accessibility acceptance were not revalidated. HEAD, index and both stashes remain preserved; no commit or push. Next: task 03 checkpoint consolidation, including deliberate asset retention/versioning.
+
+## 2026-11-06 Requirements baseline and local inventory
+
+The user adopted `BuscaVacante_AUDITORIA_FINAL.pdf` as the functional/technical target. See `../requirements-gap-analysis-2026-11-06.md` and `../PRIORITY_CHECKLIST.md`. Older architectural decisions and the snapshots below describe the existing implementation, not compliance with that target. Better Auth, a project-controlled backend and Tigris are required by the specification; the current implementation still uses Supabase.
+
+Task 01 is complete: 18 modified tracked files and 1,083 untracked files were classified and backed up outside the repository with per-file SHA-256 verification. A Git bundle was verified and both stashes preserved. See `../worktree-inventory-2026-11-06.md` for dependencies, recovery limits and proposed checkpoints. No functional code, staging, commits or stashes were changed. Next task: 02, lint corrections. Consolidation into a clean checkpoint remains task 03.
+
+Validation from the same session before this documentation-only inventory: typecheck and production build passed; 373 tests passed and 15 were skipped; lint reported 25 errors and 28 warnings. Production behavior, coverage and remote SQL isolation were not revalidated.
+
+## Historical snapshots
+
 Last verified: 2026-09-10.
 
 ## PRODUCT RESET MILESTONE 3A-2 COMPLETE - CONTEXTUAL CV ONBOARDING

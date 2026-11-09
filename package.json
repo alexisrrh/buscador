@@ -6,20 +6,27 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:coverage": "vitest run --coverage",
+    "test:db": "vitest run --config vitest.database.config.ts",
+    "db:migrate": "node scripts/migrate-database.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.7.0",
     "@supabase/ssr": "0.12.5",
     "@supabase/supabase-js": "2.112.4",
     "mammoth": "^1.12.2",
     "next": "16.3.3",
     "pdf-parse": "^2.4.5",
     "pdfmake": "^0.2.20",
+    "pg": "8.23.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "latest",
@@ -27,8 +34,11 @@
     "@testing-library/user-event": "latest",
     "@types/node": "latest",
     "@types/pdfmake": "^0.2.12",
+    "@types/pg": "8.23.1",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/three": "^0.186.0",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.3",
     "jsdom": "latest",

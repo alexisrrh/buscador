@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync("supabase/migrations/20260914000100_onboarding_preference_states.sql", "utf8");
+// Git may check out SQL as CRLF on Windows; assertions concern SQL content.
+const migration = readFileSync("supabase/migrations/20260914000100_onboarding_preference_states.sql", "utf8").replace(/\r\n/g, "\n");
 
 describe("onboarding preference state migration", () => {
   it("adds explicit preference states with UNKNOWN defaults and no inferred backfill", () => {

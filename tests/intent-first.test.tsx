@@ -1,6 +1,9 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("@/app/actions/intent", () => ({ beginSearchIntent: vi.fn(), startPublicSearchIntent: vi.fn() }));
 import { IntentEntry } from "@/components/intent-entry";
+import { startPublicSearchIntent } from "@/app/actions/intent";
 import { OfferPreparationContextCard } from "@/components/offer-preparation-context";
 import {
   offerPreparationContextFromQuery,
@@ -88,12 +91,47 @@ describe("intent-first entry", () => {
     expect(screen.queryByLabelText("Contexto de candidatura")).not.toBeInTheDocument();
   });
 
-  it("renders an accessible, model-free mobile-friendly entry form", () => {
-    render(<IntentEntry intent={{ role: "Administrativo", location: "", workMode: "ANY" }} />);
-    expect(screen.getByLabelText("¿Qué trabajo estás buscando?")).toBeRequired();
-    expect(screen.getByLabelText(/Ubicación/)).not.toBeRequired();
-    expect(screen.getByRole("radio", { name: "Cualquiera" })).toBeChecked();
-    expect(screen.getByRole("button", { name: /Encontrar oportunidades/i })).toBeInTheDocument();
+  it("renders accessible optional location and work-mode controls on the landing form", () => {
+    const { container } = render(<IntentEntry intent={{ role: "Administrativo", location: "A Coruña", workMode: "REMOTE" }} showSearchScope />);
+    expect(screen.getByLabelText("¿Qué trabajo buscas?")).toBeRequired();
+    expect(screen.getByPlaceholderText("Dime qué trabajo buscas...")).toHaveValue("Administrativo");
+    expect(screen.getByLabelText("¿Dónde quieres trabajar?")).toHaveValue("A Coruña");
+    expect(screen.getByLabelText("Modalidad")).toHaveValue("REMOTE");
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Empezar búsqueda" })).toBeInTheDocument();
+    expect(container.querySelector('input[type="hidden"][name="location"]')).toBeNull();
+    expect(container.querySelector('input[type="hidden"][name="work_mode"]')).toBeNull();
     expect(screen.queryByText(/CandidateProfile|SearchProfile|JobPreferences/)).not.toBeInTheDocument();
+  });
+
+  it("keeps location optional, supports remote without a destination, and exposes explicit scope changes", () => {
+    const onLocationChange = vi.fn();
+    const onWorkModeChange = vi.fn();
+    render(<IntentEntry showSearchScope onLocationChange={onLocationChange} onWorkModeChange={onWorkModeChange} />);
+
+    expect(screen.getByLabelText("¿Dónde quieres trabajar?")).toHaveValue("");
+    expect(screen.getByLabelText("Modalidad")).toHaveValue("ANY");
+    fireEvent.change(screen.getByLabelText("Modalidad"), { target: { value: "REMOTE" } });
+    fireEvent.change(screen.getByLabelText("¿Dónde quieres trabajar?"), { target: { value: "A Coruña" } });
+    expect(onWorkModeChange).toHaveBeenLastCalledWith("REMOTE");
+    expect(onLocationChange).toHaveBeenLastCalledWith("A Coruña");
+  });
+
+  it("captures all fields before the first visual transition and preserves them when initiation fails", async () => {
+    const onSearchStarted = vi.fn();
+    vi.mocked(startPublicSearchIntent).mockResolvedValueOnce({ ok: false, error: "Error de prueba", errorDestination: "/" });
+    render(<IntentEntry clientControlled showSearchScope onSearchStarted={onSearchStarted} />);
+
+    fireEvent.change(screen.getByLabelText("¿Qué trabajo buscas?"), { target: { value: "Desarrollador Full Stack" } });
+    fireEvent.change(screen.getByLabelText("¿Dónde quieres trabajar?"), { target: { value: "A Coruña" } });
+    fireEvent.change(screen.getByLabelText("Modalidad"), { target: { value: "REMOTE" } });
+    fireEvent.submit(screen.getByLabelText(/empezar una búsqueda/i));
+
+    await waitFor(() => expect(startPublicSearchIntent).toHaveBeenCalledTimes(1));
+    expect(Object.fromEntries(vi.mocked(startPublicSearchIntent).mock.calls[0][0])).toEqual({ role: "Desarrollador Full Stack", location: "A Coruña", work_mode: "REMOTE" });
+    expect(onSearchStarted).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("¿Qué trabajo buscas?")).toHaveValue("Desarrollador Full Stack");
+    expect(screen.getByLabelText("¿Dónde quieres trabajar?")).toHaveValue("A Coruña");
+    expect(screen.getByLabelText("Modalidad")).toHaveValue("REMOTE");
   });
 });
