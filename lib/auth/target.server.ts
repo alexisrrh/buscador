@@ -33,7 +33,8 @@ export function targetAuthOptions(input:TargetAuthInput):BetterAuthOptions {
   return {
     appName:'BuscaVacante',baseURL:origin,basePath:'/api/auth',secret:input.secret,database:input.pool,
     trustedOrigins:[origin],telemetry:{enabled:false},logger:{disabled:true},
-    advanced:{database:{generateId:'uuid'},cookiePrefix:policy.cookiePrefix,useSecureCookies:origin.startsWith('https:'),
+    // Better Auth otherwise skips origin checks automatically under NODE_ENV=test.
+    advanced:{disableOriginCheck:false,database:{generateId:'uuid'},cookiePrefix:policy.cookiePrefix,useSecureCookies:origin.startsWith('https:'),
       defaultCookieAttributes:{httpOnly:true,sameSite:'lax',path:'/'},backgroundTasks:{handler:task=>input.background(task.catch(()=>input.onBackgroundFailure?.()))}},
     user:{modelName:'users',fields:{emailVerified:'email_verified',createdAt:'created_at',updatedAt:'updated_at'},
       additionalFields:{disabled:{type:'boolean',defaultValue:false,input:false,returned:false},deletedAt:{type:'date',fieldName:'deleted_at',required:false,input:false,returned:false}}},

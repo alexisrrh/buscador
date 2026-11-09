@@ -153,7 +153,7 @@ describe('Better Auth 1.7.18 core against PostgreSQL 17',()=>{
   const actor=await requireActor(async()=>({user:{id,disabled:false},session:{id:'synthetic-source',expiresAt:new Date(Date.now()+60000)}}));await profiles.ensureOwnProfile(actor);
   const passwordHash=await hashPassword(randomBytes(48).toString('base64url'));
   await authPool.query("INSERT INTO identity.users(id,name,email,email_verified) VALUES($1,'Synthetic Imported User',$2,true)",[id,email]);
-  await authPool.query("INSERT INTO identity.accounts(user_id,account_id,provider_id,password) VALUES($1,$1,'credential',$2)",[id,passwordHash]);
+  await authPool.query("INSERT INTO identity.accounts(user_id,account_id,provider_id,password) VALUES($1,$2,'credential',$3)",[id,id,passwordHash]);
   const token=await resetToken(email),replacement='Imported-user-password-1234';expect((await request('/reset-password',{token,newPassword:replacement})).status).toBe(200);
   const sessionCookie=await signIn(email,replacement);expect((await requireTargetActor(auth,authPool,new Headers({cookie:sessionCookie}),profiles)).userId).toBe(id);
   await expect(authPool.query("INSERT INTO identity.users(name,email) VALUES('Collision',$1)",[email])).rejects.toMatchObject({code:'23505'});
