@@ -1,5 +1,11 @@
 # Current State
 
+## 2026-11-09 Tarea 06F: candidaturas
+
+PR #7 fusionado por el usuario en develop (8cb018e). Rama feat/candidaturas-postgresql: seis tablas privadas, repositorio de borradores/candidaturas/respuestas/configuración e historial append-only. 21 tablas preparadas de 22; siguiente 06E2 derivados. Ver ../../db/APPLICATIONS.md.
+
+Generación/validación actuales conservadas, revisión optimista del borrador y FKs compuestas; preparación transaccional MANUAL sin invocar conectores. Sin rutas nuevas ni migración real; runtime Supabase conservado. Evidencia local/remota y revisión/fusión en el PR. Tarea 06 y tareas funcionales 18/19/20 siguen abiertas.
+
 ## 2026-11-09 Tarea 06E1: CV base y evidencia
 
 PR #6 fusionado por el usuario en develop (2e401df). Rama feat/cv-evidencia-postgresql: cinco tablas, repositorios privados de CV/evidencia, interfaz de lectura de objetos y pruebas. Ver ../../db/RESUME_EVIDENCE.md. Quince tablas preparadas de 22; runtime Supabase conservado, sin datos/archivos reales importados.

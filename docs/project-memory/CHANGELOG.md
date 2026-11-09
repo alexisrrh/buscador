@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-09 Persistencia PostgreSQL de candidaturas (06F)
+
+- PR #7 integrado en develop; nueva rama feat/candidaturas-postgresql.
+- Seis tablas con RLS, FKs compuestas, versiones y aprobación de borrador, preparación/confirmación atómica, dedupe e historial append-only. Validación y formatos existentes reutilizados.
+- Pruebas de frontera y PostgreSQL real añadidas; evidencia y revisión en el PR. 21 tablas de 22 preparadas, sin activar el destino ni ejecutar envíos. Siguiente 06E2 derivados antes de 06G.
+
 ## 2026-11-09 CV base y evidencia PostgreSQL (06E1)
 
 - PR #6 integrado; rama feat/cv-evidencia-postgresql desde develop.

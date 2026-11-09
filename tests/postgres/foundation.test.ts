@@ -24,6 +24,8 @@ import { matchJobOfferToSearchProfile } from "@/lib/matching/engine";
 import { generateMatchesForSearchProfile } from "@/lib/matching/service";
 import { PostgresResumeRepository } from "@/lib/server/db/resume-repository";
 import { PostgresEvidenceRepository } from "@/lib/server/db/evidence-repository";
+import { PostgresApplicationRepository } from "@/lib/server/db/application-repository";
+import { applicationDraftInput } from "../application-persistence-fixture";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -701,4 +703,96 @@ describe('PostgreSQL CV and evidence persistence',()=>{
       expect(Math.abs(rows[0].version-rows[1].version)).toBe(1);
     } finally {await pool.end();}
   });
+});
+
+
+describe('PostgreSQL application persistence',()=>{
+ const question={questionKey:'city',questionText:'City?',answerType:'TEXT' as const,answerValue:'Madrid',source:'PROFILE' as const,confidence:0.8,requiresConfirmation:false,classification:'SAFE_STRUCTURED' as const};
+ async function applicationFixture() {
+  const candidate=await repository.createCandidate(actorA,'Candidatura sintética');
+  const search=await searches.save(actorA,draft(candidate.id));await searches.transition(actorA,search.search.id,1,'ACTIVE');
+  const cv=new PostgresResumeRepository(work),bytes=new Uint8Array(Buffer.from('%PDF-1.7 '+randomUUID()));
+  const resume=await cv.register(actorA,candidate.id,{filename:'cv.pdf',mimeType:'application/pdf',size:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
+  await cv.finalizeUpload(actorA,resume.id,{read:async()=>bytes});await cv.approve(actorA,resume.id);
+  const offer=await offers.persist(source(),neutral(),{},new Date());
+  const input=await applicationDraftInput({candidateProfileId:candidate.id,searchProfileId:search.search.id,jobOfferId:offer.jobOfferId,resumeId:resume.id});
+  const repo=new PostgresApplicationRepository(work),saved=await repo.saveDraft(actorA,input);
+  return {repo,input,saved,offer};
+ }
+ async function prepared() {
+  const f=await applicationFixture();await f.repo.approveDraft(actorA,f.saved.id,1);
+  const app=await f.repo.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test/apply',questions:[question]});
+  return {...f,app};
+ }
+ it('stores existing generated content without raw CV text and supports revisioned edits',async()=>{
+  const f=await applicationFixture();const row=await f.repo.findDraft(actorA,f.saved.id);
+  expect(row).toMatchObject({status:'READY_FOR_REVIEW',revision:1});
+  expect((row as Record<string,unknown>).profile_analysis).not.toHaveProperty('source_text');
+  await expect(f.repo.saveDraft(actorA,f.input)).rejects.toThrow('DRAFT_ALREADY_EXISTS');
+  expect((await f.repo.findCurrentDraft(actorA,f.input))?.id).toBe(f.saved.id);
+  const updated=await f.repo.saveDraft(actorA,{...f.input,id:f.saved.id,expectedRevision:1});expect(updated.revision).toBe(2);
+  await expect(f.repo.approveDraft(actorA,f.saved.id,1)).rejects.toThrow('DRAFT_REVISION_CONFLICT');
+  await f.repo.approveDraft(actorA,f.saved.id,2);
+  await expect(f.repo.saveDraft(actorA,{...f.input,id:f.saved.id,expectedRevision:2})).rejects.toThrow('DRAFT_REVISION_CONFLICT');
+  await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.application_drafts SET recruiter_message='Changed' WHERE id=$1",[f.saved.id]))).rejects.toMatchObject({code:'23514'});
+ });
+ it('requires an approved current CV and approved draft before preparation',async()=>{
+  const f=await applicationFixture();
+  await expect(f.repo.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test',questions:[]})).rejects.toThrow('DRAFT_NOT_APPROVED');
+  await f.repo.approveDraft(actorA,f.saved.id,1);await new PostgresResumeRepository(work).archive(actorA,f.input.resumeId);
+  await expect(f.repo.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test',questions:[]})).rejects.toThrow('APPLICATION_CONTEXT_UNAVAILABLE');
+ });
+ it('deduplicates preparation without overwriting answers, target or events',async()=>{
+  const f=await prepared();const again=await f.repo.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test/different',questions:[]});
+  expect(again).toEqual({id:f.app.id,created:false});expect((await f.repo.findApplication(actorA,f.app.id))?.target_url).toBe('https://example.test/apply');
+  expect((await f.repo.history(actorA,f.app.id)).map(x=>x.event_type).sort()).toEqual(['CREATED','MODE_DECIDED']);
+  const rows=await work.withActor(actorA,tx=>tx.query('SELECT requires_confirmation FROM public.application_answers WHERE application_id=$1',[f.app.id]));
+  expect(rows.rows).toEqual([{requires_confirmation:true}]);
+ });
+ it('rolls back the application and earlier answers if a later answer fails',async()=>{
+  const f=await applicationFixture();await f.repo.approveDraft(actorA,f.saved.id,1);
+  await expect(f.repo.prepare(actorA,{draftId:f.saved.id,targetUrl:'https://example.test',questions:[question,{...question,questionKey:'invalid',confidence:2}]})).rejects.toMatchObject({code:'23514'});
+  expect((await work.withActor(actorA,tx=>tx.query('SELECT id FROM public.applications WHERE application_draft_id=$1',[f.saved.id]))).rows).toEqual([]);
+ });
+ it('isolates all six tables, answers and draft operations between users',async()=>{
+  const f=await prepared();expect(await f.repo.findDraft(actorB,f.saved.id)).toBeNull();expect(await f.repo.findApplication(actorB,f.app.id)).toBeNull();
+  expect(await f.repo.history(actorB,f.app.id)).toEqual([]);
+  await expect(f.repo.approveDraft(actorB,f.saved.id,1)).rejects.toThrow('DRAFT_NOT_FOUND');
+  const answer=(await work.withActor(actorA,tx=>tx.query('SELECT id FROM public.application_answers WHERE application_id=$1',[f.app.id]))).rows[0].id;
+  await expect(f.repo.confirmAnswer(actorB,answer,'Barcelona')).rejects.toThrow('APPLICATION_ANSWER_UNAVAILABLE');
+  for(const table of ['application_drafts','applications','application_answers','application_events','application_user_settings','user_application_answers']) {
+   expect((await runtime.query('SELECT user_id FROM public.'+table)).rows).toEqual([]);
+   expect((await work.withActor(actorB,tx=>tx.query('SELECT user_id FROM public.'+table+' WHERE user_id=$1',[A]))).rows).toEqual([]);
+   for(const neutral of [catalogWork,ingestWork]) await expect(neutral.run(tx=>tx.query('SELECT user_id FROM public.'+table))).rejects.toMatchObject({code:'42501'});
+  }
+ });
+ it('confirms an answer with an append-only event and stores reusable user answers independently',async()=>{
+  const f=await prepared();const answer=(await work.withActor(actorA,tx=>tx.query('SELECT id FROM public.application_answers WHERE application_id=$1',[f.app.id]))).rows[0].id;
+  await f.repo.confirmAnswer(actorA,answer,'Barcelona');await f.repo.rememberAnswer(actorA,question,'Barcelona');await f.repo.rememberAnswer(actorB,question,'Madrid');
+  const row=(await work.withActor(actorA,tx=>tx.query('SELECT answer_value,requires_confirmation,source FROM public.application_answers WHERE id=$1',[answer]))).rows[0];
+  expect(row).toMatchObject({answer_value:'Barcelona',requires_confirmation:false,source:'USER_APPROVED'});
+  const events=await f.repo.history(actorA,f.app.id);expect(events).toHaveLength(3);
+  await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.application_events SET metadata='{}' WHERE id=$1",[events[0].id]))).rejects.toMatchObject({code:'42501'});
+  await expect(work.withActor(actorA,tx=>tx.query('DELETE FROM public.application_events WHERE id=$1',[events[0].id]))).rejects.toMatchObject({code:'42501'});
+  expect(await f.repo.settings(actorA)).toEqual({auto_apply_enabled:false});
+ });
+ it('rejects mismatched draft and source contexts at the database boundary',async()=>{
+  const f=await prepared();const other=await applicationFixture();
+  await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.applications SET application_draft_id=$1 WHERE id=$2',[other.saved.id,f.app.id]))).rejects.toMatchObject({code:'23503'});
+  await expect(work.withActor(actorA,tx=>tx.query('UPDATE public.applications SET job_offer_source_id=$1 WHERE id=$2',[other.offer.jobOfferSourceId,f.app.id]))).rejects.toMatchObject({code:'23503'});
+ });
+ it('archives a draft without deleting its application history or resurrecting it',async()=>{
+  const f=await prepared();await f.repo.archiveDraft(actorA,f.saved.id,1);expect(await f.repo.findDraft(actorA,f.saved.id)).toBeNull();
+  expect(await f.repo.findApplication(actorA,f.app.id)).not.toBeNull();expect(await f.repo.history(actorA,f.app.id)).toHaveLength(2);
+  await expect(work.withActor(actorA,tx=>tx.query("UPDATE public.application_drafts SET deleted_at=NULL,status='READY_FOR_REVIEW' WHERE id=$1",[f.saved.id]))).rejects.toMatchObject({code:'23514'});
+ });
+ it('serializes concurrent preparations from independent connections',async()=>{
+  const f=await applicationFixture();await f.repo.approveDraft(actorA,f.saved.id,1);
+  const url=new URL(process.env.TEST_DATABASE_URL!);url.username=runtimeRole;url.password=testPassword;const pool=createDatabasePool(url.toString(),1);
+  try {
+   const second=new PostgresApplicationRepository(new UnitOfWork(pool));const input={draftId:f.saved.id,targetUrl:'https://example.test',questions:[question]};
+   const results=await Promise.all([f.repo.prepare(actorA,input),second.prepare(actorA,input)]);
+   expect(results[0].id).toBe(results[1].id);expect(results.filter(x=>x.created)).toHaveLength(1);expect(await f.repo.history(actorA,results[0].id)).toHaveLength(2);
+  } finally {await pool.end();}
+ });
 });
