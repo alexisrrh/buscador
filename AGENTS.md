@@ -119,7 +119,7 @@ Esta estructura es una referencia. Antes de crear carpetas o archivos, revisar l
 - Subir la rama a GitHub y abrir un Pull Request hacia `develop`. No trabajar ni hacer push directo a `develop` o `main`.
 - Completar todas las secciones de `.github/PULL_REQUEST_TEMPLATE.md`, indicando cambios, pruebas, pendientes y observaciones. No marcar revisiones o validaciones que no hayan ocurrido.
 - Integrar en `develop` después de aprobar CI y realizar Self Review. El usuario trabaja solo: develop mantiene PR obligatorio, pero no exige aprobación de otra cuenta ni aprobación independiente del último push. El autor revisa y decide fusionar; no registrar una aprobación propia como Code Review de otro desarrollador.
-- Promover `develop` a `main` mediante otro Pull Request cuando el conjunto esté validado. main conserva su requisito actual de revisión independiente; cualquier ajuste para trabajo individual requiere decisión expresa.
+- Promover `develop` a `main` mediante otro Pull Request cuando el conjunto esté validado. Por decisión expresa del usuario del 9 de noviembre de 2026, main también funciona en modo individual: PR, CI y Self Review obligatorios, sin aprobación de otra cuenta ni del último push. El usuario decide fusionar; no simular una revisión independiente.
 - Los títulos de los Pull Requests siguen la misma convención de tipos en inglés y descripción en español que los commits.
 
 ### Mensajes de commit

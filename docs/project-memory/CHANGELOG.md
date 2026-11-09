@@ -1,5 +1,11 @@
 # Project Changelog
 
+## 2026-11-09 Flujo individual también en main
+
+- Decisión expresa del usuario: main no requiere otra cuenta ni aprobación independiente del último push; PR, CI y Self Review se conservan.
+- PATCH y GET comparados: resto de protecciones de main y toda la configuración de develop intactos. Evidencias locales sin credenciales; PR #10 no fusionado por el agente.
+- PR #9 ya integrado; documentación y memoria sincronizadas. Siguiente tarea técnica: 06G contratos/importación de fixtures.
+
 ## 2026-11-09 Persistencia de CV derivados (06E2)
 
 - PR #8 integrado; nueva rama feat/cv-derivados-postgresql.
