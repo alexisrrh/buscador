@@ -99,8 +99,10 @@ export async function importSyntheticFixture(pool:Pick<Pool,'connect'>,seed='tra
     async function read(table:string,row:Row):Promise<{row:Row;sql_nulls:string[]}|null> {
       const entry=await role(table,row);
       const nulls=schema.rows.filter(c=>c.table_name===table).map(c=>`CASE WHEN t.${identifier(c.column_name)} IS NULL THEN '${c.column_name}' END`).join(',');
-      return (await client.query<{row:Row;sql_nulls:string[]}>(`SELECT to_jsonb(t) AS row,array_remove(ARRAY[${nulls}]::text[],NULL) AS sql_nulls
-        FROM public.${identifier(table)} t WHERE ${identifier(entry.identity)}=$1`,[row[entry.identity]])).rows[0]??null;
+      const actual=(await client.query<{row:Row;sql_nulls:string[]}>(`SELECT to_jsonb(t) AS row,array_remove(ARRAY[${nulls}]::text[],NULL) AS sql_nulls
+        FROM public.${identifier(table)} t WHERE ${identifier(entry.identity)}=$1`,[row[entry.identity]])).rows[0];
+      if(actual)actual.sql_nulls.sort();
+      return actual??null;
     }
     function matches(row:Row,actual:{row:Row;sql_nulls:string[]}) {
       return Object.entries(row).every(([key,value])=>canonical(actual.row[key])===canonical(value) && (value!==null || actual.sql_nulls.includes(key)));
